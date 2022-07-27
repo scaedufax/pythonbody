@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import logging
 
-from nbody.utils import grav_pot
+from pythonbody.utils import grav_pot
 
 class dat10():
     def __init__(self, file_path: str = None, G = 1):

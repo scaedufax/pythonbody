@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import logging
 
-from nbody.snap import snap
-from nbody.utils import grav_pot
+from pythonbody.snap import snap
+from pythonbody.utils import grav_pot
 
 class cluster(pd.DataFrame):
     def __init__(self,

@@ -1,0 +1,3 @@
+
+# On Kepler
+# pip install pandas jupyter numpy h5py matplotlib tqdm --upgrade --ignore-installed

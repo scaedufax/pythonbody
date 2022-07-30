@@ -1,7 +1,8 @@
 #include <math.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <stdlib.h>
+#include <omp.h>
+#include <pthread.h>
 
 #include "grav_pot.h"
 
@@ -16,11 +17,10 @@ struct thread_args {
 	double *EPOT;
 };
 
-double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
-
 		for (int j = i+1; j < n; j++) {
-
 			double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
 			double epot_ij = -m[i]*m[j]/dist;
 			EPOT[i] += epot_ij;
@@ -113,8 +113,15 @@ double grav_pot_threaded(double *m, double *x1, double *x2, double *x3, double *
 	return epot_tot;	*/
 
 }
+double grav_pot_unthreaded(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+	for (int i = 0; i < n; i++) {
+		for (int j = i+1; j < n; j++) {
+			double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+			double epot_ij = -m[i]*m[j]/dist;
+			EPOT[i] += epot_ij;
+			EPOT[j] += epot_ij;
+		}
+	}
+}
 
-/*double grav_pot(double *m, double *x1, double *x2, double *x3, double *v1, double *v2, double *v3) {
 
-	return 0;
-}*/

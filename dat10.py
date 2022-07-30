@@ -67,11 +67,12 @@ class dat10():
             self._EKIN = self._data["EKIN"].sum()
         return self._EKIN
     @property
-    def EPOT(self, G=1, STEPSIZE=1000):
-        if self._EPOT is None:
-            self._data["EPOT"] = self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]])
-            self._EPOT = self._data["EPOT"].sum()
-        return self._EPOT
+    def EPOT(self, G=1):
+        #if self._EPOT is None:
+        #    self._data["EPOT"] = self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]])
+        #    self._EPOT = self._data["EPOT"].sum()
+        #return self._EPOT
+        return np.sum(self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]]))
 
     @property
     def ZMBAR(self):

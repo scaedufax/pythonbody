@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "grav_pot.h"
 
@@ -18,6 +19,10 @@ struct thread_args {
 };
 
 double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+	if num_threads == NULL {
+		num_threads = sysconf(_SC_NPROCESSORS_ONLN)
+	}
+
 	#pragma omp parallel for
 	for (int i = 0; i < n; i++) {
 		for (int j = i+1; j < n; j++) {

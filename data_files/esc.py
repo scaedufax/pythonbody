@@ -2,6 +2,9 @@ import pandas as pd
 import pathlib
 import os
 import errno
+import numpy as np
+
+from .data_file import DataFile as pbdf
 
 COLS = ["TTOT", "BODY", "RI", "VI", "STEP T[Myr]", "M[M*]", "EESC", "VI[km/s]", "K*", "NAME", "ANGLE PHI", "ANGLE THETA", "M1[M*]", "RADIUS[RSun]", "LUM[LSun]", "TEFF", "AGE[Myr]", "EPOCH"]
 
@@ -27,11 +30,16 @@ def load(data_path="."):
                     names=COLS
                     )
         else :
-            df =  df = pd.read_csv(data_path + "/" + file,
+            df = pd.read_csv(data_path + "/" + file,
                     delim_whitespace=True,
                     skiprows=1,
                     header=None
                     )
         dfs += [df]
-    return pd.concat(dfs,ignore_index=True)
+    return pbdf("esc",pd.concat(dfs,ignore_index=True))
 
+def calc_EESC_TOT(df: pbdf):
+    arr = np.zeros(df.shape[0])
+    for i in df.index:
+        arr[i] = np.sum(df["EESC"][:i])
+    return arr

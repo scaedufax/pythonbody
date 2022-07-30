@@ -11,8 +11,9 @@ from pythonbody.cluster import cluster
 from pythonbody import data_files
 
 
-SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody"))]
-SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody"))}
+SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))]
+SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))}
+CALCABLE_DATA = {key: [i for i in eval(f"dir(data_files.{key})") if "calc_" in i] for key in SUPPORTED_DATA_FILES}
 
 class UnknownDataLoad(Exception):
     pass
@@ -146,10 +147,6 @@ class nbody:
                                                                  index=[i]
                                                             )))
         self._data["E"].sort_index(inplace=True)
-
-        #self._data["EKIN"] = np.array(EKIN)
-        #self._data["EPOT"] = np.array(EPOT)
-
     
     def show_mem_usage(self):
         """

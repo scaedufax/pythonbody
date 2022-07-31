@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <pthread.h>
-#include <unistd.h>
+#include <unistd.h> /* sysconf(_SC_NPROCESSORS_ONLN) -> processor count*/
 
 #include "grav_pot.h"
 
@@ -120,13 +120,6 @@ double grav_pot_threaded(double *m, double *x1, double *x2, double *x3, double *
 	free(thread_ids);
 	free(EPOT_threads);
 	
-	/* calculate total energy */
-	/*double epot_tot = 0;
-	for (int i = 0; i < n; i++) {
-		epot_tot += EPOT[i];
-	}
-	return epot_tot;	*/
-
 }
 double grav_pot_unthreaded(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
 	for (int i = 0; i < n; i++) {

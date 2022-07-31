@@ -24,21 +24,25 @@ double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT,
 		num_threads = (int *) sysconf(_SC_NPROCESSORS_ONLN);
 	}*/
 
-	double EPOT_thread[n];
-	for (int i = 0; i < n; i++) {
-		EPOT_thread[i] = 0;
-	}
-	#pragma omp parallel for reduction(+:EPOT_thread)
-	for (int i = 0; i < n; i++) {
-		for (int j = i+1; j < n; j++) {
-			double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-			double epot_ij = -m[i]*m[j]/dist;
-			EPOT_thread[i] += epot_ij;
-			EPOT_thread[j] += epot_ij;
+	#pragma omp parallel
+	{
+		double EPOT_thread[n];
+		for (int i = 0; i < n; i++) {
+			EPOT_thread[i] = 0;
 		}
-	}
-	for (int i = 0; i < n; i++) {
-		EPOT[i] = EPOT_thread[i];
+		#pragma omp for
+		for (int i = 0; i < n; i++) {
+			for (int j = i+1; j < n; j++) {
+				double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+				double epot_ij = -m[i]*m[j]/dist;
+				EPOT_thread[i] += epot_ij;
+				EPOT_thread[j] += epot_ij;
+			}
+		}
+		for (int i = 0; i < n; i++) {
+			#pragma omp atomic
+			EPOT[i] += EPOT_thread[i];
+		}
 	}
 }
 

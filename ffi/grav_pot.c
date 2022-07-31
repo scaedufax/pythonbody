@@ -19,18 +19,19 @@ struct thread_args {
 };
 
 double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
-	#pragma omp parallel for
+	/* TODO: properly implement passing NULL as num_threads
+	if (num_threads == NULL) {
+		num_threads = (int *) sysconf(_SC_NPROCESSORS_ONLN);
+	}*/
+	#pragma omp parallel for reduction(+:EPOT[:n])
 	for (int i = 0; i < n; i++) {
 		double EPOT_i = 0.0;
 		for (int j = i+1; j < n; j++) {
 			double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
 			double epot_ij = -m[i]*m[j]/dist;
-			EPOT_i += epot_ij;
-			#pragma omp atomic
+			EPOT[i] += epot_ij;
 			EPOT[j] += epot_ij;
 		}
-		#pragma omp atomic
-		EPOT[i] += EPOT_i;
 	}
 }
 
@@ -67,6 +68,7 @@ double grav_pot_threaded(double *m, double *x1, double *x2, double *x3, double *
 	
 	/* In order to avoid race conditions assign */
 	/* an array for EPOT to each thread, summing up later on */
+
 	double *EPOT_threads = (double*) malloc(sizeof(double)*n*num_threads);
 	for (int i = 0; i < n*num_threads;i++) {
 		EPOT_threads[i] = 0;

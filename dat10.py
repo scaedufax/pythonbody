@@ -5,8 +5,30 @@ import logging
 
 from pythonbody.utils import grav_pot
 
+# TODO: Do something more reasonable with G.
+
 class dat10():
+    """
+    Class for reading and modifying dat.10 files
+    for nbody.
+
+    Attributes:
+        com (float): center of mass
+        EKIN (float): kinetic energy
+        EPOT (float): potential energy
+        ETOT (float) EPOT+EKIN
+
+        ZMBAR: Calculates ZMBAR for use in nbody input files
+        RBAR: Calculates RBAR for use in nbody input files
+        AVMASS: prints average Mass of system
+
+    """
     def __init__(self, file_path: str = None, G = 1):
+        """
+        dat10 constructor
+        Parameters:
+            file_path (str): path to dat.10 file
+        """
         self._setup_logger()
         self._data = None
         self._com = None
@@ -22,15 +44,30 @@ class dat10():
             self.file_path = file_path
             self.load(self.file_path)
 
-    def load(self, file: str):
+    def load(self, file_path: str):
+        """
+        function to load data from dat.10 file
+
+        Parameters:
+            file_path (str): path do dat.10 file
+        """
         self._data = pd.read_csv(
-                file,
+                file_path,
                 header=None,
                 index_col=False,
                 delimiter=" ",
                 names=self._default_cols
                 )
     def save(self, file:str):
+        """
+        save (modified) dat.10 file
+
+        Will only save the relevant cols for nbody, not other cols
+        methods, or you will have created.
+
+        Parameters:
+            file (str): path to file to save output to.
+        """
         self._data[self._default_cols].to_csv(
             file,
             sep = " ",
@@ -80,6 +117,14 @@ class dat10():
     @property
     def RBAR(self):
         return np.linalg.norm(self.iloc[:,1:4],axis=1).mean()
+    @property
+    def COM(self):
+        if self._com is None:
+            self._com = 1/self.iloc[:,0].sum() * np.sum(self.iloc[:,[1,2,3]].multiply(self.iloc[:,0],axis=0))
+        return self._com
+    @property
+    def AVMASS(self):
+        return self._data.iloc[:,0].mean()   
         
     def __setitem__(self, key, item):
         self._data[key] = item
@@ -96,19 +141,14 @@ class dat10():
             
     def len(self):
         return self._data.shape[0]
-    
-    @property
-    def com(self):
-        if self._com is None:
-            self._com = 1/self.iloc[:,0].sum() * np.sum(self.iloc[:,[1,2,3]].multiply(self.iloc[:,0],axis=0))
-        return self._com
-    
-    def adjust_com(self):        
+     
+    def adjust_com(self):
+        """
+        Changes positions into center of mass system
+        """
         self._data.iloc[:,[1,2,3]] = self._data.iloc[:,[1,2,3]] - self.com
         self._com = None
     
-    def mean_mass(self):
-        return self._data.iloc[:,0].mean()   
     def _setup_logger(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(10)

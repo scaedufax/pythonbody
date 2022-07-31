@@ -23,9 +23,8 @@ class nbody:
     Class for handling nbody results
     
     Attributes:
-        version (str): nbody version used for the simulation
         data_path (str): Path where output files of nbody can be found
-        job_id (list): Not required, but helps finding the correct (main out) file(s)
+        nb_stdout_files (list or str): path to nbody standard output data
         
         _data (dict): contains data from nbody simulation
         _files (dict): contains files related to the simulation
@@ -75,7 +74,7 @@ class nbody:
         return self._data[key]
 
     def __repr__(self):
-        return repr(self._data)
+        return self._data.keys()
 
     def __len__(self):
         return len(self._data)
@@ -86,14 +85,10 @@ class nbody:
     def load(self, *what):
         """
         Loads data into the self._data from files associated with nbody.
-        
-        If a data type for loading is associated with a file containing more info then just the required
-        one, all data associated with a filetype is loaded. E.g. if RLAGR is loaded, also AVMASS, VROT, ...
-        will be loaded.
-        
+         
         Parameters:        
             what (list): Type of data the function is supposed to load.
-                         See SUPPORTED_DATA_LOAD
+                         See SUPPORTED_DATA_FILES and SUPPORTED_DATA_COLS
         """
 
         if len(what) == 0:
@@ -129,6 +124,10 @@ class nbody:
 
 
     def calculate_energy_evolution(self):
+        """
+        Calculates potential and kinetic energy for every nbody time step.
+        Careful: depending on hardware and runtime, this can take a while!
+        """
         if self.snap.shape == (0.3):
             self.snap._load_files()
         self._data["E"] = pd.DataFrame() 

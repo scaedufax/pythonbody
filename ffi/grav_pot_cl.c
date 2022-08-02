@@ -22,15 +22,16 @@
 "    if (id < n) {                                               \n" \
 "        c[id] = a[id] + b[id];                                  \n" \
 "    }                                                           \n" \
-"}*/                                                               \n" \
+"}                                                               \n" \
                                                                 "\n" ;
+																*/
 
 double grav_pot(double *m,
                 double *x1,
                 double *x2,
                 double *x3,
                 double *EPOT,
-                int n,
+                int n
                 )
 {
     cl_mem l_m;

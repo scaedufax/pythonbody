@@ -14,8 +14,10 @@ def grav_pot(data: pd.DataFrame,
 
     EPOT = (c_double * N)(*np.zeros(N))
 
-    lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot.so")  
-    func = eval(f"lib.grav_pot_{c_func}")
+    #lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot.so")  
+    lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_cuda.so")  
+    #func = eval(f"lib.grav_pot_{c_func}")
+    func = eval(f"lib.grav_pot")
     func.argtypes = [
             c_double * N, # M
             c_double * N, # X1 
@@ -23,8 +25,8 @@ def grav_pot(data: pd.DataFrame,
             c_double * N, # X3
             c_double * N, # EPOT (results)
             c_int,        # N
-            c_int,        # num_threads
-            ]
+            ]#c_int,        # num_threads
+            #]
     func.restype = c_int 
 
     func((c_double * N)(*data["M"].values),

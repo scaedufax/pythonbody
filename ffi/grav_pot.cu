@@ -4,6 +4,8 @@
 #include <time.h>
 #include <omp.h>
 
+//#include "grav_pot_cuda.h"
+
 #define NTHREADS 256
 
 // Kernel function to add the elements of two arrays
@@ -17,40 +19,45 @@ void grav_pot_kernel(double *m,
 {
   int index = blockIdx.x * blockDim.x + threadIdx.x;
   int stride = blockDim.x * gridDim.x;
-  for (int i = index; i < n; i += stride)
+  for (int i = index; i < n; i += stride) {
 	  for (int j = 0; j< n; j++) {
+		  if (i == j) continue;
           double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-          E[i] += -m[i]*m[j]/dist;
+          EPOT[i] += -m[i]*m[j]/dist;
+
 	  }
+  }
 }
-void grav_pot(double *m,
+extern "C" void grav_pot(double *m,
               double *x1,
               double *x2,
               double *x3,
               double *EPOT,
               int n)
 {
-    double *l_m, *l_x1, *l_x2, *l_x3, *l_EPOT
-    cudaMallocManaged(l_m, n*sizeof(double));
-    cudaMallocManaged(l_x1, n*sizeof(double));
-    cudaMallocManaged(l_x2, n*sizeof(double));
-    cudaMallocManaged(l_x3, n*sizeof(double));
-    cudaMallocManaged(l_EPOT, n*sizeof(double));
+    double *l_m, *l_x1, *l_x2, *l_x3, *l_EPOT;
+    cudaMallocManaged(&l_m, n*sizeof(double));
+    cudaMallocManaged(&l_x1, n*sizeof(double));
+    cudaMallocManaged(&l_x2, n*sizeof(double));
+    cudaMallocManaged(&l_x3, n*sizeof(double));
+    cudaMallocManaged(&l_EPOT, n*sizeof(double));
+	printf("Hallo\n");
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i=0; i < n; i++) {
         l_m[i] = m[i];
         l_x1[i] = x1[i];
         l_x2[i] = x2[i];
         l_x3[i] = x3[i];
-        l_EPOT[i] = EPOT[i];
+        l_EPOT[i] = 0.0;
     }
    
     int blocks = (int) n/NTHREADS + 1;
-    grav_pot<<<blocks, NTHREADS>>>(l_m, l_x1, l_x2, l_x3, l_EPOT);
+	printf("Blocks: %d Threads: %d \n",blocks,NTHREADS);
+    grav_pot_kernel<<<blocks, NTHREADS>>>(l_m, l_x1, l_x2, l_x3, l_EPOT, n);
     cudaDeviceSynchronize();
     
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for (int i=0; i < n; i++) {
         EPOT[i] = l_EPOT[i];
     }

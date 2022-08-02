@@ -5,7 +5,7 @@ import numpy as np
 def grav_pot(data: pd.DataFrame,
              G: float = 1,
              num_threads: int = None,
-             c_func = "omp"
+             c_func = "cuda"
              ):
     if num_threads is None:
         from multiprocessing import cpu_count
@@ -13,11 +13,16 @@ def grav_pot(data: pd.DataFrame,
     N = data.shape[0]
 
     EPOT = (c_double * N)(*np.zeros(N))
-
-    #lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot.so")  
-    lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_cuda.so")  
-    #func = eval(f"lib.grav_pot_{c_func}")
-    func = eval(f"lib.grav_pot")
+    lib = None
+    if c_func == "cuda":
+        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_cuda.so")  
+        func = eval(f"lib.grav_pot")
+    elif c_func == "opencl":
+        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_ocl.so")  
+        func = eval(f"lib.grav_pot")
+    else:
+        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot.so")
+        func = eval(f"lib.grav_pot_{c_func}")
     func.argtypes = [
             c_double * N, # M
             c_double * N, # X1 

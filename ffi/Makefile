@@ -1,6 +1,6 @@
 CFLAGS=-fPIC -std=c99 -fopenmp
 
-all: grav_pot_cuda.so #grav_pot_ocl.so #grav_pot_cuda.so grav_pot.so
+all: grav_pot.so grav_pot_cuda.so #grav_pot_ocl.so #grav_pot_cuda.so grav_pot.so
 
 
 grav_pot.so: grav_pot.o

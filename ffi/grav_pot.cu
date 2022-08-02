@@ -4,7 +4,6 @@
 #include <stdio.h>
 //#include <omp.h>
 
-//#include "grav_pot_cuda.h"
 
 #define NTHREADS 256
 
@@ -22,7 +21,9 @@ void grav_pot_kernel(double *m,
   for (int i = index; i < n; i += stride) {
 	  for (int j = 0; j< n; j++) {
 		  if (i == j) continue;
-          double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+          double dist = sqrt( (x1[i] - x1[j])*(x1[i] - x1[j]) + \
+				  			  (x2[i] - x2[j])*(x2[i] - x2[j]) + \
+							  (x3[i] - x3[j])*(x3[i] - x3[j]) );
           EPOT[i] += -m[i]*m[j]/dist;
 
 	  }
@@ -69,36 +70,3 @@ extern "C" void grav_pot(double *m,
 
 }
 
-/*int main(void)
-{
-  // Allocate Unified Memory – accessible from CPU or GPU
-  cudaMallocManaged(&x, N*sizeof(float));
-  cudaMallocManaged(&y, N*sizeof(float));
-
-  // initialize x and y arrays on the host
-  srand((unsigned int)time(NULL));
-  for (int i = 0; i < N; i++) {
-    x[i] = (float) rand()/((float)RAND_MAX);
-    y[i] = 0.0f;
-  }
-
-  // Run kernel on 1M elements on the GPU
-  int blocks = (int) N/NTHREADS + 1;
-  printf("NBLOCKS: %d, NTHREADS: %d\n", blocks, NTHREADS);
-  grav_pot<<<blocks, NTHREADS>>>(N, x, y);
-
-  // Wait for GPU to finish before accessing on host
-  cudaDeviceSynchronize();
-
-  // Check for errors (all values should be 3.0f)
-  float ETOT = 0.0f;
-  for (int i = 0; i < N; i++)
-    ETOT += y[i];
-  std::cout << "ETOT: " << ETOT << std::endl;
-
-  // Free memory
-  cudaFree(x);
-  cudaFree(y);
-  
-  return 0;
-}*/

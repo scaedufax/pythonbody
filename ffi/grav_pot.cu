@@ -1,8 +1,8 @@
 #include <iostream>
 #include <math.h>
 #include <stdlib.h>
-#include <time.h>
-#include <omp.h>
+#include <stdio.h>
+//#include <omp.h>
 
 //#include "grav_pot_cuda.h"
 
@@ -41,7 +41,6 @@ extern "C" void grav_pot(double *m,
     cudaMallocManaged(&l_x2, n*sizeof(double));
     cudaMallocManaged(&l_x3, n*sizeof(double));
     cudaMallocManaged(&l_EPOT, n*sizeof(double));
-	printf("Hallo\n");
 
     //#pragma omp parallel for
     for (int i=0; i < n; i++) {
@@ -53,7 +52,7 @@ extern "C" void grav_pot(double *m,
     }
    
     int blocks = (int) n/NTHREADS + 1;
-	printf("Blocks: %d Threads: %d \n",blocks,NTHREADS);
+	//printf("Blocks: %d Threads: %d \n",blocks,NTHREADS);
     grav_pot_kernel<<<blocks, NTHREADS>>>(l_m, l_x1, l_x2, l_x3, l_EPOT, n);
     cudaDeviceSynchronize();
     

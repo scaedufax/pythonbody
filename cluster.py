@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import logging
+import warnings
 
 from pythonbody.snap import snap
 from pythonbody.utils import grav_pot
@@ -30,6 +31,8 @@ class cluster(pd.DataFrame):
         """
         super().__init__(columns=["M", "X1", "X2", "X3", "V1", "V2", "V3"])
 
+        # stop warning for self.snap assignments can not be done
+        warnings.simplefilter(action='ignore', category=UserWarning)
         self.data_path = data_path
         self.snap = s
         self.time = None

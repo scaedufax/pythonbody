@@ -6,8 +6,25 @@ import numpy as np
 
 from .data_file import DataFile as pbdf
 
-#COLS = ["TTOT", "BODY", "RI", "VI", "STEP T[Myr]", "M[M*]", "EESC", "VI[km/s]", "K*", "NAME", "ANGLE PHI", "ANGLE THETA", "M1[M*]", "RADIUS[RSun]", "LUM[LSun]", "TEFF", "AGE[Myr]", "EPOCH"]
-COLS=None
+COLS = ["TTOT",
+        "BODY",
+        "RI",
+        "VI",
+        "STEP",
+        "T[Myr]", 
+        "M[M*]", 
+        "EESC", 
+        "VI[km/s]",
+        "K*",
+        "NAME",
+        "ANGLE PHI",
+        "ANGLE THETA",
+        "M1[M*]",
+        "RADIUS[RSun]",
+        "LUM[LSun]",
+        "TEFF",
+        "AGE[Myr]",
+        "EPOCH"]
 
 REGEX = None
 
@@ -28,7 +45,8 @@ def load(data_path="."):
                     delim_whitespace=True,
                     skiprows=1,
                     header=None,
-                    names=COLS
+                    names=COLS,
+                    index_col=False
                     )
         else :
             df = pd.read_csv(data_path + "/" + file,

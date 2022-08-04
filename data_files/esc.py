@@ -3,10 +3,11 @@ import pathlib
 import os
 import errno
 import numpy as np
+import re
 
 from .data_file import DataFile as pbdf
 
-COLS = ["TTOT",
+"""COLS = ["TTOT",
         "BODY",
         "RI",
         "VI",
@@ -24,7 +25,8 @@ COLS = ["TTOT",
         "LUM[LSun]",
         "TEFF",
         "AGE[Myr]",
-        "EPOCH"]
+        "EPOCH"]"""
+COLS = None
 
 REGEX = None
 
@@ -32,6 +34,19 @@ FILES = ["esc.11"]
 
 def load(data_path="."):
     global COLS,REGEX,FILES
+
+    with open(data_path + "/" + FILES[0],"r") as data_file:
+        header = data_file.readline().rstrip()
+        # for newer versions, get rid of spaces
+        header = header.replace("ANGLES PHI, THETA", "ANGLE_PHI ANGLE_THETA")
+        # for older versions get rid of spaces
+        header = header.replace("ANGLE PHI", "ANGLE_PHI")
+        header = header.replace("ANGLE THETA", "ANGLE_THETA")
+
+        # extract COLS from header
+        header = re.sub("\s+", " ", header).strip()
+        COLS = header.split(" ")
+
     if REGEX is not None:
         FILES = load_files()
     else:

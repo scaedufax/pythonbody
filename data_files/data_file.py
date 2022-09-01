@@ -16,6 +16,7 @@ class DataFile(pd.DataFrame):
                 missing_list = ast.literal_eval(str(ke).replace(" not in index", "").replace("\"",""))
             else:
                 missing_list = [str(ke).replace(" not in index", "").replace("\"","").replace("\'","")]
+            
             for missing in missing_list:
                 if f"calc_{missing}" in eval(f"dir(data_files.{self.__name__})"):
                     self[missing] = eval(f"data_files.{self.__name__}.calc_{missing}(self)")

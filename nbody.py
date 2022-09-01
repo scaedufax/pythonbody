@@ -74,7 +74,7 @@ class nbody:
         return self._data[key]
 
     def __repr__(self):
-        return self._data.keys()
+        return str(self._data.keys())
 
     def __len__(self):
         return len(self._data)

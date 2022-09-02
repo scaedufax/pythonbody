@@ -22,6 +22,7 @@ class snap(pd.DataFrame):
             self._load_files()
 
         self.cluster_data = None;
+        self.RDENS = None
             
         #if self.files is not None:
         #    self._load_files()
@@ -35,17 +36,20 @@ class snap(pd.DataFrame):
             value = [value]
 
         missing_list = []
-        for val in value:
-            if val not in self.cluster_data.columns:
-                missing_list += [val]
-        
-        if len(missing_list) == 0:
-            return self.cluster_data[value]
-        elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/","_over_") not in dir(self) for val in missing_list]) == 0:
-            for missing in missing_list:
-                if missing not in self.cluster_data.columns:
-                    eval(f"self.calc_{missing}()".replace("/","_over_"))
-            return self.cluster_data[value]
+        if self.cluster_data is not None:
+            for val in value:
+                if val not in self.cluster_data.columns:
+                    missing_list += [val]
+            
+            if len(missing_list) == 0:
+                return self.cluster_data[value]
+            elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/","_over_") not in dir(self) for val in missing_list]) == 0:
+                for missing in missing_list:
+                    if missing not in self.cluster_data.columns:
+                        eval(f"self.calc_{missing}()".replace("/","_over_"))
+                return self.cluster_data[value]
+            else:
+                return super().__getitem__(value)
         else:
             return super().__getitem__(value)
 
@@ -70,6 +74,11 @@ class snap(pd.DataFrame):
             "V2": f["Step#" + self.loc[time]["step"]]["005 V2"][:],
             "V3": f["Step#" + self.loc[time]["step"]]["006 V3"][:],
             })
+        self.RDENS = [
+                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][6],
+                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][7],
+                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][8],
+                     ]
         return self.cluster_data
 
     def calc_spherical_coords(self):
@@ -111,20 +120,55 @@ class snap(pd.DataFrame):
         if not "R" in self.cluster_data.columns:
             self.calc_R()
 
+        """rvxy = self.cluster_data["X1"]*self.cluster_data["V1"] + self.cluster_data["X2"]*self.cluster_data["V2"]
+        rxy2 = self.cluster_data["X1"] **2 + self.cluster_data["X2"]**2
+        vrot1 = self.cluster_data["V1"] - rvxy* self.cluster_data["X1"]/rxy2
+        vrot2 = self.cluster_data["V2"] - rvxy* self.cluster_data["X2"]/rxy2
+        xsign = np.sign(vrot1*self.cluster_data["X2"]-vrot2*self.cluster_data["X1"])
+        self.cluster_data["VROT"] = xsign*np.sqrt(vrot1**2+vrot2**2)"""
+
+        """RR12 = self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2
+        XR12 = (self.cluster_data["V1"] * (self.cluster_data["X1"] - self.RDENS[0])) + \
+                (self.cluster_data["V2"] * (self.cluster_data["X2"] -  self.RDENS[1]))
+
+        VROT1 = self.cluster_data["V1"] - XR12/RR12 * self.cluster_data["X1"]
+        VROT2 = self.cluster_data["V2"] - XR12/RR12 * self.cluster_data["X2"]
+
+        VROTM = np.sqrt(VROT1**2 + VROT2**2)
+        XSIGN = np.sign(VROT1*self.cluster_data["X2"]/np.sqrt(RR12) - VROT2*self.cluster_data["X1"]/np.sqrt(RR12))
+
+        self.cluster_data["VROT"] = XSIGN*self.cluster_data["M"]*VROTM"""
+        VROT = np.cross( 
+                    np.cross(
+                        self.cluster_data.loc[:,["X1","X2","X3"]],
+                        self.cluster_data.loc[:,["V1","V2","V3"]]
+                    )/(self.cluster_data["R"]**2).values.reshape(self.cluster_data.shape[0],1),
+                    self.cluster_data.loc[:,["X1","X2","X3"]]
+                )
+        XSIGN = np.sign(VROT[:,0]*self.cluster_data["X2"]/np.sqrt(self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2) \
+                            - VROT[:,1]*self.cluster_data["X1"]/np.sqrt(self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2))
+        self.cluster_data["VROT"] = XSIGN * np.sqrt(VROT[:,0]**2 + VROT[:,1]**2)
+
+
         """self.cluster_data["VROT"] = np.cross(
                 self.cluster_data.loc[:,["X1","X2","X3"]],
                 self.cluster_data.loc[:,["V1","V2","V3"]]
             )[:,2]/(self.cluster_data["R"]**2)"""
+
+        
+        """
         self.cluster_data["VROT"] = np.linalg.norm(np.cross(
                 self.cluster_data.loc[:,["X1","X2","X3"]],
                 self.cluster_data.loc[:,["V1","V2","V3"]]
             ), axis=1)/(self.cluster_data["R"]**2)
+        """
 
     def calc_VROT_CUMMEAN(self):
         if not "VROT" in self.cluster_data.columns:
             self.calc_VROT()
 
         self.cluster_data["VROT_CUMMEAN"] = cummean(self.cluster_data["VROT"].values)
+        #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
 
 
     def _load_files(self):

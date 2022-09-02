@@ -5,11 +5,17 @@ import errno
 import re
 from tqdm import tqdm
 import numpy as np
+import multiprocessing as mp
 
 COLS = None
 
 
 FILES = None
+
+data = {}
+def analyze_line(line):
+    global data
+    cols = None
 
 def load(stdout_files):
     #global COLS,REGEX,FILES
@@ -22,7 +28,8 @@ def load(stdout_files):
 
         with open(out_file, "r") as myfile:
             cols = None
-            for line in tqdm(myfile):
+            lines = myfile.readlines()
+            for line in tqdm(lines):
                 if re.search("TIME.*M/MT:", line):
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")

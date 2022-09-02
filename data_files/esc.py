@@ -73,7 +73,5 @@ def load(data_path="."):
     return pbdf("esc",pd.concat(dfs,ignore_index=True))
 
 def calc_EESC_TOT(df: pbdf, eesc_col="EESC"):
-    arr = np.zeros(df.shape[0])
-    for i in df.index:
-        arr[i] = np.sum(df[eesc_col][:i+1])
+    arr = df[eesc_col].cumsum().values
     return arr

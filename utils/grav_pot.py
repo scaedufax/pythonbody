@@ -1,4 +1,5 @@
 from ctypes import cdll, c_double, c_int
+import pathlib
 import pandas as pd
 import numpy as np
 
@@ -18,11 +19,11 @@ def grav_pot(data: pd.DataFrame,
     EPOT = (c_double * N)(*np.zeros(N))
     lib = None
     func = None
-    if c_func == "cuda":
-        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/grav_pot_cuda.so")  
+    if c_func == "cuda" and pathlib.Path("pythonbody/ffi/.libs/libgrav_pot_cuda.so").is_file():
+        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libgrav_pot_cuda.so")  
         func = eval(f"lib.grav_pot")
     else:
-        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/grav_pot.so")
+        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libgrav_pot.so")
         if c_func is not None:
             func = eval(f"lib.grav_pot_{c_func}")
         else:

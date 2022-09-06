@@ -2,4 +2,14 @@ __pycache__
 **/*.o
 **/*.so
 **/*.dll
+**/*.la
+**/*.lo
+**/*.tar.gz
 
+ffi/.deps
+ffi/.libs
+ffi/autom4te.cache
+ffi/config.log
+ffi/config.status
+ffi/*~
+ffi/libtool

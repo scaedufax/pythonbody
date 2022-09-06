@@ -15,14 +15,12 @@ def grav_pot(data: pd.DataFrame,
     EPOT = (c_double * N)(*np.zeros(N))
     lib = None
     if c_func == "cuda":
-        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_cuda.so")  
-        func = eval(f"lib.grav_pot")
-    elif c_func == "opencl":
-        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot_ocl.so")  
+        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/grav_pot_cuda.so")  
         func = eval(f"lib.grav_pot")
     else:
-        lib = cdll.LoadLibrary("pythonbody/ffi/grav_pot.so")
-        func = eval(f"lib.grav_pot_{c_func}")
+        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/grav_pot.so")  
+        func = eval(f"lib.grav_pot")
+    
     func.argtypes = [
             c_double * N, # M
             c_double * N, # X1 

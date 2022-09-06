@@ -5,7 +5,7 @@ import numpy as np
 def cummean(data: np.array):
     N = data.shape[0]
     target = (c_double * N)(*np.zeros(N))
-    lib = cdll.LoadLibrary("pythonbody/ffi/cummean.so")
+    lib = cdll.LoadLibrary("pythonbody/ffi/.libs/cummean.so")
     func = lib.cummean
     func.argtypes = [
             c_double * N, # target

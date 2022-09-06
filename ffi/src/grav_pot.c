@@ -3,11 +3,29 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#if HAVE_CL_CL_H == 1
-double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
-#else
-double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+#include "grav_pot.h"
+#if HAVE_CL_OPENCL_H == 1
+
+#define CL_TARGET_OPENCL_VERSION 300
+#include <CL/opencl.h>
 #endif
+
+#define CL_SUCCESS_OR_RETURN(code, where) do { \
+    if (code != CL_SUCCESS) {printf("Err (%d): %s\n",code,where); return code; } \
+}while (0);
+
+double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int n) {
+    #if HAVE_CL_OPENCL_H == 1
+    return grav_pot_ocl(m,x1,x2,x3,EPOT,n);
+    #elif HAVE_OMP_H == 1
+    return grav_pot_omp(m,x1,x2,x3,EPOT,n);
+    #else
+    return grav_pot_omp(m,x1,x2,x3,EPOT,n);
+    #endif
+}
+
+#if HAVE_OMP_H == 1
+double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n) {
 	#pragma omp parallel
 	{
 		double EPOT_thread[n];
@@ -29,17 +47,11 @@ double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int
 		}
 	}
 }
+#endif
 
-#if HAVE_CL_CL_H == 1
-
-#define CL_TARGET_OPENCL_VERSION 300
-#include <CL/opencl.h>
-
-#define CL_SUCCESS_OR_RETURN(code, where) do { \
-    if (code != CL_SUCCESS) {printf("Err (%d): %s\n",code,where); return code; } \
-}while (0);
 
  
+#if HAVE_CL_OPENCL_H == 1
 // OpenCL kernel. Each work item takes care of one element of c
 const char *kernelSource =                                       "\n" \
 "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
@@ -66,7 +78,7 @@ const char *kernelSource =                                       "\n" \
 "}\n\n";
 
 
-double grav_pot(double *m,
+double grav_pot_ocl(double *m,
                 double *x1,
                 double *x2,
                 double *x3,
@@ -110,6 +122,9 @@ double grav_pot(double *m,
  
     // Get ID for the device
     err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
+    if (err != CL_SUCCESS) {
+        err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
+    }
 	
 	CL_SUCCESS_OR_RETURN(err, "clGetDeviceIDs");
  

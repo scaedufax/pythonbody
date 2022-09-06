@@ -88,7 +88,11 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = x86_64-pc-linux-gnu
 host_triplet = x86_64-pc-linux-gnu
-am__append_1 = -lOpenCL  
+am__append_1 = $(OPENMP_LDFLAGS) 
+am__append_2 = $(OPENMP_CFLAGS)
+am__append_3 = $(OPENMP_LDFLAGS) 
+am__append_4 = $(OPENMP_CFLAGS)
+am__append_5 = -lOpenCL 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -248,7 +252,7 @@ CPPFLAGS =
 CSCOPE = cscope
 CTAGS = ctags
 CYGPATH_W = echo
-DEFS = -DPACKAGE_NAME=\"libpythonbody\" -DPACKAGE_TARNAME=\"libpythonbody\" -DPACKAGE_VERSION=\"0.1.0\" -DPACKAGE_STRING=\"libpythonbody\ 0.1.0\" -DPACKAGE_BUGREPORT=\"uli@shad0wfax.de\" -DPACKAGE_URL=\"\" -DPACKAGE=\"libpythonbody\" -DVERSION=\"0.1.0\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_CL_OPENCL_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
+DEFS = -DPACKAGE_NAME=\"libpythonbody\" -DPACKAGE_TARNAME=\"libpythonbody\" -DPACKAGE_VERSION=\"0.1.0\" -DPACKAGE_STRING=\"libpythonbody\ 0.1.0\" -DPACKAGE_BUGREPORT=\"uli@shad0wfax.de\" -DPACKAGE_URL=\"\" -DPACKAGE=\"libpythonbody\" -DVERSION=\"0.1.0\" -DHAVE_STDIO_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_STRINGS_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_UNISTD_H=1 -DSTDC_HEADERS=1 -DHAVE_OMP_H=1 -DHAVE_CL_OPENCL_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
 DLLTOOL = false
 DSYMUTIL = 
@@ -358,11 +362,11 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign subdir-objects
 lib_LTLIBRARIES = libgrav_pot.la libcummean.la
 libgrav_pot_la_SOURCES = src/grav_pot.c
-libgrav_pot_la_LDFLAGS = $(OPENMP_LDFLAGS) $(am__append_1)
-libgrav_pot_la_CFLAGS = $(OPENMP_CFLAGS)
+libgrav_pot_la_LDFLAGS = $(am__append_1) $(am__append_5)
+libgrav_pot_la_CFLAGS = $(am__append_2)
+libcummean_la_LDFLAGS = $(am__append_3)
+libcummean_la_CFLAGS = $(am__append_4)
 libcummean_la_SOURCES = src/cummean.c
-libcummean_la_LDFLAGS = $(OPENMP_LDFLAGS) 
-libcummean_la_CFLAGS = $(OPENMP_CFLAGS)
 all: all-am
 
 .SUFFIXES:

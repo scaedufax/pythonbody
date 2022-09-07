@@ -4,9 +4,10 @@
 #include <omp.h>
 
 #include "grav_pot.h"
+
 #if HAVE_CL_OPENCL_H == 1
 
-#define CL_TARGET_OPENCL_VERSION 300
+#define CL_TARGET_OPENCL_VERSION 200
 #include <CL/opencl.h>
 #endif
 
@@ -125,6 +126,12 @@ double grav_pot_ocl(double *m,
     if (err != CL_SUCCESS) {
         err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
     }
+
+	/*char vendor[128];
+	char name[128];
+	clGetPlatformInfo(cpPlatform, CL_PLATFORM_VENDOR, 128*sizeof(char), vendor, NULL);
+	clGetPlatformInfo(cpPlatform, CL_PLATFORM_NAME, 128*sizeof(char), name, NULL);
+	printf("%s %s\n",vendor,name);*/
 	
 	CL_SUCCESS_OR_RETURN(err, "clGetDeviceIDs");
  

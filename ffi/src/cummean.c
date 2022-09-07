@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #if HAVE_CL_OPENCL_H == 1
-#define CL_TARGET_OPENCL_VERSION 300
+#define CL_TARGET_OPENCL_VERSION 200
 #include <CL/opencl.h>
 #define CL_SUCCESS_OR_RETURN(code, where) do { \
     if (code != CL_SUCCESS) {printf("Err (%d): %s\n",code,where); return code; } \
@@ -86,6 +86,7 @@ double cummean_ocl(double *target,
     // Get ID for the device
     err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
     if (err != CL_SUCCESS) {
+		printf("Warning, need to use CPU as fallback device");
         err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
     }
 	

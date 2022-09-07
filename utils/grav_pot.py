@@ -6,7 +6,7 @@ import numpy as np
 def grav_pot(data: pd.DataFrame,
              G: float = 1,
              num_threads: int = None,
-             c_func = "ocl"
+             c_func = "ocl",
              ):
     if c_func not in ["ocl","omp","unthreaded", None]:
         raise ValueError("c_func must be either cuda, ocl, omp, unthreaded or None")
@@ -42,7 +42,7 @@ def grav_pot(data: pd.DataFrame,
                 (c_double * N)(*data["X3"].values),
                 EPOT,
                 N,
-                num_threads
+                num_threads,
                 )
     return np.array(EPOT)
 

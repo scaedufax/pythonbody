@@ -237,13 +237,13 @@ distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} '/media/stuff/nbody/pythonbody/ffi/missing' aclocal-1.16
+ACLOCAL = ${SHELL} '/media/stuff_win/nbody/pythonbody/ffi/missing' aclocal-1.16
 AMTAR = $${TAR-tar}
 AM_DEFAULT_VERBOSITY = 1
 AR = ar
-AUTOCONF = ${SHELL} '/media/stuff/nbody/pythonbody/ffi/missing' autoconf
-AUTOHEADER = ${SHELL} '/media/stuff/nbody/pythonbody/ffi/missing' autoheader
-AUTOMAKE = ${SHELL} '/media/stuff/nbody/pythonbody/ffi/missing' automake-1.16
+AUTOCONF = ${SHELL} '/media/stuff_win/nbody/pythonbody/ffi/missing' autoconf
+AUTOHEADER = ${SHELL} '/media/stuff_win/nbody/pythonbody/ffi/missing' autoheader
+AUTOMAKE = ${SHELL} '/media/stuff_win/nbody/pythonbody/ffi/missing' automake-1.16
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
@@ -280,7 +280,7 @@ LIPO =
 LN_S = ln -s
 LTLIBOBJS = 
 LT_SYS_LIBRARY_PATH = 
-MAKEINFO = ${SHELL} '/media/stuff/nbody/pythonbody/ffi/missing' makeinfo
+MAKEINFO = ${SHELL} '/media/stuff_win/nbody/pythonbody/ffi/missing' makeinfo
 MANIFEST_TOOL = :
 MKDIR_P = /usr/bin/mkdir -p
 NM = /usr/bin/nm -B
@@ -304,10 +304,10 @@ SET_MAKE =
 SHELL = /bin/sh
 STRIP = strip
 VERSION = 0.1.0
-abs_builddir = /media/stuff/nbody/pythonbody/ffi
-abs_srcdir = /media/stuff/nbody/pythonbody/ffi
-abs_top_builddir = /media/stuff/nbody/pythonbody/ffi
-abs_top_srcdir = /media/stuff/nbody/pythonbody/ffi
+abs_builddir = /media/stuff_win/nbody/pythonbody/ffi
+abs_srcdir = /media/stuff_win/nbody/pythonbody/ffi
+abs_top_builddir = /media/stuff_win/nbody/pythonbody/ffi
+abs_top_srcdir = /media/stuff_win/nbody/pythonbody/ffi
 ac_ct_AR = ar
 ac_ct_CC = gcc
 ac_ct_DUMPBIN = 
@@ -327,7 +327,6 @@ datadir = ${datarootdir}
 datarootdir = ${prefix}/share
 docdir = ${datarootdir}/doc/${PACKAGE_TARNAME}
 dvidir = ${docdir}
-enable_cuda = 
 exec_prefix = ${prefix}
 host = x86_64-pc-linux-gnu
 host_alias = 
@@ -337,7 +336,7 @@ host_vendor = pc
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /media/stuff/nbody/pythonbody/ffi/install-sh
+install_sh = ${SHELL} /media/stuff_win/nbody/pythonbody/ffi/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -888,8 +887,6 @@ uninstall-am: uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
-
-#nvcc --compiler-options '-fPIC' -o .libs/grav_pot_cuda.so --shared src/grav_pot.cu
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

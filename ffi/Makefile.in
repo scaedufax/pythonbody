@@ -327,7 +327,6 @@ datadir = @datadir@
 datarootdir = @datarootdir@
 docdir = @docdir@
 dvidir = @dvidir@
-enable_cuda = @enable_cuda@
 exec_prefix = @exec_prefix@
 host = @host@
 host_alias = @host_alias@
@@ -888,8 +887,6 @@ uninstall-am: uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
-
-@NVCC_TRUE@nvcc --compiler-options '-fPIC' -o .libs/grav_pot_cuda.so --shared src/grav_pot.cu
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

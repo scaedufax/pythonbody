@@ -19,7 +19,3 @@ libgrav_pot_la_LDFLAGS += -lOpenCL
 endif
 
 libcummean_la_SOURCES = src/cummean.c
-
-if NVCC
-nvcc --compiler-options '-fPIC' -o .libs/grav_pot_cuda.so --shared src/grav_pot.cu
-endif

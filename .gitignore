@@ -5,6 +5,8 @@ __pycache__
 **/*.la
 **/*.lo
 **/*.tar.gz
+.*
+**/.*
 
 **/.deps
 **/.libs

@@ -3,6 +3,7 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign subdir-objects
 lib_LTLIBRARIES = libgrav_pot.la libcummean.la
 libgrav_pot_la_SOURCES = src/grav_pot.c
+libcummean_la_SOURCES = src/cummean.c
 libgrav_pot_la_LDFLAGS =
 libgrav_pot_la_CFLAGS =
 libcummean_la_LDFLAGS =
@@ -16,6 +17,6 @@ endif
 
 if OPENCL
 libgrav_pot_la_LDFLAGS += -lOpenCL 
+libcummean_la_LDFLAGS += -lOpenCL 
 endif
 
-libcummean_la_SOURCES = src/cummean.c

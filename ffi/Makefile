@@ -93,6 +93,7 @@ am__append_2 = $(OPENMP_CFLAGS)
 am__append_3 = $(OPENMP_LDFLAGS) 
 am__append_4 = $(OPENMP_CFLAGS)
 am__append_5 = -lOpenCL 
+am__append_6 = -lOpenCL 
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -361,11 +362,11 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign subdir-objects
 lib_LTLIBRARIES = libgrav_pot.la libcummean.la
 libgrav_pot_la_SOURCES = src/grav_pot.c
+libcummean_la_SOURCES = src/cummean.c
 libgrav_pot_la_LDFLAGS = $(am__append_1) $(am__append_5)
 libgrav_pot_la_CFLAGS = $(am__append_2)
-libcummean_la_LDFLAGS = $(am__append_3)
+libcummean_la_LDFLAGS = $(am__append_3) $(am__append_6)
 libcummean_la_CFLAGS = $(am__append_4)
-libcummean_la_SOURCES = src/cummean.c
 all: all-am
 
 .SUFFIXES:

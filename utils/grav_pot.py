@@ -6,9 +6,9 @@ import numpy as np
 def grav_pot(data: pd.DataFrame,
              G: float = 1,
              num_threads: int = None,
-             c_func = "cuda"
+             c_func = "ocl"
              ):
-    if c_func not in ["cuda","ocl","omp","unthreaded", None]:
+    if c_func not in ["ocl","omp","unthreaded", None]:
         raise ValueError("c_func must be either cuda, ocl, omp, unthreaded or None")
 
     if num_threads is None:
@@ -19,15 +19,11 @@ def grav_pot(data: pd.DataFrame,
     EPOT = (c_double * N)(*np.zeros(N))
     lib = None
     func = None
-    if c_func == "cuda" and pathlib.Path("pythonbody/ffi/.libs/libgrav_pot_cuda.so").is_file():
-        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libgrav_pot_cuda.so")  
-        func = eval(f"lib.grav_pot")
+    lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libgrav_pot.so")
+    if c_func is not None:
+        func = eval(f"lib.grav_pot_{c_func}")
     else:
-        lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libgrav_pot.so")
-        if c_func is not None:
-            func = eval(f"lib.grav_pot_{c_func}")
-        else:
-            func = eval(f"lib.grav_pot")
+        func = eval(f"lib.grav_pot")
     
     func.argtypes = [
             c_double * N, # M

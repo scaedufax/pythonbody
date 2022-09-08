@@ -22,6 +22,7 @@ class snap(pd.DataFrame):
             self._load_files()
 
         self.cluster_data = None;
+        self.binary_data = None;
         self.RDENS = None
             
         #if self.files is not None:
@@ -53,6 +54,11 @@ class snap(pd.DataFrame):
         else:
             return super().__getitem__(value)
 
+    """def __repr__(self):
+        if self.cluster_data is not None:
+            return self.cluster_data.__repr__()
+        else:
+            super().__repr__()"""
 
     @property
     def reduced(self):
@@ -63,6 +69,11 @@ class snap(pd.DataFrame):
     def load_cluster(self, time):
         if self.shape == (0,3):
             self._load_files()
+        
+        add_cols = {
+                    "K*": "031 KW",
+                    "NAME": "032 Name"
+                   }
 
         f = h5py.File(self.loc[time]["file"],"r")
         self.cluster_data =  pd.DataFrame({
@@ -74,11 +85,39 @@ class snap(pd.DataFrame):
             "V2": f["Step#" + self.loc[time]["step"]]["005 V2"][:],
             "V3": f["Step#" + self.loc[time]["step"]]["006 V3"][:],
             })
+        for col in add_cols.keys():
+            print(f["Step#" + self.loc[time]["step"]].keys(), "031 KW" in f["Step#" + self.loc[time]["step"]].keys())
+            if add_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
+                self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][add_cols[col]][:]
+        
+        self.binary_data =  pd.DataFrame({
+            "cmX1": f["Step#" + self.loc[time]["step"]]["101 Bin cm X1"][:],
+            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"][:],
+            "cmX3": f["Step#" + self.loc[time]["step"]]["103 Bin cm X3"][:],
+            "cmV1": f["Step#" + self.loc[time]["step"]]["104 Bin cm V1"][:],
+            "cmV2": f["Step#" + self.loc[time]["step"]]["105 Bin cm V2"][:],
+            "cmV3": f["Step#" + self.loc[time]["step"]]["106 Bin cm V3"][:],
+            "relX1": f["Step#" + self.loc[time]["step"]]["125 Bin rel X1"][:],
+            "relX2": f["Step#" + self.loc[time]["step"]]["126 Bin rel X2"][:],
+            "relX3": f["Step#" + self.loc[time]["step"]]["127 Bin rel X3"][:],
+            "relV1": f["Step#" + self.loc[time]["step"]]["128 Bin rel V1"][:],
+            "relV2": f["Step#" + self.loc[time]["step"]]["129 Bin rel V2"][:],
+            "relV3": f["Step#" + self.loc[time]["step"]]["130 Bin rel V3"][:],
+            "K*1": f["Step#" + self.loc[time]["step"]]["158 Bin KW1"][:],
+            "K*2": f["Step#" + self.loc[time]["step"]]["159 Bin KW2"][:],
+            "NAME1": f["Step#" + self.loc[time]["step"]]["161 Bin Name1"][:],
+            "NAME2": f["Step#" + self.loc[time]["step"]]["162 Bin Name2"][:],
+
+            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"][:],
+            
+            })
+
         self.RDENS = [
                         f["Step#" + self.loc[time]["step"]]["000 Scalars"][6],
                         f["Step#" + self.loc[time]["step"]]["000 Scalars"][7],
                         f["Step#" + self.loc[time]["step"]]["000 Scalars"][8],
                      ]
+        f.close()
         return self.cluster_data
 
     def calc_spherical_coords(self):

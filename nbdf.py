@@ -9,6 +9,19 @@ class nbdf(pd.DataFrame):
         """
         checks if passed value(s) are in currently loaded dataframe, otherwise returns snap list data
         """
+        #try:
+        #    return super().__getitem__(value)
+        #except:
+        #    pass
+        try:
+            return super().loc[value.values[:,0]]
+        except:
+            pass
+        try:
+            return super().loc[:,value]
+        except:
+            pass
+
         if type(value) != list:
             value = [value]
 

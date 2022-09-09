@@ -8,26 +8,24 @@ from tqdm import tqdm
 import re
 
 from pythonbody.utils import cummean
+#from pythonbody import nbdf
+from pythonbody.snap.binaries import binaries
+from pythonbody.snap.singles import singles
         
-import time
-
 class snap(pd.DataFrame):
     def __init__(self, data_path = None):
         super().__init__(columns=["time","file","step"])
         self.data_path = data_path
         
         self.files = None
+        self.time = None
         if self.data_path is not None:
             self.files = sorted(glob.glob(self.data_path + "/snap*"))
             self._load_files()
 
         self.cluster_data = None;
-        self.binary_data = None;
-        self.RDENS = None
-            
-        #if self.files is not None:
-        #    self._load_files()
-        #    self.sort_values("time",inplace=True)
+        self.binary_data = None; 
+        self.singles_data = None
 
     def __getitem__(self, value):
         """
@@ -66,58 +64,66 @@ class snap(pd.DataFrame):
             self._load_files()
         return self[self["time"] == self["time"].values.astype(int)]
 
+    @property
+    def binaries(self, t=0):
+        if self.binary_data is None:
+            self.load_cluster(t)
+        return self.binary_data
+    @property
+    def singles(self, t=0):
+        if self.singles_data is None:
+            self.load_cluster(t)
+        return self.singles_data
+
     def load_cluster(self, time):
         if self.shape == (0,3):
             self._load_files()
+
+        self.time = time
         
         add_cols = {
                     "K*": "031 KW",
-                    "NAME": "032 Name"
+                    "NAME": "032 Name",
+                    "Type": "033 Type",
                    }
 
         f = h5py.File(self.loc[time]["file"],"r")
         self.cluster_data =  pd.DataFrame({
-            "M":  f["Step#" + self.loc[time]["step"]]["023 M"][:],
-            "X1": f["Step#" + self.loc[time]["step"]]["001 X1"][:],
-            "X2": f["Step#" + self.loc[time]["step"]]["002 X2"][:],
-            "X3": f["Step#" + self.loc[time]["step"]]["003 X3"][:],
-            "V1": f["Step#" + self.loc[time]["step"]]["004 V1"][:],
-            "V2": f["Step#" + self.loc[time]["step"]]["005 V2"][:],
-            "V3": f["Step#" + self.loc[time]["step"]]["006 V3"][:],
+            "M":  f["Step#" + self.loc[time]["step"]]["023 M"],
+            "X1": f["Step#" + self.loc[time]["step"]]["001 X1"],
+            "X2": f["Step#" + self.loc[time]["step"]]["002 X2"],
+            "X3": f["Step#" + self.loc[time]["step"]]["003 X3"],
+            "V1": f["Step#" + self.loc[time]["step"]]["004 V1"],
+            "V2": f["Step#" + self.loc[time]["step"]]["005 V2"],
+            "V3": f["Step#" + self.loc[time]["step"]]["006 V3"],
             })
         for col in add_cols.keys():
-            print(f["Step#" + self.loc[time]["step"]].keys(), "031 KW" in f["Step#" + self.loc[time]["step"]].keys())
             if add_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
                 self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][add_cols[col]][:]
         
-        self.binary_data =  pd.DataFrame({
-            "cmX1": f["Step#" + self.loc[time]["step"]]["101 Bin cm X1"][:],
-            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"][:],
-            "cmX3": f["Step#" + self.loc[time]["step"]]["103 Bin cm X3"][:],
-            "cmV1": f["Step#" + self.loc[time]["step"]]["104 Bin cm V1"][:],
-            "cmV2": f["Step#" + self.loc[time]["step"]]["105 Bin cm V2"][:],
-            "cmV3": f["Step#" + self.loc[time]["step"]]["106 Bin cm V3"][:],
-            "relX1": f["Step#" + self.loc[time]["step"]]["125 Bin rel X1"][:],
-            "relX2": f["Step#" + self.loc[time]["step"]]["126 Bin rel X2"][:],
-            "relX3": f["Step#" + self.loc[time]["step"]]["127 Bin rel X3"][:],
-            "relV1": f["Step#" + self.loc[time]["step"]]["128 Bin rel V1"][:],
-            "relV2": f["Step#" + self.loc[time]["step"]]["129 Bin rel V2"][:],
-            "relV3": f["Step#" + self.loc[time]["step"]]["130 Bin rel V3"][:],
-            "K*1": f["Step#" + self.loc[time]["step"]]["158 Bin KW1"][:],
-            "K*2": f["Step#" + self.loc[time]["step"]]["159 Bin KW2"][:],
-            "NAME1": f["Step#" + self.loc[time]["step"]]["161 Bin Name1"][:],
-            "NAME2": f["Step#" + self.loc[time]["step"]]["162 Bin Name2"][:],
-
-            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"][:],
-            
+        self.binary_data =  binaries({
+            "M1": f["Step#" + self.loc[time]["step"]]["123 Bin M1*"],
+            "M2": f["Step#" + self.loc[time]["step"]]["124 Bin M2*"],
+            "cmX1": f["Step#" + self.loc[time]["step"]]["101 Bin cm X1"],
+            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"],
+            "cmX3": f["Step#" + self.loc[time]["step"]]["103 Bin cm X3"],
+            "cmV1": f["Step#" + self.loc[time]["step"]]["104 Bin cm V1"],
+            "cmV2": f["Step#" + self.loc[time]["step"]]["105 Bin cm V2"],
+            "cmV3": f["Step#" + self.loc[time]["step"]]["106 Bin cm V3"],
+            "relX1": f["Step#" + self.loc[time]["step"]]["125 Bin rel X1"],
+            "relX2": f["Step#" + self.loc[time]["step"]]["126 Bin rel X2"],
+            "relX3": f["Step#" + self.loc[time]["step"]]["127 Bin rel X3"],
+            "relV1": f["Step#" + self.loc[time]["step"]]["128 Bin rel V1"],
+            "relV2": f["Step#" + self.loc[time]["step"]]["129 Bin rel V2"],
+            "relV3": f["Step#" + self.loc[time]["step"]]["130 Bin rel V3"],
+            "K*1": f["Step#" + self.loc[time]["step"]]["158 Bin KW1"],
+            "K*2": f["Step#" + self.loc[time]["step"]]["159 Bin KW2"],
+            "NAME1": f["Step#" + self.loc[time]["step"]]["161 Bin Name1"],
+            "NAME2": f["Step#" + self.loc[time]["step"]]["162 Bin Name2"], 
             })
 
-        self.RDENS = [
-                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][6],
-                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][7],
-                        f["Step#" + self.loc[time]["step"]]["000 Scalars"][8],
-                     ]
-        f.close()
+        self.singles_data = singles(self.cluster_data, self.binary_data)
+
         return self.cluster_data
 
     def calc_spherical_coords(self):

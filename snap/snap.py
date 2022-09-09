@@ -8,7 +8,7 @@ from tqdm import tqdm
 import re
 
 from pythonbody.utils import cummean
-#from pythonbody import nbdf
+from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import binaries
 from pythonbody.snap.singles import singles
         
@@ -23,9 +23,10 @@ class snap(pd.DataFrame):
             self.files = sorted(glob.glob(self.data_path + "/snap*"))
             self._load_files()
 
-        self.cluster_data = None;
-        self.binary_data = None; 
+        self.cluster_data = None
+        self.binary_data = None 
         self.singles_data = None
+        self.time_evolution_data = None
 
     def __getitem__(self, value):
         """
@@ -74,6 +75,44 @@ class snap(pd.DataFrame):
         if self.singles_data is None:
             self.load_cluster(t)
         return self.singles_data
+
+    def calc_time_evolution_data(self, RLAGRS=None):
+        if RLAGRS is None:
+            RLAGRS = [0.001,
+                     0.003,
+                     0.005,
+                     0.01,
+                     0.03,
+                     0.05,
+                     0.1,
+                     0.2,
+                     0.3,
+                     0.4,
+                     0.5,
+                     0.6,
+                     0.7,
+                     0.8,
+                     0.9,
+                     0.95,
+                     0.99]
+        self.time_evolution_data = {
+                "RLAGR_BH": nbdf(),
+                "E": nbdf(),
+                }
+        for i,r in tqdm(self.iterrows(), total=self.shape[0]):
+            self.load_cluster(i)
+            self.calc_R()
+            self.calc_M_over_MT()
+            self.singles.calc_R()
+            self.singles.calc_M_over_MT()
+            self.binaries.calc_Eb()
+            for rlagr in RLAGRS:
+                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.singles.filter("BH")[self.singles.filter("BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries.filter("BH-BH").shape[0]
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries.filter("BH-BH")["Eb"].sum()
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries.filter("BH-BH")["Eb"].mean()
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_std"] = self.binaries.filter("BH-BH")["Eb"].std()
+
 
     def load_cluster(self, time):
         if self.shape == (0,3):
@@ -145,6 +184,7 @@ class snap(pd.DataFrame):
         self.cluster_data.loc[mask,"PHI"] = np.pi/2
         mask = (self.cluster_data["X1"] == 0) & (self.cluster_data["X2"] < 0)
         self.cluster_data.loc[mask,"PHI"] = -np.pi/2
+        self.cluster_data["R/Rt"] = self.cluster_data["R"]/self.cluster_data["R"].max()
 
         self.cluster_data.sort_values("R",ignore_index=True,inplace=True)
 

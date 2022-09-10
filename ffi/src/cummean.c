@@ -33,15 +33,14 @@ const char *kernelSource =                                       "\n" \
 "                                int n)                           \n" \
 "{                                                                \n" \
 "    //Get our global thread ID                                   \n" \
-"    int id = get_global_id(0);                                   \n" \
-"    int i  = id;                                                 \n" \
+"    int i = get_global_id(0);                                    \n" \
 "    double mean = 0.0;                                           \n" \
 "    //Make sure we do not go out of bounds                       \n" \
-"    if (id < n) {                                                \n" \
+"    if (i < n) {                                                 \n" \
 "       for (int j = 0; j <= i; j++) {                            \n" \
 "           mean += src[j];                                       \n" \
 "       }                                                         \n" \
-"       target[id] = mean/(i+1);                                     \n" \
+"    target[i] = mean/(i+1);                                      \n" \
 "    }                                                            \n" \
 "}\n\n";
 

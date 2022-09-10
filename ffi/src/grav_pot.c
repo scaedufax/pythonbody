@@ -61,21 +61,21 @@ const char *kernelSource =                                       "\n" \
 "                                __global double *x2,             \n" \
 "                                __global double *x3,             \n" \
 "                                __global double *EPOT,           \n" \
-"                                int n)                 \n" \
-"{                                                               \n" \
-"    //Get our global thread ID                                  \n" \
-"    int id = get_global_id(0);                                  \n" \
-"    int i  = id;                                  \n" \
-"    double EPOT_i = 0.0;                                              \n" \
-"    //Make sure we do not go out of bounds                      \n" \
-"    if (id < n) {\n" \
-"       for (int j = 0; j < n; j++) {\n" \
-"		   if (i == j) continue;\n" \
+"                                int n)                           \n" \
+"{                                                                \n" \
+"    //Get our global thread ID                                   \n" \
+"    int id = get_global_id(0);                                   \n" \
+"    int i  = id;                                                 \n" \
+"    double EPOT_i = 0.0;                                         \n" \
+"    //Make sure we do not go out of bounds                       \n" \
+"    if (id < n) {                                                \n" \
+"       for (int j = 0; j < n; j++) {                             \n" \
+"		   if (i == j) continue;                                  \n" \
 "           double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));\n" \
-"           EPOT_i +=  -m[i]*m[j]/dist;\n" \
-"       }\n" \
-"      EPOT[id] = EPOT_i; \n" \
-"    }                                                           \n" \
+"           EPOT_i +=  -m[i]*m[j]/dist;                           \n" \
+"       }                                                         \n" \
+"      EPOT[id] = EPOT_i;                                         \n" \
+"    }                                                            \n" \
 "}\n\n";
 
 

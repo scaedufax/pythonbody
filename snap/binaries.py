@@ -8,7 +8,10 @@ class binaries(nbdf):
         super().__init__(*args,**kwargs)
         warnings.filterwarnings("ignore", category=UserWarning)
         self.filters = ["BH-BH", "BH-Any"]
-    def calc_Eb(self, G=1):
+    def calc_Eb(self, G=4.30091e-3):
+        """
+        see http://web.pd.astro.it/mapelli/colldyn3.pdf
+        """
         self["Eb"] = ((0.5*self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values * np.linalg.norm(self[["relV1", "relV2", "relV3"]],axis=1)) - (G*(self["M1"].values*self["M2"].values)/(np.linalg.norm(self[["relX1", "relX2", "relX3"]],axis=1)))
         return self["Eb"]
 

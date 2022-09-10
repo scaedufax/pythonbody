@@ -6,6 +6,7 @@ import h5py
 import sys
 from tqdm import tqdm
 import re
+import pathlib
 
 from pythonbody.utils import cummean
 from pythonbody.nbdf import nbdf
@@ -15,7 +16,10 @@ from pythonbody.snap.singles import singles
 class snap(pd.DataFrame):
     def __init__(self, data_path = None):
         super().__init__(columns=["time","file","step"])
+        if not pathlib.Path(data_path).is_dir():
+            raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
+
         
         self.files = None
         self.time = None
@@ -75,8 +79,13 @@ class snap(pd.DataFrame):
         if self.singles_data is None:
             self.load_cluster(t)
         return self.singles_data
+    @property
+    def time_evolution(self):
+        if self.time_evolution_data is None:
+            self.calc_time_evolution_data()
+        return self.time_evolution_data
 
-    def calc_time_evolution_data(self, RLAGRS=None):
+    def calculate_time_evolution(self, RLAGRS=None):
         if RLAGRS is None:
             RLAGRS = [0.001,
                      0.003,
@@ -94,7 +103,8 @@ class snap(pd.DataFrame):
                      0.8,
                      0.9,
                      0.95,
-                     0.99]
+                     0.99,
+                     1.0]
         self.time_evolution_data = {
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),

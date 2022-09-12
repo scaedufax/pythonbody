@@ -4,6 +4,7 @@
 #include <omp.h>
 
 #include "grav_pot.h"
+#include "ocl.h"
 
 #if HAVE_CL_OPENCL_H == 1
 
@@ -53,8 +54,11 @@ double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT,
 
  
 #if HAVE_CL_OPENCL_H == 1
+cl_program ocl_program_grav_pot;
+cl_kernel ocl_kernel_grav_pot;
+
 // OpenCL kernel. Each work item takes care of one element of c
-const char *kernelSource =                                       "\n" \
+const char *kernel_source_grav_pot =                                       "\n" \
 "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
 "__kernel void grav_pot_kernel(  __global double *m,              \n" \
 "                                __global double *x1,             \n" \
@@ -78,6 +82,31 @@ const char *kernelSource =                                       "\n" \
 "    }                                                            \n" \
 "}\n\n";
 
+int ocl_init_grav_pot(void) {
+	cl_int err;
+    // Create the compute program from the source buffer
+    ocl_program_grav_pot = clCreateProgramWithSource(ocl_context, 1,
+                            (const char **) & kernel_source_grav_pot, NULL, &err);
+    CL_SUCCESS_OR_RETURN(err, "clCreateProgramWithSource");
+
+    // Build the program executable
+    clBuildProgram(ocl_program_grav_pot, 0, NULL, NULL, NULL, NULL);
+
+    /*char build_log[4096];
+    err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, (size_t) 4096, build_log, NULL);
+    printf("%s", build_log);
+    CL_SUCCESS_OR_RETURN(err, "clGetProgramBuildInfo");*/
+
+    // Create the compute kernel in the program we wish to run
+    ocl_kernel_grav_pot = clCreateKernel(ocl_program_grav_pot, "grav_pot_kernel", &err);
+    CL_SUCCESS_OR_RETURN(err, "clCreateKernel");
+    return CL_SUCCESS;
+}
+    
+void ocl_free_grav_pot(void) {
+    clReleaseProgram(ocl_program_grav_pot);
+    clReleaseKernel(ocl_kernel_grav_pot);
+}
 
 double grav_pot_ocl(double *m,
                 double *x1,
@@ -93,15 +122,6 @@ double grav_pot_ocl(double *m,
     cl_mem l_x3;
     cl_mem l_EPOT;
     
-    cl_platform_id cpPlatform;        // OpenCL platform
-    cl_device_id device_id;           // device ID
-    cl_context context;               // context
-    cl_command_queue queue;           // command queue
-    cl_program program;               // program
-    cl_kernel kernel;                 // kernel
-									  //
-    //const char* kernelSource = Read_Source_File("./grav_pot_cl_kernel.c");
-
 	unsigned int N = (unsigned int) n;
     
     size_t bytes = n*sizeof(double);
@@ -114,90 +134,49 @@ double grav_pot_ocl(double *m,
  
     // Number of total work items - localSize must be devisor
     //globalSize = ceil(n/(float)localSize)*localSize;
-    globalSize = (((int) (n/localSize)) + 1)*localSize;
-    
-    // Bind to platform
-    err = clGetPlatformIDs(1, &cpPlatform, NULL);
-	
-	CL_SUCCESS_OR_RETURN(err, "clGetPlatfromIDs");
- 
-    // Get ID for the device
-    err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_GPU, 1, &device_id, NULL);
-    if (err != CL_SUCCESS) {
-        err = clGetDeviceIDs(cpPlatform, CL_DEVICE_TYPE_CPU, 1, &device_id, NULL);
-    }
-
-	/*char vendor[128];
-	char name[128];
-	clGetPlatformInfo(cpPlatform, CL_PLATFORM_VENDOR, 128*sizeof(char), vendor, NULL);
-	clGetPlatformInfo(cpPlatform, CL_PLATFORM_NAME, 128*sizeof(char), name, NULL);
-	printf("%s %s\n",vendor,name);*/
-	
-	CL_SUCCESS_OR_RETURN(err, "clGetDeviceIDs");
- 
-    // Create a context 
-    context = clCreateContext(0, 1, &device_id, NULL, NULL, &err);
- 
-    // Create a command queue
-    queue = clCreateCommandQueueWithProperties(context, device_id, 0, &err);
- 
-    // Create the compute program from the source buffer
-    program = clCreateProgramWithSource(context, 1,
-                            (const char **) & kernelSource, NULL, &err);
-	CL_SUCCESS_OR_RETURN(err, "clCreateProgramWithSource");
- 
-    // Build the program executable
-    clBuildProgram(program, 0, NULL, NULL, NULL, NULL);
-
-	/*char build_log[4096];
-    err = clGetProgramBuildInfo(program, device_id, CL_PROGRAM_BUILD_LOG, (size_t) 4096, build_log, NULL);
-	printf("%s", build_log);
-	CL_SUCCESS_OR_RETURN(err, "clGetProgramBuildInfo");*/
- 
-    // Create the compute kernel in the program we wish to run
-    kernel = clCreateKernel(program, "grav_pot_kernel", &err);
-	CL_SUCCESS_OR_RETURN(err, "clCreateKernel");
- 
+    //globalSize = (((int) (n/localSize)) + 1)*localSize;
+	globalSize = N;
+     
     // Create the input and output arrays in device memory for our calculation
-    l_m = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
-    l_x1 = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
-    l_x2 = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
-    l_x3 = clCreateBuffer(context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
-    l_EPOT = clCreateBuffer(context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL);
+    l_m = clCreateBuffer(ocl_context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
+    l_x1 = clCreateBuffer(ocl_context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
+    l_x2 = clCreateBuffer(ocl_context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
+    l_x3 = clCreateBuffer(ocl_context, CL_MEM_READ_ONLY, bytes, NULL, NULL);
+    l_EPOT = clCreateBuffer(ocl_context, CL_MEM_WRITE_ONLY, bytes, NULL, NULL);
     
-    err = clEnqueueWriteBuffer(queue, l_m, CL_TRUE, 0,
+    err = clEnqueueWriteBuffer(ocl_queue, l_m, CL_TRUE, 0,
                                    bytes, m, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(queue, l_x1, CL_TRUE, 0,
+    err |= clEnqueueWriteBuffer(ocl_queue, l_x1, CL_TRUE, 0,
                                    bytes, x1, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(queue, l_x2, CL_TRUE, 0,
+    err |= clEnqueueWriteBuffer(ocl_queue, l_x2, CL_TRUE, 0,
                                    bytes, x2, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(queue, l_x3, CL_TRUE, 0,
+    err |= clEnqueueWriteBuffer(ocl_queue, l_x3, CL_TRUE, 0,
                                    bytes, x3, 0, NULL, NULL);
-    err |= clEnqueueWriteBuffer(queue, l_EPOT, CL_TRUE, 0,
+    err |= clEnqueueWriteBuffer(ocl_queue, l_EPOT, CL_TRUE, 0,
                                    bytes, EPOT, 0, NULL, NULL);
 
 	CL_SUCCESS_OR_RETURN(err, "clEngueueWriteBuffer");
     
     // Set the arguments to our compute kernel
-    err  = clSetKernelArg(kernel, 0, sizeof(cl_mem), &l_m);
-    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &l_x1);
-    err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &l_x2);
-    err |= clSetKernelArg(kernel, 3, sizeof(cl_mem), &l_x3);
-    err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &l_EPOT);
-    err |= clSetKernelArg(kernel, 5, sizeof(int), &n);
+    err  = clSetKernelArg(ocl_kernel_grav_pot, 0, sizeof(cl_mem), &l_m);
+    err |= clSetKernelArg(ocl_kernel_grav_pot, 1, sizeof(cl_mem), &l_x1);
+    err |= clSetKernelArg(ocl_kernel_grav_pot, 2, sizeof(cl_mem), &l_x2);
+    err |= clSetKernelArg(ocl_kernel_grav_pot, 3, sizeof(cl_mem), &l_x3);
+    err |= clSetKernelArg(ocl_kernel_grav_pot, 4, sizeof(cl_mem), &l_EPOT);
+    err |= clSetKernelArg(ocl_kernel_grav_pot, 5, sizeof(int), &n);
 	
 	CL_SUCCESS_OR_RETURN(err, "clSetKernelArg");
  
     // Execute the kernel over the entire range of the data set 
-    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &globalSize, &localSize,
+    err = clEnqueueNDRangeKernel(ocl_queue, ocl_kernel_grav_pot, 1, NULL, &globalSize, NULL,
                                                               0, NULL, NULL);
 	CL_SUCCESS_OR_RETURN(err, "clEnqueueNDRangeKernel");
  
     // Wait for the command queue to get serviced before reading back results
-    clFinish(queue);
+    clFinish(ocl_queue);
  
     // Read the results from the device
-    clEnqueueReadBuffer(queue, l_EPOT, CL_TRUE, 0,
+    clEnqueueReadBuffer(ocl_queue, l_EPOT, CL_TRUE, 0,
                                 bytes, EPOT, 0, NULL, NULL );
  
     //Sum up vector c and print result divided by n, this should equal 1 within error
@@ -208,10 +187,6 @@ double grav_pot_ocl(double *m,
     clReleaseMemObject(l_x2);
     clReleaseMemObject(l_x3);
     clReleaseMemObject(l_EPOT);
-    clReleaseProgram(program);
-    clReleaseKernel(kernel);
-    clReleaseCommandQueue(queue);
-    clReleaseContext(context);
 
 }
 #endif

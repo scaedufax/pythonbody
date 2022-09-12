@@ -8,7 +8,8 @@ from tqdm import tqdm
 import re
 import pathlib
 
-from pythonbody.utils import cummean
+#from pythonbody.utils import cummean
+from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import binaries
 from pythonbody.snap.singles import singles
@@ -262,7 +263,7 @@ class snap(pd.DataFrame):
         if not "VROT" in self.cluster_data.columns:
             self.calc_VROT()
 
-        self.cluster_data["VROT_CUMMEAN"] = cummean(self.cluster_data["VROT"].values)
+        self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
         #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
 
 

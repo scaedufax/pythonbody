@@ -7,6 +7,11 @@ AC_OPENMP
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_FILES([Makefile])
 
+dnl debug
+AC_ARG_ENABLE([debug],
+    AS_HELP_STRING([--enable-debug], ["enable debugging info"]))
+AM_CONDITIONAL([DEBUG], [test "x$enable_omp" = "xyes"])
+
 dnl check for omp
 AS_IF([test x$enable_openmp != "xno"], [
 AC_CHECK_HEADERS([omp.h],[enable_omp=yes])

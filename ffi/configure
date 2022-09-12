@@ -697,6 +697,8 @@ OPENCL_FALSE
 OPENCL_TRUE
 OMP_FALSE
 OMP_TRUE
+DEBUG_FALSE
+DEBUG_TRUE
 OPENMP_CFLAGS
 AM_BACKSLASH
 AM_DEFAULT_VERBOSITY
@@ -790,6 +792,7 @@ enable_option_checking
 enable_dependency_tracking
 enable_silent_rules
 enable_openmp
+enable_debug
 enable_shared
 enable_static
 with_pic
@@ -1442,6 +1445,7 @@ Optional Features:
   --enable-silent-rules   less verbose build output (undo: "make V=1")
   --disable-silent-rules  verbose build output (undo: "make V=0")
   --disable-openmp        do not use OpenMP
+  --enable-debug          "enable debugging info"
   --enable-shared[=PKGS]  build shared libraries [default=yes]
   --enable-static[=PKGS]  build static libraries [default=yes]
   --enable-fast-install[=PKGS]
@@ -4464,6 +4468,21 @@ printf "%s\n" "$ac_cv_prog_c_openmp" >&6; }
 
 
 ac_config_files="$ac_config_files Makefile"
+
+
+# Check whether --enable-debug was given.
+if test ${enable_debug+y}
+then :
+  enableval=$enable_debug;
+fi
+
+ if test "x$enable_omp" = "xyes"; then
+  DEBUG_TRUE=
+  DEBUG_FALSE='#'
+else
+  DEBUG_TRUE='#'
+  DEBUG_FALSE=
+fi
 
 
 ac_header= ac_cache=
@@ -12842,6 +12861,10 @@ else
   am__EXEEXT_FALSE=
 fi
 
+if test -z "${DEBUG_TRUE}" && test -z "${DEBUG_FALSE}"; then
+  as_fn_error $? "conditional \"DEBUG\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${OMP_TRUE}" && test -z "${OMP_FALSE}"; then
   as_fn_error $? "conditional \"OMP\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5

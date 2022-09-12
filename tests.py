@@ -8,6 +8,7 @@ os.chdir("../")
 import numpy as np
 import pandas as pd
 from utils import grav_pot,cummean
+from ffi.ffi import FFI
 #import timeit
 import datetime as dt
 
@@ -15,6 +16,8 @@ N = 100000
 np.random.seed(314159)
 
 if __name__ == "__main__":
+    ffi = FFI()
+
     df = pd.DataFrame({
         "M": np.random.rand(N),
         "X1": np.random.rand(N),
@@ -28,7 +31,7 @@ if __name__ == "__main__":
         try:
             s = dt.datetime.now()
             #eval(f"EPOT_{c_func} = None")
-            EPOT[c_func] = eval(f"grav_pot(df, c_func='{c_func}')")
+            EPOT[c_func] = eval(f"ffi.grav_pot(df, c_func='{c_func}')")
             print(f"{c_func.replace('unthreaded','unthrd')}:\t{(dt.datetime.now() - s).microseconds/1000000 + (dt.datetime.now() - s).seconds}")
         except:
             continue
@@ -38,15 +41,16 @@ if __name__ == "__main__":
     print()
     print("Testing cummean")
 
+
     CUMMEAN = {}
     for c_func in EPOT_c_funcs:
         try:
             s = dt.datetime.now()
             #eval(f"EPOT_{c_func} = None")
-            CUMMEAN[c_func] = eval(f"cummean(np.array(df['M']), c_func='{c_func}')")
+            CUMMEAN[c_func] = eval(f"ffi.cummean(np.array(df['M']), c_func='{c_func}')")
             print(f"{c_func.replace('unthreaded','unthrd')}:\t{(dt.datetime.now() - s).microseconds/1000000 + (dt.datetime.now() - s).seconds}")
         except:
             continue
         if EPOT_c_funcs.index(c_func) != 0:
-          np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func])
+          np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func],rtol=1e-5)
     print()

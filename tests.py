@@ -8,7 +8,7 @@ os.chdir("../")
 import numpy as np
 import pandas as pd
 from utils import grav_pot,cummean
-from ffi.ffi import FFI
+from ffi import ffi
 #import timeit
 import datetime as dt
 
@@ -16,8 +16,6 @@ N = 100000
 np.random.seed(314159)
 
 if __name__ == "__main__":
-    ffi = FFI()
-
     df = pd.DataFrame({
         "M": np.random.rand(N),
         "X1": np.random.rand(N),
@@ -36,7 +34,7 @@ if __name__ == "__main__":
         except:
             continue
         if EPOT_c_funcs.index(c_func) != 0:
-          np.testing.assert_allclose(EPOT[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], EPOT[c_func])
+          np.testing.assert_allclose(EPOT[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], EPOT[c_func],rtol=1e-4)
 
     print()
     print("Testing cummean")
@@ -52,5 +50,5 @@ if __name__ == "__main__":
         except:
             continue
         if EPOT_c_funcs.index(c_func) != 0:
-          np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func],rtol=1e-5)
+          np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func],rtol=1e-4)
     print()

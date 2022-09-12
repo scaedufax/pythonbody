@@ -1,4 +1,4 @@
-from ctypes import cdll, c_double, c_int
+from ctypes import cdll, c_double, c_int, c_float
 import numpy as np
 import pandas as pd
 
@@ -9,6 +9,7 @@ class FFI:
         self._ocl_init_cummean()
         self._ocl_init_grav_pot()
     def __del__(self):
+        print("Freeing memory before exiting")
         self._ocl_free_grav_pot()
         self._ocl_free_cummean()
         self._ocl_free()
@@ -50,20 +51,20 @@ class FFI:
         if c_func not in ["ocl","omp","unthreaded", None]:
             raise ValueError("c_func must be either cuda, ocl, omp, unthreaded or None")
         N = data.shape[0]
-        target = (c_double * N)(*np.zeros(N))
+        target = (c_float * N)(*np.zeros(N))
         if c_func is not None:
             func = eval(f"self.lib.cummean_{c_func}")
         else:
             func = eval(f"self.lib.cummean")
         func.argtypes = [ 
-                c_double * N, # target
-                c_double * N, # source
+                c_float * N, # target
+                c_float * N, # source
                 c_int,        # N 
                 ]   
         func.restype = c_int 
 
         func(target,
-                (c_double * N)(*data),
+                (c_float * N)(*data),
                 N,  
             )   
         return np.array(target)
@@ -78,27 +79,27 @@ class FFI:
 
         N = data.shape[0]
 
-        EPOT = (c_double * N)(*np.zeros(N))
+        EPOT = (c_float * N)(*np.zeros(N))
         if c_func is not None:
             func = eval(f"self.lib.grav_pot_{c_func}")
         else:
             func = eval(f"self.lib.grav_pot")
         
         func.argtypes = [
-                c_double * N, # M
-                c_double * N, # X1 
-                c_double * N, # X2
-                c_double * N, # X3
-                c_double * N, # EPOT (results)
+                c_float * N, # M
+                c_float * N, # X1 
+                c_float * N, # X2
+                c_float * N, # X3
+                c_float * N, # EPOT (results)
                 c_int,        # N
                 ]#c_int,        # num_threads
                 #]
         func.restype = c_int 
 
-        func((c_double * N)(*data["M"].values),
-                    (c_double * N)(*data["X1"].values),
-                    (c_double * N)(*data["X2"].values),
-                    (c_double * N)(*data["X3"].values),
+        func((c_float * N)(*data["M"].values),
+                    (c_float * N)(*data["X1"].values),
+                    (c_float * N)(*data["X2"].values),
+                    (c_float * N)(*data["X3"].values),
                     EPOT,
                     N,
                     num_threads

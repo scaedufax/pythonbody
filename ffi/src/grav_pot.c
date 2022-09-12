@@ -17,7 +17,7 @@
 
 #endif
 
-double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int n) {
+double grav_pot(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
     #if HAVE_CL_OPENCL_H == 1
     return grav_pot_ocl(m,x1,x2,x3,EPOT,n);
     #elif HAVE_OMP_H == 1
@@ -28,18 +28,18 @@ double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int
 }
 
 #if HAVE_OMP_H == 1
-double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n) {
+double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
 	#pragma omp parallel
 	{
-		double EPOT_thread[n];
+		float EPOT_thread[n];
 		for (int i = 0; i < n; i++) {
 			EPOT_thread[i] = 0;
 		}
 		#pragma omp for
 		for (int i = 0; i < n; i++) {
 			for (int j = i+1; j < n; j++) {
-				double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-				double epot_ij = -m[i]*m[j]/dist;
+				float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+				float epot_ij = -m[i]*m[j]/dist;
 				EPOT_thread[i] += epot_ij;
 				EPOT_thread[j] += epot_ij;
 			}
@@ -57,28 +57,28 @@ cl_program ocl_program_grav_pot;
 cl_kernel ocl_kernel_grav_pot;
 
 const char *kernel_source_grav_pot =                             "\n" \
-"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
-"__kernel void grav_pot_kernel(  __global double *m,              \n" \
-"                                __global double *x1,             \n" \
-"                                __global double *x2,             \n" \
-"                                __global double *x3,             \n" \
-"                                __global double *EPOT,           \n" \
+"__kernel void grav_pot_kernel(  __global float *m,               \n" \
+"                                __global float *x1,              \n" \
+"                                __global float *x2,              \n" \
+"                                __global float *x3,              \n" \
+"                                __global float *EPOT,            \n" \
 "                                int n)                           \n" \
 "{                                                                \n" \
 "    //Get our global thread ID                                   \n" \
 "    int id = get_global_id(0);                                   \n" \
 "    int i  = id;                                                 \n" \
-"    double EPOT_i = 0.0;                                         \n" \
+"    float EPOT_i = 0.0;                                          \n" \
 "    //Make sure we do not go out of bounds                       \n" \
 "    if (id < n) {                                                \n" \
 "       for (int j = 0; j < n; j++) {                             \n" \
 "		   if (i == j) continue;                                  \n" \
-"           double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));\n" \
+"           float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));\n" \
 "           EPOT_i +=  -m[i]*m[j]/dist;                           \n" \
 "       }                                                         \n" \
 "      EPOT[id] = EPOT_i;                                         \n" \
 "    }                                                            \n" \
 "}\n\n";
+//"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
 
 int ocl_init_grav_pot(void) {
 	cl_int err;
@@ -106,11 +106,11 @@ void ocl_free_grav_pot(void) {
     clReleaseKernel(ocl_kernel_grav_pot);
 }
 
-double grav_pot_ocl(double *m,
-                double *x1,
-                double *x2,
-                double *x3,
-                double *EPOT,
+double grav_pot_ocl(float *m,
+                float *x1,
+                float *x2,
+                float *x3,
+                float *EPOT,
                 int n
                 )
 {
@@ -122,7 +122,7 @@ double grav_pot_ocl(double *m,
     
 	unsigned int N = (unsigned int) n;
     
-    size_t bytes = n*sizeof(double);
+    size_t bytes = n*sizeof(float);
     
     size_t globalSize, localSize;
     cl_int err;
@@ -188,11 +188,11 @@ double grav_pot_ocl(double *m,
 }
 #endif
 
-double grav_pot_unthreaded(double *m, double *x1, double *x2, double *x3, double *EPOT, int n, int num_threads) {
+double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n, int num_threads) {
 	for (int i = 0; i < n; i++) {
 		for (int j = i+1; j < n; j++) {
-			double dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-			double epot_ij = -m[i]*m[j]/dist;
+			float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+			float epot_ij = -m[i]*m[j]/dist;
 			EPOT[i] += epot_ij;
 			EPOT[j] += epot_ij;
 		}

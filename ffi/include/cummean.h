@@ -10,9 +10,9 @@ int ocl_init_cummean(void);
 void ocl_free_cummean(void);
 #endif
 
-double cummean_omp(double *target, double *source, int n);
-double cummean_ocl(double *target, double *source, int n);
-double cummean_unthreaded(double *target, double *source, int n);
+double cummean_omp(float *target, float *source, int n);
+double cummean_ocl(float *target, float *source, int n);
+double cummean_unthreaded(float *target, float *source, int n);
 
 
 #endif

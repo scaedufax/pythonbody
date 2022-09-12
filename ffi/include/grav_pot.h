@@ -9,8 +9,8 @@ int ocl_init_grav_pot(void);
 void ocl_free_grav_pot(void);
 #endif
 
-double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT, int n);
-double grav_pot_ocl(double *m, double *x1, double *x2, double *x3, double *EPOT, int n);
-double grav_pot_unthreade(double *m, double *x1, double *x2, double *x3, double *EPOT, int n);
+double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
+double grav_pot_ocl(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
+double grav_pot_unthreade(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 
 #endif

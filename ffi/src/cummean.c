@@ -5,7 +5,7 @@
 #include "cummean.h"
 
 #if HAVE_OMP_H == 1
-double cummean_omp(double *target, double *source, int n) {
+double cummean_omp(float *target, float *source, int n) {
 	#pragma omp parallel
     {
         #pragma omp for
@@ -25,14 +25,13 @@ cl_kernel ocl_kernel_cummean;
 
 // OpenCL kernel. Each work item takes care of one element of c
 const char *kernel_source_cummean =                              "\n" \
-"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
-"__kernel void cummean_kernel(  __global double *target,         \n" \
-"                                __global double *src,            \n" \
-"                                int n)                           \n" \
+"__kernel void cummean_kernel( __global float *target,            \n" \
+"                              __global float *src,               \n" \
+"                              int n)                             \n" \
 "{                                                                \n" \
 "    //Get our global thread ID                                   \n" \
 "    int i = get_global_id(0);                                    \n" \
-"    double mean = 0.0;                                           \n" \
+"    float mean = 0.0;                                           \n" \
 "    //Make sure we do not go out of bounds                       \n" \
 "    if (i < n) {                                                 \n" \
 "       for (int j = 0; j <= i; j++) {                            \n" \
@@ -43,6 +42,7 @@ const char *kernel_source_cummean =                              "\n" \
 "}\n\n";
 
 //"       printf('%d, %f', id, mean);                               \n" \
+//"#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
 
 int ocl_init_cummean() {
 	cl_int err;
@@ -71,8 +71,8 @@ void ocl_free_cummean(void) {
     clReleaseKernel(ocl_kernel_cummean);
 }
 
-double cummean_ocl(double *target,
-                   double *src,
+double cummean_ocl(float *target,
+                   float *src,
                    int n
                   )
 {
@@ -81,7 +81,7 @@ double cummean_ocl(double *target,
     
 	unsigned int N = (unsigned int) n;
     
-    size_t bytes = n*sizeof(double);
+    size_t bytes = n*sizeof(float);
     
     size_t globalSize, localSize;
     cl_int err;
@@ -132,7 +132,7 @@ double cummean_ocl(double *target,
 }
 #endif
 
-double cummean_unthreaded(double *target, double *source, int n) {
+double cummean_unthreaded(float *target, float *source, int n) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j <= i; j++) {
 			target[i] += source[j];

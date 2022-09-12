@@ -3,7 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import logging
 
-from pythonbody.utils import grav_pot
+from pythonbody.ffi import ffi
 
 # TODO: Do something more reasonable with G.
 
@@ -109,7 +109,7 @@ class dat10():
         #    self._data["EPOT"] = self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]])
         #    self._EPOT = self._data["EPOT"].sum()
         #return self._EPOT
-        return np.sum(self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]]))
+        return np.sum(self._G * ffi.grav_pot(self._data[["M", "X1", "X2", "X3"]]))
 
     @property
     def ZMBAR(self):

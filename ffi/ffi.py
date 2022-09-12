@@ -9,7 +9,6 @@ class FFI:
         self._ocl_init_cummean()
         self._ocl_init_grav_pot()
     def __del__(self):
-        print("Freeing memory before exiting")
         self._ocl_free_grav_pot()
         self._ocl_free_cummean()
         self._ocl_free()

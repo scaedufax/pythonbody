@@ -7,7 +7,6 @@ os.chdir("../")
 
 import numpy as np
 import pandas as pd
-from utils import grav_pot,cummean
 from ffi import ffi
 #import timeit
 import datetime as dt

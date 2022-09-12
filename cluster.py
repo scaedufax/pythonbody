@@ -4,7 +4,7 @@ import logging
 import warnings
 
 from pythonbody.snap import snap
-from pythonbody.utils import grav_pot
+from pythonbody.ffi import ffi
 
 # TODO: remove time_dependencies and load everything
 
@@ -79,7 +79,7 @@ class cluster(pd.DataFrame):
         this may take some time.
         """
         if not "EPOT" in self.columns:
-            self["EPOT"] = grav_pot(self)
+            self["EPOT"] = ffi.grav_pot(self)
         return self["EPOT"].sum()
 
 

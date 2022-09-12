@@ -8,7 +8,6 @@ from tqdm import tqdm
 import re
 import pathlib
 
-#from pythonbody.utils import cummean
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import binaries

@@ -129,11 +129,6 @@ double cummean_ocl(double *target,
     // release OpenCL resources
     clReleaseMemObject(l_src);
     clReleaseMemObject(l_target);
-    /*clReleaseProgram(program);
-    clReleaseKernel(kernel);
-    clReleaseCommandQueue(queue);
-    clReleaseContext(context);*/
-
 }
 #endif
 

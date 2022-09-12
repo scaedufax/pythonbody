@@ -4,17 +4,18 @@
 #include <omp.h>
 
 #include "grav_pot.h"
-#include "ocl.h"
 
 #if HAVE_CL_OPENCL_H == 1
 
 #define CL_TARGET_OPENCL_VERSION 200
 #include <CL/opencl.h>
-#endif
+#include "ocl.h"
 
 #define CL_SUCCESS_OR_RETURN(code, where) do { \
     if (code != CL_SUCCESS) {printf("Err (%d): %s\n",code,where); return code; } \
 }while (0);
+
+#endif
 
 double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int n) {
     #if HAVE_CL_OPENCL_H == 1
@@ -22,7 +23,7 @@ double grav_pot(double *m, double *x1, double *x2, double *x3, double *EPOT, int
     #elif HAVE_OMP_H == 1
     return grav_pot_omp(m,x1,x2,x3,EPOT,n);
     #else
-    return grav_pot_omp(m,x1,x2,x3,EPOT,n);
+    return grav_pot_unthreaded(m,x1,x2,x3,EPOT,n);
     #endif
 }
 
@@ -50,15 +51,12 @@ double grav_pot_omp(double *m, double *x1, double *x2, double *x3, double *EPOT,
 	}
 }
 #endif
-
-
  
 #if HAVE_CL_OPENCL_H == 1
 cl_program ocl_program_grav_pot;
 cl_kernel ocl_kernel_grav_pot;
 
-// OpenCL kernel. Each work item takes care of one element of c
-const char *kernel_source_grav_pot =                                       "\n" \
+const char *kernel_source_grav_pot =                             "\n" \
 "#pragma OPENCL EXTENSION cl_khr_fp64 : enable                    \n" \
 "__kernel void grav_pot_kernel(  __global double *m,              \n" \
 "                                __global double *x1,             \n" \
@@ -187,7 +185,6 @@ double grav_pot_ocl(double *m,
     clReleaseMemObject(l_x2);
     clReleaseMemObject(l_x3);
     clReleaseMemObject(l_EPOT);
-
 }
 #endif
 

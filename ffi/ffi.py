@@ -1,10 +1,18 @@
 from ctypes import cdll, c_double, c_int, c_float
 import numpy as np
 import pandas as pd
+import pathlib
 
 class FFI:
     def __init__(self):
-        self.lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libpythonbody.so")
+        if pathlib.Path("pythonbody/ffi/.libs/libpythonbody.so").is_file():
+            self.lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libpythonbody.so")
+        elif pathlib.Path("ffi/.libs/libpythonbody.so").is_file():
+            self.lib = cdll.LoadLibrary("ffi/.libs/libpythonbody.so")
+        elif pathlib.Path(".libs/libpythonbody.so").is_file():
+            self.lib = cdll.LoadLibrary(".libs/libpythonbody.so")
+        else:
+            raise Exception("Couldn't load libpythonbody.so!")
         self._ocl_init()
         self._ocl_init_cummean()
         self._ocl_init_grav_pot()

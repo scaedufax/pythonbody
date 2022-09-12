@@ -130,46 +130,49 @@ class snap(pd.DataFrame):
 
         self.time = time
         
-        add_cols = {
-                    "K*": "031 KW",
-                    "NAME": "032 Name",
-                    "Type": "033 Type",
-                   }
+        default_cols = {
+                "M": "023 M",
+                "X1": "001 X1",
+                "X2": "002 X2",
+                "X3": "003 X3",
+                "V1": "004 V1",
+                "V2": "005 V2",
+                "V3": "006 V3",                
+                "K*": "031 KW",
+                "NAME": "032 Name",
+                "Type": "033 Type",
+                }
 
         f = h5py.File(self.loc[time]["file"],"r")
-        self.cluster_data =  pd.DataFrame({
-            "M":  f["Step#" + self.loc[time]["step"]]["023 M"],
-            "X1": f["Step#" + self.loc[time]["step"]]["001 X1"],
-            "X2": f["Step#" + self.loc[time]["step"]]["002 X2"],
-            "X3": f["Step#" + self.loc[time]["step"]]["003 X3"],
-            "V1": f["Step#" + self.loc[time]["step"]]["004 V1"],
-            "V2": f["Step#" + self.loc[time]["step"]]["005 V2"],
-            "V3": f["Step#" + self.loc[time]["step"]]["006 V3"],
-            })
-        for col in add_cols.keys():
-            if add_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
-                self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][add_cols[col]][:]
-        
-        self.binary_data =  binaries({
-            "M1": f["Step#" + self.loc[time]["step"]]["123 Bin M1*"],
-            "M2": f["Step#" + self.loc[time]["step"]]["124 Bin M2*"],
-            "cmX1": f["Step#" + self.loc[time]["step"]]["101 Bin cm X1"],
-            "cmX2": f["Step#" + self.loc[time]["step"]]["102 Bin cm X2"],
-            "cmX3": f["Step#" + self.loc[time]["step"]]["103 Bin cm X3"],
-            "cmV1": f["Step#" + self.loc[time]["step"]]["104 Bin cm V1"],
-            "cmV2": f["Step#" + self.loc[time]["step"]]["105 Bin cm V2"],
-            "cmV3": f["Step#" + self.loc[time]["step"]]["106 Bin cm V3"],
-            "relX1": f["Step#" + self.loc[time]["step"]]["125 Bin rel X1"],
-            "relX2": f["Step#" + self.loc[time]["step"]]["126 Bin rel X2"],
-            "relX3": f["Step#" + self.loc[time]["step"]]["127 Bin rel X3"],
-            "relV1": f["Step#" + self.loc[time]["step"]]["128 Bin rel V1"],
-            "relV2": f["Step#" + self.loc[time]["step"]]["129 Bin rel V2"],
-            "relV3": f["Step#" + self.loc[time]["step"]]["130 Bin rel V3"],
-            "K*1": f["Step#" + self.loc[time]["step"]]["158 Bin KW1"],
-            "K*2": f["Step#" + self.loc[time]["step"]]["159 Bin KW2"],
-            "NAME1": f["Step#" + self.loc[time]["step"]]["161 Bin Name1"],
-            "NAME2": f["Step#" + self.loc[time]["step"]]["162 Bin Name2"], 
-            })
+        self.cluster_data =  pd.DataFrame(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        for col in default_cols.keys():
+            if default_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
+                self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][default_cols[col]][:]
+       
+        binary_cols = {
+                "M1": "123 Bin M1",
+                "M2": "124 Bin M2",
+                "cmX1": "101 Bin cm X1",
+                "cmX2": "102 Bin cm X2",
+                "cmX3": "103 Bin cm X3",
+                "cmV1": "104 Bin cm V1",
+                "cmV2": "105 Bin cm V2",
+                "cmV3": "106 Bin cm V3",
+                "relX1": "125 Bin rel X1",
+                "relX2": "126 Bin rel X2",
+                "relX3": "127 Bin rel X3",
+                "relV1": "128 Bin rel V1",
+                "relV2": "129 Bin rel V2",
+                "relV3": "130 Bin rel V3",
+                "K*1": "158 Bin KW1",
+                "K*2": "159 Bin KW2",
+                "NAME1": "161 Bin Name1",
+                "NAME2": "162 Bin Name2", 
+                }
+        self.binary_data =  pd.DataFrame(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        for col in binary_cols.keys():
+            if binary_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
+                self.binary_data[col] = f["Step#" + self.loc[time]["step"]][binary_cols[col]][:]
 
         self.singles_data = singles(self.cluster_data, self.binary_data)
 

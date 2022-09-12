@@ -146,7 +146,7 @@ class dat10():
         """
         Changes positions into center of mass system
         """
-        self._data.iloc[:,[1,2,3]] = self._data.iloc[:,[1,2,3]] - self.com
+        self._data.iloc[:,[1,2,3]] = self._data.iloc[:,[1,2,3]] - self.COM
         self._com = None
     
     def _setup_logger(self):

@@ -1,34 +1,40 @@
-from ctypes import cdll, c_double, c_int, c_float
+from ctypes import cdll, c_int, c_float, c_void_p, byref
 import numpy as np
 import pandas as pd
 import pathlib
 
+
 class FFI:
-    def __init__(self):
+    def __init__(self, p_id: int = None, d_id: int = None):
         if pathlib.Path("pythonbody/ffi/.libs/libpythonbody.so").is_file():
-            self.lib = cdll.LoadLibrary("pythonbody/ffi/.libs/libpythonbody.so")
+            self.lib = cdll.LoadLibrary(
+                    "pythonbody/ffi/.libs/libpythonbody.so"
+                    )
         elif pathlib.Path("ffi/.libs/libpythonbody.so").is_file():
             self.lib = cdll.LoadLibrary("ffi/.libs/libpythonbody.so")
         elif pathlib.Path(".libs/libpythonbody.so").is_file():
             self.lib = cdll.LoadLibrary(".libs/libpythonbody.so")
         else:
             raise Exception("Couldn't load libpythonbody.so!")
-        self._ocl_init()
-        self._ocl_init_cummean()
-        self._ocl_init_grav_pot()
+        self._ocl_init(p_id, d_id)
+
     def __del__(self):
         self._ocl_free_grav_pot()
         self._ocl_free_cummean()
         self._ocl_free()
 
-    def _ocl_init(self):
+    def _ocl_init(self, p_id: int = None, d_id: int = None):
         func = self.lib.ocl_init
-        func.argtypes = []
+        func.argtypes = [c_void_p, c_void_p]
         func.restype = c_int
 
-        err = func()
+        err = func(c_void_p(None) if p_id is None else byref(c_int(p_id)),
+                   c_void_p(None) if d_id is None else byref(c_int(d_id)))
         if err != 0:
             raise Exception("Error initialize OpenCL")
+        self._ocl_init_cummean()
+        self._ocl_init_grav_pot()
+
     def _ocl_init_cummean(self):
         func = self.lib.ocl_init_cummean
         func.restype = c_int

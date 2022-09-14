@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <omp.h>
 
-#include "grav_pot.h"
+#include "../include/grav_pot.h"
 
 #if HAVE_CL_OPENCL_H == 1
 
 #define CL_TARGET_OPENCL_VERSION 200
 #include <CL/opencl.h>
-#include "ocl.h"
+#include "../include/ocl.h"
 
 #define CL_SUCCESS_OR_RETURN(code, where) do { \
     if (code != CL_SUCCESS) {printf("Err (%d): %s\n",code,where); return code; } \
@@ -188,7 +188,7 @@ double grav_pot_ocl(float *m,
 }
 #endif
 
-double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n, int num_threads) {
+double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
 	for (int i = 0; i < n; i++) {
 		for (int j = i+1; j < n; j++) {
 			float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));

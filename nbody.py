@@ -3,7 +3,6 @@ import re
 import glob
 from tqdm import tqdm
 import pandas as pd
-import numpy as np
 import sys
 
 from pythonbody.snap import snap
@@ -15,25 +14,27 @@ SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i !=
 SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))}
 CALCABLE_DATA = {key: [i for i in eval(f"dir(data_files.{key})") if "calc_" in i] for key in SUPPORTED_DATA_FILES}
 
+
 class UnknownDataLoad(Exception):
     pass
+
 
 class nbody:
     """
     Class for handling nbody results
-    
+
     Attributes:
         data_path (str): Path where output files of nbody can be found
         nb_stdout_files (list or str): path to nbody standard output data
-        
+
         _data (dict): contains data from nbody simulation
         _files (dict): contains files related to the simulation
-    
+
     """
     def __init__(self, data_path: str = None, nb_stdout_files: list = None):
         """
         Initializes class with data
-        
+       
         Parameters:
             data_path (str): Path where output files of nbody can be found
             nbody_stdout_files (list): list of file from nbody stdout
@@ -43,7 +44,7 @@ class nbody:
          
         self.data_path = data_path
         # make sure self.data_path ends with "/"
-        if (self.data_path and 
+        if (self.data_path and
             self.data_path[len(self.data_path) -1 ] != "/"):            
             self.data_path += "/"
 
@@ -138,13 +139,14 @@ class nbody:
 
             # TODO: change to pandas version
             if sys.version_info.minor >= 10:
-                    self._data["E"].loc[i,["EPOT", "EKIN"]] = [self.cluster.EPOT, self.cluster.EKIN]
+                self._data["E"].loc[i, ["EPOT", "EKIN"]] = [self.cluster.EPOT,
+                                                            self.cluster.EKIN]
             else:
                 self._data["E"].__init__(self._data["E"].append(pd.DataFrame(
-                                                                 [[ self.cluster.EPOT,
-                                                                    self.cluster.EKIN]],
-                                                                 index=[i]
-                                                            )))
+                                                     [[self.cluster.EPOT,
+                                                       self.cluster.EKIN]],
+                                                     index=[i]
+                                                )))
         self._data["E"].sort_index(inplace=True)
     
     def show_mem_usage(self):

@@ -22,7 +22,7 @@ if __name__ == "__main__":
         "X3": np.random.rand(N),
         })
     EPOT = {}
-    EPOT_c_funcs = [ "unthreaded", "omp", "ocl", "cuda"]
+    EPOT_c_funcs = ["unthreaded", "omp", "ocl", "cuda"]
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
         try:

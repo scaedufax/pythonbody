@@ -11,6 +11,6 @@ void ocl_free_grav_pot(void);
 
 double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 double grav_pot_ocl(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
-double grav_pot_unthreade(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
+double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 
 #endif

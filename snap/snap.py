@@ -5,22 +5,21 @@ import logging
 import h5py
 import sys
 from tqdm import tqdm
-import re
 import pathlib
 
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import binaries
 from pythonbody.snap.singles import singles
-        
+
+
 class snap(pd.DataFrame):
-    def __init__(self, data_path = None):
-        super().__init__(columns=["time","file","step"])
+    def __init__(self, data_path=None):
+        super().__init__(columns=["time", "file", "step"])
         if not pathlib.Path(data_path).is_dir():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
 
-        
         self.files = None
         self.time = None
         if self.data_path is not None:
@@ -28,13 +27,14 @@ class snap(pd.DataFrame):
             self._load_files()
 
         self.cluster_data = None
-        self.binary_data = None 
+        self.binary_data = None
         self.singles_data = None
         self.time_evolution_data = None
 
     def __getitem__(self, value):
         """
-        checks if passed value(s) are in currently loaded cluster data, otherwise returns snap list data
+        checks if passed value(s) are in currently loaded cluster data,
+        otherwise returns snap list data
         """
         if type(value) != list:
             value = [value]
@@ -44,13 +44,13 @@ class snap(pd.DataFrame):
             for val in value:
                 if val not in self.cluster_data.columns:
                     missing_list += [val]
-            
+
             if len(missing_list) == 0:
                 return self.cluster_data[value]
-            elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/","_over_") not in dir(self) for val in missing_list]) == 0:
+            elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/", "_over_") not in dir(self) for val in missing_list]) == 0:
                 for missing in missing_list:
                     if missing not in self.cluster_data.columns:
-                        eval(f"self.calc_{missing}()".replace("/","_over_"))
+                        eval(f"self.calc_{missing}()".replace("/", "_over_"))
                 return self.cluster_data[value]
             else:
                 return super().__getitem__(value)
@@ -65,7 +65,7 @@ class snap(pd.DataFrame):
 
     @property
     def reduced(self):
-        if self.shape == (0,3):
+        if self.shape[0] == 0:
             self._load_files()
         return self[self["time"] == self["time"].values.astype(int)]
 
@@ -74,11 +74,13 @@ class snap(pd.DataFrame):
         if self.binary_data is None:
             self.load_cluster(t)
         return self.binary_data
+
     @property
     def singles(self, t=0):
         if self.singles_data is None:
             self.load_cluster(t)
         return self.singles_data
+
     @property
     def time_evolution(self):
         if self.time_evolution_data is None:
@@ -88,28 +90,28 @@ class snap(pd.DataFrame):
     def calculate_time_evolution(self, RLAGRS=None):
         if RLAGRS is None:
             RLAGRS = [0.001,
-                     0.003,
-                     0.005,
-                     0.01,
-                     0.03,
-                     0.05,
-                     0.1,
-                     0.2,
-                     0.3,
-                     0.4,
-                     0.5,
-                     0.6,
-                     0.7,
-                     0.8,
-                     0.9,
-                     0.95,
-                     0.99,
-                     1.0]
+                      0.003,
+                      0.005,
+                      0.01,
+                      0.03,
+                      0.05,
+                      0.1,
+                      0.2,
+                      0.3,
+                      0.4,
+                      0.5,
+                      0.6,
+                      0.7,
+                      0.8,
+                      0.9,
+                      0.95,
+                      0.99,
+                      1.0]
         self.time_evolution_data = {
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
                 }
-        for i,r in tqdm(self.iterrows(), total=self.shape[0]):
+        for i, r in tqdm(self.iterrows(), total=self.shape[0]):
             self.load_cluster(i)
             self.calc_R()
             self.calc_M_over_MT()

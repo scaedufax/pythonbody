@@ -4538,12 +4538,12 @@ else
 fi
 
 
-       for ac_header in CL/openuzcl.h
+       for ac_header in CL/opencl.h
 do :
-  ac_fn_c_check_header_compile "$LINENO" "CL/openuzcl.h" "ac_cv_header_CL_openuzcl_h" "$ac_includes_default"
-if test "x$ac_cv_header_CL_openuzcl_h" = xyes
+  ac_fn_c_check_header_compile "$LINENO" "CL/opencl.h" "ac_cv_header_CL_opencl_h" "$ac_includes_default"
+if test "x$ac_cv_header_CL_opencl_h" = xyes
 then :
-  printf "%s\n" "#define HAVE_CL_OPENUZCL_H 1" >>confdefs.h
+  printf "%s\n" "#define HAVE_CL_OPENCL_H 1" >>confdefs.h
  enable_opencl=yes
 fi
 

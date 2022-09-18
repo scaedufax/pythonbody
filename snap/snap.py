@@ -9,7 +9,7 @@ import pathlib
 
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
-from pythonbody.snap.binaries import binaries
+from pythonbody.snap.binaries import Binaries
 from pythonbody.snap.singles import singles
 
 
@@ -140,9 +140,14 @@ class snap(pd.DataFrame):
                 "V1": "004 V1",
                 "V2": "005 V2",
                 "V3": "006 V3",                
+                "A1": "007 A1",
+                "A2": "008 A2",
+                "A3": "009 A3",                
+                "POT": "025 POT",                
                 "K*": "031 KW",
                 "NAME": "032 Name",
                 "Type": "033 Type",
+
                 }
 
         f = h5py.File(self.loc[time]["file"],"r")
@@ -152,8 +157,8 @@ class snap(pd.DataFrame):
                 self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][default_cols[col]][:]
        
         binary_cols = {
-                "M1": "123 Bin M1",
-                "M2": "124 Bin M2",
+                "M1": "123 Bin M1*",
+                "M2": "124 Bin M2*",
                 "cmX1": "101 Bin cm X1",
                 "cmX2": "102 Bin cm X2",
                 "cmX3": "103 Bin cm X3",
@@ -171,7 +176,7 @@ class snap(pd.DataFrame):
                 "NAME1": "161 Bin Name1",
                 "NAME2": "162 Bin Name2", 
                 }
-        self.binary_data =  pd.DataFrame(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        self.binary_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
         for col in binary_cols.keys():
             if binary_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
                 self.binary_data[col] = f["Step#" + self.loc[time]["step"]][binary_cols[col]][:]
@@ -209,6 +214,8 @@ class snap(pd.DataFrame):
         return self.calc_spherical_coords()
     def calc_PHI(self):
         return self.calc_spherical_coords()
+    def calc_EKIN(self):
+        self.cluster_data["EKIN"] = 0.5*self.cluster_data["M"]*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
 
     def calc_M_over_MT(self):
         if not "R" in self.cluster_data.columns:

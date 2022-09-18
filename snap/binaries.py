@@ -3,7 +3,7 @@ import numpy as np
 
 from pythonbody.nbdf import nbdf
 
-class binaries(nbdf):
+class Binaries(nbdf):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         warnings.filterwarnings("ignore", category=UserWarning)
@@ -12,7 +12,7 @@ class binaries(nbdf):
         """
         see http://web.pd.astro.it/mapelli/colldyn3.pdf
         """
-        self["Eb"] = ((0.5*self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values * np.linalg.norm(self[["relV1", "relV2", "relV3"]],axis=1)) - (G*(self["M1"].values*self["M2"].values)/(np.linalg.norm(self[["relX1", "relX2", "relX3"]],axis=1)))
+        self["Eb"] = ((0.5*self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values * np.linalg.norm(self[["relV1", "relV2", "relV3"]],axis=1))**2 - (G*(self["M1"].values*self["M2"].values)/(np.linalg.norm(self[["relX1", "relX2", "relX3"]],axis=1)))
         return self["Eb"]
 
     def filter(self,value):

@@ -16,12 +16,20 @@ class FFI:
             self.lib = cdll.LoadLibrary(".libs/libpythonbody.so")
         else:
             raise Exception("Couldn't load libpythonbody.so!")
-        self._ocl_init(p_id, d_id)
+        try:
+            self._ocl_init(p_id, d_id)
+            self.default_cfunc = "ocl"
+            self.OpenCL = True
+        except:
+            print("Couldn't load OpenCL, defaulting back to OpenMP")
+            self.default_cfunc = "omp"
+        
 
     def __del__(self):
-        self._ocl_free_grav_pot()
-        self._ocl_free_cummean()
-        self._ocl_free()
+        if self.OpenCL:
+            self._ocl_free_grav_pot()
+            self._ocl_free_cummean()
+            self._ocl_free()
 
     def _ocl_init(self, p_id: int = None, d_id: int = None):
         func = self.lib.ocl_init
@@ -60,9 +68,11 @@ class FFI:
         func = self.lib.ocl_free
         func()
 
-    def cummean(self, data: np.array, c_func="ocl"):
-        if c_func not in ["ocl","omp","unthreaded", None]:
+    def cummean(self, data: np.array, c_func="auto"):
+        if c_func not in ["ocl","omp","unthreaded","auto", None]:
             raise ValueError("c_func must be either cuda, ocl, omp, unthreaded or None")
+        if c_func == "auto":
+            c_func = self.default_cfunc
         N = data.shape[0]
         target = (c_float * N)(*np.zeros(N))
         if c_func is not None:
@@ -85,10 +95,12 @@ class FFI:
                  data: pd.DataFrame,
                  G: float = 1,
                  num_threads: int = None,
-                 c_func = "ocl"
+                 c_func ="auto"
                  ):
-        if c_func not in ["ocl","omp","unthreaded", None]:
+        if c_func not in ["ocl","omp","unthreaded","auto", None]:
             raise ValueError("c_func must be either cuda, ocl, omp, unthreaded or None")
+        if c_func == "auto":
+            c_func = self.default_cfunc
 
         N = data.shape[0]
 

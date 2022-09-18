@@ -22,18 +22,24 @@ if __name__ == "__main__":
         "X3": np.random.rand(N),
         })
     EPOT = {}
-    EPOT_c_funcs = ["unthreaded", "omp", "ocl", "cuda"]
+    EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
+        reinit = False
+        if c_func == "ocl_cpu":
+            ffi._ocl_init(2,0)
+            reinit = True
         try:
             s = dt.datetime.now()
             #eval(f"EPOT_{c_func} = None")
-            EPOT[c_func] = eval(f"ffi.grav_pot(df, c_func='{c_func}')")
+            EPOT[c_func] = eval(f"ffi.grav_pot(df, c_func=\"{c_func.replace('ocl_cpu','ocl')}\")")
             print(f"{c_func.replace('unthreaded','unthrd')}:\t{(dt.datetime.now() - s).microseconds/1000000 + (dt.datetime.now() - s).seconds}")
         except:
             continue
         if EPOT_c_funcs.index(c_func) != 0:
           np.testing.assert_allclose(EPOT[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], EPOT[c_func],rtol=1e-4)
+        if reinit:
+            ffi._ocl_init()
 
     print()
     print("Testing cummean")

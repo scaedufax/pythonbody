@@ -113,7 +113,10 @@ class snap(pd.DataFrame):
                 "E": nbdf(),
                 }
         for idx in tqdm(self.index[::stepsize]):
-            self.load_cluster(idx)
+            try:
+                self.load_cluster(idx)
+            except:
+                continue
             self.calc_R()
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()

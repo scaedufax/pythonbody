@@ -118,7 +118,7 @@ class snap(pd.DataFrame):
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
                 self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
                 self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
                 self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()

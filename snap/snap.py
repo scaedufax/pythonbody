@@ -118,7 +118,7 @@ class snap(pd.DataFrame):
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.singles[self.singles["K*"] == 14][self.singles[self.singles["K*"] == 14]["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
                 self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
                 self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
                 self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
@@ -219,13 +219,13 @@ class snap(pd.DataFrame):
         self.cluster_data["EKIN"] = 0.5*self.cluster_data["M"]*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
 
     def calc_M_over_MT(self):
-        if not "R" in self.cluster_data.columns:
+        if "R" not in self.cluster_data.columns:
             self.calc_R()
 
         self.cluster_data["M/MT"] = self.cluster_data["M"].cumsum()/self.cluster_data["M"].sum()
 
     def calc_VROT(self):
-        if not "R" in self.cluster_data.columns:
+        if "R" not in self.cluster_data.columns:
             self.calc_R()
 
         """rvxy = self.cluster_data["X1"]*self.cluster_data["V1"] + self.cluster_data["X2"]*self.cluster_data["V2"]
@@ -280,7 +280,13 @@ class snap(pd.DataFrame):
 
     def filter(self, value):
         if value == "BH":
-            return self.singles[self.singles["K*"] == 14]
+            return self.cluster_data[self.singles["K*"] == 14]
+        elif value == "SINGLE_BH":
+            return self.cluster_data[(self.singles["K*"] == 14) & self.singles_mask]
+        elif value == "BH-Any":
+            return self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]
+        elif value == "BH-BH":
+            return self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]
         else:
             raise KeyError(f"Couldn't filter by value \"{value}\"")
 

@@ -88,7 +88,7 @@ class snap(pd.DataFrame):
             self.calc_time_evolution_data()
         return self.time_evolution_data
 
-    def calculate_time_evolution(self, RLAGRS=None):
+    def calculate_time_evolution(self, RLAGRS=None, stepsize=1):
         if RLAGRS is None:
             RLAGRS = [0.001,
                       0.003,
@@ -112,17 +112,17 @@ class snap(pd.DataFrame):
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
                 }
-        for i, r in tqdm(self.iterrows(), total=self.shape[0]):
-            self.load_cluster(i)
+        for idx in tqdm(self.index[::stepsize], total=self.shape[0]):
+            self.load_cluster(idx)
             self.calc_R()
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
-                self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
+                self.time_evolution_data["RLAGR_BH"].loc[idx,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["E"].loc[idx,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
+                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
+                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
+                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
 
 
     def load_cluster(self, time):

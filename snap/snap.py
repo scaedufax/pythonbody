@@ -10,7 +10,7 @@ import pathlib
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import Binaries
-from pythonbody.snap.singles import singles
+#from pythonbody.snap.singles import singles
 
 
 class snap(pd.DataFrame):
@@ -27,8 +27,9 @@ class snap(pd.DataFrame):
             self._load_files()
 
         self.cluster_data = None
-        self.binary_data = None
-        self.singles_data = None
+        self.binaries_data = None
+        self.binaries_mask = None
+        self.singles_mask = None
         self.time_evolution_data = None
 
     def __getitem__(self, value):
@@ -71,15 +72,15 @@ class snap(pd.DataFrame):
 
     @property
     def binaries(self, t=0):
-        if self.binary_data is None:
+        if self.binaries_mask is None:
             self.load_cluster(t)
-        return self.binary_data
+        return self.cluster_data[self.binaries_mask]
 
     @property
     def singles(self, t=0):
-        if self.singles_data is None:
+        if self.singles_mask is None:
             self.load_cluster(t)
-        return self.singles_data
+        return self.cluster_data[self.singles_mask]
 
     @property
     def time_evolution(self):
@@ -115,15 +116,13 @@ class snap(pd.DataFrame):
             self.load_cluster(i)
             self.calc_R()
             self.calc_M_over_MT()
-            self.singles.calc_R()
-            self.singles.calc_M_over_MT()
-            self.binaries.calc_Eb()
+            self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.singles.filter("BH")[self.singles.filter("BH")["M/MT"] < rlagr]["R"].max())
-                self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries.filter("BH-BH").shape[0]
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries.filter("BH-BH")["Eb"].sum()
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries.filter("BH-BH")["Eb"].mean()
-                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_std"] = self.binaries.filter("BH-BH")["Eb"].std()
+                self.time_evolution_data["RLAGR_BH"].loc[i,str(rlagr)] = float(self.singles[self.singles["K*"] == 14][self.singles[self.singles["K*"] == 14]["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["E"].loc[i,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
+                self.time_evolution_data["E"].loc[i,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
 
 
     def load_cluster(self, time):
@@ -151,7 +150,7 @@ class snap(pd.DataFrame):
                 }
 
         f = h5py.File(self.loc[time]["file"],"r")
-        self.cluster_data =  pd.DataFrame(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
         for col in default_cols.keys():
             if default_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
                 self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][default_cols[col]][:]
@@ -176,12 +175,14 @@ class snap(pd.DataFrame):
                 "NAME1": "161 Bin Name1",
                 "NAME2": "162 Bin Name2", 
                 }
-        self.binary_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
         for col in binary_cols.keys():
             if binary_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
-                self.binary_data[col] = f["Step#" + self.loc[time]["step"]][binary_cols[col]][:]
+                self.binaries_data[col] = f["Step#" + self.loc[time]["step"]][binary_cols[col]][:]
 
-        self.singles_data = singles(self.cluster_data, self.binary_data)
+        #self.singles_data = singles(self.cluster_data, self.binary_data)
+        self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
+        self.binaries_mask = ~ self.singles_mask
 
         return self.cluster_data
 
@@ -221,7 +222,7 @@ class snap(pd.DataFrame):
         if not "R" in self.cluster_data.columns:
             self.calc_R()
 
-        self.cluster_data["M/MT"] = self.cluster_data["M"].cumsum()
+        self.cluster_data["M/MT"] = self.cluster_data["M"].cumsum()/self.cluster_data["M"].sum()
 
     def calc_VROT(self):
         if not "R" in self.cluster_data.columns:
@@ -276,6 +277,12 @@ class snap(pd.DataFrame):
 
         self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
         #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
+
+    def filter(self, value):
+        if value == "BH":
+            return self.singles[self.singles["K*"] == 14]
+        else:
+            raise KeyError(f"Couldn't filter by value \"{value}\"")
 
 
     def _load_files(self):

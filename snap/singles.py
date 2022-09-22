@@ -1,9 +1,8 @@
-import numpy as np
 import warnings
 
 from pythonbody.nbdf import nbdf
 
-class singles(nbdf):
+class Singles(nbdf):
     def __init__(self,full,binaries,*args,**kwargs):
         if binaries.shape[0] != 0:
             super().__init__(full[~full["NAME"].isin(binaries["NAME1"]) & ~full["NAME"].isin(binaries["NAME2"])], *args, **kwargs)

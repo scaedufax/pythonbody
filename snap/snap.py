@@ -15,9 +15,9 @@ from pythonbody.snap.binaries import Binaries
 #from pythonbody.snap.singles import singles
 
 
-class snap(pd.DataFrame):
+class snap():
     def __init__(self, data_path=None):
-        super().__init__(columns=["time", "file", "step"])
+        self.snap_data = pd.DataFrame(columns=["time", "file", "step"])
         if not pathlib.Path(data_path).is_dir():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
@@ -60,17 +60,17 @@ class snap(pd.DataFrame):
         else:
             return super().__getitem__(value)
 
-    """def __repr__(self):
-        if self.cluster_data is not None:
-            return self.cluster_data.__repr__()
-        else:
-            super().__repr__()"""
+    def __repr__(self):
+        return self.cluster_data.__repr__()
+    
+    def _repr_html_(self):
+        return self.cluster_data._repr_html_()
 
     @property
     def reduced(self):
-        if self.shape[0] == 0:
+        if self.snap_data.shape[0] == 0:
             self._load_files()
-        return self[self["time"] == self["time"].values.astype(int)]
+        return self.snap_data[self.snap_data["time"] == self.snap_data["time"].values.astype(int)]
 
     @property
     def binaries(self, t=0):
@@ -92,13 +92,27 @@ class snap(pd.DataFrame):
 
     @property
     def potential_escapers(self, t=0, G=4.30091e-3):
-        if self.shape[0] == 0:
+        if self.cluster_data is None:
             self.load_cluster(t)
         if "R" not in self.cluster_data.columns:
             self.calc_R()
         if "Eb" not in self.cluster_data.columns:
             self.calc_Eb()
         return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())))]
+
+    @property
+    def binding_enegery(self, t=0, G=4.30091e-3):
+        if self.cluster_data is None:
+            self.load_cluster(t)
+        return -1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())
+
+    @property
+    def loc(self, *args, **kwargs):
+        return self.cluster_data.loc(*args, **kwargs)
+    
+    @property
+    def iloc(self, *args, **kwargs):
+        return self.cluster_data.iloc(*args, **kwargs)
 
     def calculate_time_evolution(self, RLAGRS=None, stepsize=1, max_nbtime=None):
         if RLAGRS is None:
@@ -125,22 +139,23 @@ class snap(pd.DataFrame):
                 "E": nbdf(),
                 }
         if max_nbtime is None:
-            max_nbtime = self.index.shape[0]
+            max_nbtime = self.snap_data.index.shape[0]
         else:
-            max_nbtime = self.index[self.index <= max_nbtime].shape[0]
+            max_nbtime = self.snap_data.index[self.snap_data.index <= max_nbtime].shape[0]
 
-        for idx in tqdm(self.index[:max_nbtime:stepsize]):
+        for idx in tqdm(self.snap_data.index[:max_nbtime:stepsize]):
             nbtime = None
             try:
                 nbtime = self.load_cluster(idx, return_nbtime=True)
             except Exception as e:
-                warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
+                warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
             self.calc_R()
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
                 self.time_evolution_data["RLAGR_BH"].loc[nbtime,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["RLAGR"].loc[nbtime,str(rlagr)] = float(self.cluster_data[self.cluster_data["M/MT"] < rlagr]["R"].max())
                 self.time_evolution_data["E"].loc[nbtime,"SINGLE_BH_N"] = self.filter("SINGLE_BH").shape[0]
                 self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
                 self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
@@ -149,7 +164,7 @@ class snap(pd.DataFrame):
 
 
     def load_cluster(self, time, return_nbtime = False):
-        if self.shape == (0,3):
+        if self.snap_data.shape == (0,3):
             self._load_files()
 
         self.time = time
@@ -172,12 +187,12 @@ class snap(pd.DataFrame):
 
                 }
 
-        f = h5py.File(self.loc[time]["file"],"r")
-        nbtime = f["Step#" + self.loc[time]["step"]]["000 Scalars"][0]
-        self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        f = h5py.File(self.snap_data.loc[time]["file"],"r")
+        nbtime = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][0]
+        self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
         for col in default_cols.keys():
-            if default_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
-                self.cluster_data[col] = f["Step#" + self.loc[time]["step"]][default_cols[col]][:]
+            if default_cols[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
+                self.cluster_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][default_cols[col]][:]
        
         binary_cols = {
                 "M1": "123 Bin M1*",
@@ -199,10 +214,10 @@ class snap(pd.DataFrame):
                 "NAME1": "161 Bin Name1",
                 "NAME2": "162 Bin Name2", 
                 }
-        self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
+        self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
         for col in binary_cols.keys():
-            if binary_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
-                self.binaries_data[col] = f["Step#" + self.loc[time]["step"]][binary_cols[col]][:]
+            if binary_cols[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
+                self.binaries_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][binary_cols[col]][:]
 
         #self.singles_data = singles(self.cluster_data, self.binary_data)
         self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
@@ -301,7 +316,7 @@ class snap(pd.DataFrame):
         """
 
     def calc_VROT_CUMMEAN(self):
-        if not "VROT" in self.cluster_data.columns:
+        if "VROT" not in self.cluster_data.columns:
             self.calc_VROT()
 
         self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
@@ -309,7 +324,7 @@ class snap(pd.DataFrame):
 
     def filter(self, value):
         if value == "BH":
-            return self.cluster_data[self.singles["K*"] == 14]
+            return self.cluster_data[self.cluster_data["K*"] == 14]
         elif value == "SINGLE_BH":
             return self.cluster_data[(self.singles["K*"] == 14) & self.singles_mask]
         elif value == "BH-Any":
@@ -329,20 +344,20 @@ class snap(pd.DataFrame):
             # newer python versions complain about appending... so either way...
             # TODO: change python ver to pandas ver
             if sys.version_info.minor >= 10:
-                self.loc[float(file[file.rfind("/")+1:].replace("snap.40_","").replace(".h5part",""))] = [float(file[file.rfind("/") + 1:].replace("snap.40_","").replace(".h5part","")),file, "0"]
+                self.snap_data.loc[float(file[file.rfind("/")+1:].replace("snap.40_","").replace(".h5part",""))] = [float(file[file.rfind("/") + 1:].replace("snap.40_","").replace(".h5part","")),file, "0"]
             else:
-                super().__init__(self.append({"time": float(file[file.rfind("/")+1:].replace("snap.40_","").replace(".h5part","")),
+                self.snap_data.__init__(self.snap_data.append({"time": float(file[file.rfind("/")+1:].replace("snap.40_","").replace(".h5part","")),
                                               "file": file,
                                               "step": "0"}, ignore_index=True))
-                self.index = self["time"].values
-        self.sort_index(inplace=True)
+                self.snap_data.index = self.snap_data["time"].values
+        self.snap_data.sort_index(inplace=True)
 
     def _analyze_files(self):
         if self.files is None:
             logging.error("Couldn't find any snap files to load")
             return 0
 
-        super().__init__(columns=["time","file","step"])
+        self.snap_data.__init__(columns=["time","file","step"])
 
         for file in tqdm(self.files):
             f = h5py.File(file,"r")
@@ -353,10 +368,10 @@ class snap(pd.DataFrame):
                 # newer python versions complain about appending... so either way...
                 # TODO: change python ver to pandas ver
                 if sys.version_info.minor >= 10:
-                    self.loc[f[step]['000 Scalars'][0]] = [f[step]['000 Scalars'][0],file, step.replace("Step#","")]
+                    self.snap_data.loc[f[step]['000 Scalars'][0]] = [f[step]['000 Scalars'][0],file, step.replace("Step#","")]
                 else:
-                    super().__init__(self.append({"time": f[step]['000 Scalars'][0],
+                    self.snap_data.__init__(self.snap_data.append({"time": f[step]['000 Scalars'][0],
                                                   "file": file,
                                                   "step": step.replace("Step#","")}, ignore_index=True))
-                    self.index = self["time"].values
+                    self.index = self.snap_data["time"].values
             f.close() 

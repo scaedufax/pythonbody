@@ -11,6 +11,7 @@ import warnings
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import Binaries
+from .. import defaults
 #from pythonbody.snap.singles import singles
 
 
@@ -114,8 +115,9 @@ class snap(pd.DataFrame):
                 "E": nbdf(),
                 }
         for idx in tqdm(self.index[::stepsize]):
+            nbtime = None
             try:
-                self.load_cluster(idx)
+                nbtime = self.load_cluster(idx)
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}")
                 continue
@@ -123,14 +125,14 @@ class snap(pd.DataFrame):
             self.calc_M_over_MT()
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[idx,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
-                self.time_evolution_data["E"].loc[idx,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
-                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
-                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
-                self.time_evolution_data["E"].loc[idx,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
+                self.time_evolution_data["RLAGR_BH"].loc[nbtime,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
+                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
+                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
+                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
 
 
-    def load_cluster(self, time):
+    def load_cluster(self, time, return_nbtime = False):
         if self.shape == (0,3):
             self._load_files()
 
@@ -155,6 +157,7 @@ class snap(pd.DataFrame):
                 }
 
         f = h5py.File(self.loc[time]["file"],"r")
+        nbtime = f["Step#" + self.loc[time]["step"]]["000 Scalars"][0]
         self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.loc[time]["step"]].keys()])
         for col in default_cols.keys():
             if default_cols[col] in f["Step#" + self.loc[time]["step"]].keys():
@@ -188,7 +191,8 @@ class snap(pd.DataFrame):
         #self.singles_data = singles(self.cluster_data, self.binary_data)
         self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
         self.binaries_mask = ~ self.singles_mask
-
+        if return_nbtime:
+            return nbtime
         return self.cluster_data
 
     def calc_spherical_coords(self):

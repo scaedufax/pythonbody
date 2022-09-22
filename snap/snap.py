@@ -90,6 +90,16 @@ class snap(pd.DataFrame):
             self.calc_time_evolution_data()
         return self.time_evolution_data
 
+    @property
+    def potential_escapers(self, t=0, G=4.30091e-3):
+        if self.shape[0] == 0:
+            self.load_cluster(t)
+        if "R" not in self.cluster_data.columns:
+            self.calc_R()
+        if "Eb" not in self.cluster_data.columns:
+            self.calc_Eb()
+        return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())))]
+
     def calculate_time_evolution(self, RLAGRS=None, stepsize=1, max_nbtime=None):
         if RLAGRS is None:
             RLAGRS = [0.001,
@@ -131,6 +141,7 @@ class snap(pd.DataFrame):
             self.binaries_data.calc_Eb()
             for rlagr in RLAGRS:
                 self.time_evolution_data["RLAGR_BH"].loc[nbtime,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["E"].loc[nbtime,"SINGLE_BH_N"] = self.filter("SINGLE_BH").shape[0]
                 self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
                 self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
                 self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
@@ -231,6 +242,10 @@ class snap(pd.DataFrame):
         return self.calc_spherical_coords()
     def calc_EKIN(self):
         self.cluster_data["EKIN"] = 0.5*self.cluster_data["M"]*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
+    def calc_Eb(self):
+        if "EKIN" not in self.cluster_data.columns:
+            self.calc_EKIN()
+        self.cluster_data["Eb"] = self.cluster_data["EKIN"] + self.cluster_data["POT"]
 
     def calc_M_over_MT(self):
         if "R" not in self.cluster_data.columns:

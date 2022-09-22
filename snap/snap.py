@@ -11,6 +11,10 @@ import warnings
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import Binaries
+from .. import settings
+from .. import defaults
+if settings.DEBUG_TIMING:
+    import datetime as dt
 #from .. import defaults
 #from pythonbody.snap.singles import singles
 
@@ -87,7 +91,7 @@ class snap():
     @property
     def time_evolution(self):
         if self.time_evolution_data is None:
-            self.calc_time_evolution_data()
+            self.calculate_time_evolution()
         return self.time_evolution_data
 
     @property
@@ -116,25 +120,9 @@ class snap():
 
     def calculate_time_evolution(self, RLAGRS=None, stepsize=1, max_nbtime=None):
         if RLAGRS is None:
-            RLAGRS = [0.001,
-                      0.003,
-                      0.005,
-                      0.01,
-                      0.03,
-                      0.05,
-                      0.1,
-                      0.2,
-                      0.3,
-                      0.4,
-                      0.5,
-                      0.6,
-                      0.7,
-                      0.8,
-                      0.9,
-                      0.95,
-                      0.99,
-                      1.0]
+            RLAGRS = defaults.RLAGRS
         self.time_evolution_data = {
+                "RLAGR": nbdf(),
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
                 }
@@ -150,22 +138,47 @@ class snap():
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
+            if settings.DEBUG_TIMING:
+                time_debug_time_evolution_calc = time_debug_calc = time_debug_calc_R = dt.datetime.now()
             self.calc_R()
+            if settings.DEBUG_TIMING:
+                print(f"Calculating R took {dt.datetime.now() - time_debug_calc_R}")
+                time_debug_calc_M_over_MT = dt.datetime.now()
             self.calc_M_over_MT()
+            if settings.DEBUG_TIMING:
+                print(f"Calculating M/MT took {dt.datetime.now() - time_debug_calc_M_over_MT}")
+                time_debug_calc_Eb = dt.datetime.now()
             self.binaries_data.calc_Eb()
+            if settings.DEBUG_TIMING:
+                stop = dt.datetime.now()
+                print(f"Calculating Eb took {stop - time_debug_calc_Eb}")
+                print(f"All calc_* functions took {stop - time_debug_calc}")
+                time_debug_RLAGR = dt.datetime.now()
+            
             for rlagr in RLAGRS:
-                self.time_evolution_data["RLAGR_BH"].loc[nbtime,str(rlagr)] = float(self.filter("SINGLE_BH")[self.filter("SINGLE_BH")["M/MT"] < rlagr]["R"].max())
+                self.time_evolution_data["RLAGR_BH"].loc[nbtime,str(rlagr)] = float(self.cluster_data[(self.cluster_data["K*"] == 14) & self.singles_mask & (self.cluster_data["M/MT"] < rlagr)]["R"].max())
                 self.time_evolution_data["RLAGR"].loc[nbtime,str(rlagr)] = float(self.cluster_data[self.cluster_data["M/MT"] < rlagr]["R"].max())
-                self.time_evolution_data["E"].loc[nbtime,"SINGLE_BH_N"] = self.filter("SINGLE_BH").shape[0]
-                self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
-                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
-                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
-                self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
+            
+            if settings.DEBUG_TIMING:
+                print(f"Calculating RLAGR took {dt.datetime.now() - time_debug_RLAGR}")
+                time_debug_E = dt.datetime.now()
+
+            self.time_evolution_data["E"].loc[nbtime,"SINGLE_BH_N"] = self.filter("SINGLE_BH").shape[0]
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
+            if settings.DEBUG_TIMING:
+                print(f"Calculating E data took {dt.datetime.now() - time_debug_E}")
+                print(f"Calculating time evolution data for NB time {idx} took {dt.datetime.now() - time_debug_time_evolution_calc}")
 
 
     def load_cluster(self, time, return_nbtime = False):
         if self.snap_data.shape == (0,3):
             self._load_files()
+
+        if settings.DEBUG_TIMING:
+            time_debug_load_cluster = dt.datetime.now()
 
         self.time = time
         
@@ -187,7 +200,11 @@ class snap():
 
                 }
 
+        if settings.DEBUG_TIMING:
+            time_debug_hdf5_file = dt.datetime.now()
         f = h5py.File(self.snap_data.loc[time]["file"],"r")
+        if settings.DEBUG_TIMING:
+            print(f"Loading hdf5 file {time} took {dt.datetime.now() - time_debug_hdf5_file}")
         nbtime = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][0]
         self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
         for col in default_cols.keys():
@@ -222,6 +239,9 @@ class snap():
         #self.singles_data = singles(self.cluster_data, self.binary_data)
         self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
         self.binaries_mask = ~ self.singles_mask
+        
+        if settings.DEBUG_TIMING:
+            print(f"Loading cluster data at time {time} took {dt.datetime.now() - time_debug_load_cluster}")
         if return_nbtime:
             return float(nbtime)
         return self.cluster_data

@@ -65,10 +65,14 @@ class snap():
             return super().__getitem__(value)
 
     def __repr__(self):
-        return self.cluster_data.__repr__()
+        if self.cluster_data is not None:
+            return self.cluster_data.__repr__()
+        return self.snap_data.__repr__()
     
     def _repr_html_(self):
-        return self.cluster_data._repr_html_()
+        if self.cluster_data is not None:
+            return self.cluster_data._repr_html_()
+        return self.snap_data._repr_html_()
 
     @property
     def reduced(self):
@@ -168,6 +172,12 @@ class snap():
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
+            
+            # clean up zero values as nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_tot"] == 0,"BH-BH_Eb_tot"] = np.nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_mean"] == 0,"BH-BH_Eb_mean"] = np.nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_std"] == 0,"BH-BH_Eb_std"] = np.nan
+
             if settings.DEBUG_TIMING:
                 print(f"Calculating E data took {dt.datetime.now() - time_debug_E}")
                 print(f"Calculating time evolution data for NB time {idx} took {dt.datetime.now() - time_debug_time_evolution_calc}")

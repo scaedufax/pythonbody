@@ -226,6 +226,10 @@ class snap():
             return float(nbtime)
         return self.cluster_data
 
+    def calc_all(self):
+        for func in [func for func in dir(self) if "calc_" in func and func not in ["calc_R", "calc_THETA", "calc_PHI", "calc_all"]]:
+            eval(f"self.{func}()")
+
     def calc_spherical_coords(self):
         """
         calculates spherical coordinates from cartesian ones.
@@ -261,6 +265,12 @@ class snap():
         if "EKIN" not in self.cluster_data.columns:
             self.calc_EKIN()
         self.cluster_data["Eb"] = self.cluster_data["EKIN"] + self.cluster_data["POT"]
+    def calc_LZ_spec(self):
+        self.cluster_data["LZ_spec"] = self.cluster_data["X1"] * self.cluster_data["V2"] - self.cluster_data["X2"] * self.cluster_data["V1"]
+    def calc_LZ(self):
+        if "LZ_spec" not in self.cluster_data.columns:
+            self.calc_LZ_spec()
+        self.cluster_data["LZ"] = self.cluster_data["M"] * self.cluster_data["LZ_spec"] 
 
     def calc_M_over_MT(self):
         if "R" not in self.cluster_data.columns:

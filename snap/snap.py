@@ -174,9 +174,9 @@ class snap():
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()
             
             # clean up zero values as nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_tot"] == 0,"BH-BH_Eb_tot"] = np.nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_mean"] == 0,"BH-BH_Eb_mean"] = np.nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH_BH_EB_std"] == 0,"BH-BH_Eb_std"] = np.nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-BH_Eb_tot"] == 0,"BH-BH_Eb_tot"] = np.nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-BH_Eb_mean"] == 0,"BH-BH_Eb_mean"] = np.nan
+            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-BH_Eb_std"] == 0,"BH-BH_Eb_std"] = np.nan
 
             if settings.DEBUG_TIMING:
                 print(f"Calculating E data took {dt.datetime.now() - time_debug_E}")

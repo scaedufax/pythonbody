@@ -119,7 +119,7 @@ class snap(pd.DataFrame):
             try:
                 nbtime = self.load_cluster(idx, return_nbtime=True)
             except Exception as e:
-                warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}")
+                warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
             self.calc_R()
             self.calc_M_over_MT()

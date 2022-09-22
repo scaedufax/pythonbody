@@ -6,6 +6,7 @@ import h5py
 import sys
 from tqdm import tqdm
 import pathlib
+import warnings
 
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
@@ -115,7 +116,8 @@ class snap(pd.DataFrame):
         for idx in tqdm(self.index[::stepsize]):
             try:
                 self.load_cluster(idx)
-            except:
+            except Exception as e:
+                warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}")
                 continue
             self.calc_R()
             self.calc_M_over_MT()

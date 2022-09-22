@@ -129,6 +129,7 @@ class snap():
                 "RLAGR": nbdf(),
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
+                "N": nbdf(),
                 }
         if max_nbtime is None:
             max_nbtime = self.snap_data.index.shape[0]
@@ -167,8 +168,12 @@ class snap():
                 print(f"Calculating RLAGR took {dt.datetime.now() - time_debug_RLAGR}")
                 time_debug_E = dt.datetime.now()
 
-            self.time_evolution_data["E"].loc[nbtime,"SINGLE_BH_N"] = self.filter("SINGLE_BH").shape[0]
-            self.time_evolution_data["E"].loc[nbtime,"BH-BH_N"] = self.binaries_data.filter("BH-BH").shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"SINGLE_BH"] = self.cluster_data[(self.cluster_data["K*"] == 14) & self.singles_mask].shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"BH-BH"] = self.binaries_data.filter("BH-BH").shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"POTENTIAL_ESCAPERS"] = self.potential_escapers.shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"SINGLES"] = self.singles.shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"BINARIES"] = self.binaries.shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"TOT"] = self.cluster_data.shape[0]
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data.filter("BH-BH")["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data.filter("BH-BH")["Eb"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_std"] = self.binaries_data.filter("BH-BH")["Eb"].std()

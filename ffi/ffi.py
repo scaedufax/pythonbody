@@ -21,7 +21,7 @@ class FFI:
             self.default_cfunc = "ocl"
             self.OpenCL = True
         except:
-            print("Couldn't load OpenCL, defaulting back to OpenMP")
+            print("FFI: Couldn't load OpenCL, defaulting back to OpenMP")
             self.default_cfunc = "omp"
         
 

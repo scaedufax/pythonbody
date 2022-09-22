@@ -90,7 +90,7 @@ class snap(pd.DataFrame):
             self.calc_time_evolution_data()
         return self.time_evolution_data
 
-    def calculate_time_evolution(self, RLAGRS=None, stepsize=1):
+    def calculate_time_evolution(self, RLAGRS=None, stepsize=1, max_nbtime=None):
         if RLAGRS is None:
             RLAGRS = [0.001,
                       0.003,
@@ -114,7 +114,12 @@ class snap(pd.DataFrame):
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
                 }
-        for idx in tqdm(self.index[::stepsize]):
+        if max_nbtime is None:
+            max_nbtime = self.index.shape[0]
+        else:
+            max_nbtime = self.index[self.index <= max_nbtime].shape[0]
+
+        for idx in tqdm(self.index[:max_nbtime:stepsize]):
             nbtime = None
             try:
                 nbtime = self.load_cluster(idx, return_nbtime=True)

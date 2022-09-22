@@ -11,7 +11,7 @@ import warnings
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import Binaries
-from .. import defaults
+#from .. import defaults
 #from pythonbody.snap.singles import singles
 
 
@@ -117,7 +117,7 @@ class snap(pd.DataFrame):
         for idx in tqdm(self.index[::stepsize]):
             nbtime = None
             try:
-                nbtime = self.load_cluster(idx)
+                nbtime = self.load_cluster(idx, return_nbtime=True)
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.loc[idx,'file']}\". Exception:\n{str(e)}")
                 continue
@@ -192,7 +192,7 @@ class snap(pd.DataFrame):
         self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
         self.binaries_mask = ~ self.singles_mask
         if return_nbtime:
-            return nbtime
+            return float(nbtime)
         return self.cluster_data
 
     def calc_spherical_coords(self):

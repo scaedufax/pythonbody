@@ -174,15 +174,19 @@ class snap():
             
             if settings.DEBUG_TIMING:
                 print(f"Calculating RLAGR took {dt.datetime.now() - time_debug_RLAGR}")
-                time_debug_E = dt.datetime.now()
+                time_debug_N = dt.datetime.now()
 
             self.time_evolution_data["N"].loc[nbtime,"SINGLE_BH"] = self.cluster_data[(self.cluster_data["K*"] == 14) & self.singles_mask].shape[0]
             self.time_evolution_data["N"].loc[nbtime,"BH-BH"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)].shape[0]
             self.time_evolution_data["N"].loc[nbtime,"BH-Any"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)].shape[0]
             self.time_evolution_data["N"].loc[nbtime,"POTENTIAL_ESCAPERS"] = self.potential_escapers.shape[0]
+            self.time_evolution_data["N"].loc[nbtime,"POTENTIAL_ESCAPERS_REL"] = self.potential_escapers.shape[0]/self.cluster_data.shape[0]
             self.time_evolution_data["N"].loc[nbtime,"SINGLES"] = self.singles.shape[0]
             self.time_evolution_data["N"].loc[nbtime,"BINARIES"] = self.binaries.shape[0]
             self.time_evolution_data["N"].loc[nbtime,"TOT"] = self.cluster_data.shape[0]
+            if settings.DEBUG_TIMING:
+                print(f"Calculating N data took {dt.datetime.now() - time_debug_N}")
+                time_debug_E = dt.datetime.now()
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["Eb"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].sum()

@@ -32,14 +32,16 @@ class Binaries(nbdf):
         self["cmLZ"] = self["cmLZ_spec"] * (self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values
 
     def calc_relEKIN_spec(self):
-        self["relEKIN_spec"] = 0.5*np.linalg.norm(self.cluster_data[["relV1", "relV2", "relV3"]], axis=1)**2
+        self["relEKIN_spec"] = 0.5*np.linalg.norm(self[["relV1", "relV2", "relV3"]], axis=1)**2
     def calc_relEKIN(self):
         if "relEKIN_spec" not in self.columns:
             self.calc_relEKIN_spec()
         self["relEKIN"] = self["relEKIN_spec"] * (self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values
+
     def calc_cmEKIN_spec(self):
-        self["cmEKIN_spec"] = 0.5*np.linalg.norm(self.cluster_data[["cmV1", "cmV2", "cmV3"]], axis=1)**2
-    def calc_relEKIN(self):
+        self["cmEKIN_spec"] = 0.5*np.linalg.norm(self[["cmV1", "cmV2", "cmV3"]], axis=1)**2
+
+    def calc_cmEKIN(self):
         if "cmEKIN_spec" not in self.columns:
             self.calc_cmEKIN_spec()
         self["cmEKIN"] = self["cmEKIN_spec"] * (self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values

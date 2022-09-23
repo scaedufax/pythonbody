@@ -122,7 +122,11 @@ class snap():
     def iloc(self, *args, **kwargs):
         return self.cluster_data.iloc(*args, **kwargs)
 
-    def calculate_time_evolution(self, RLAGRS=None, stepsize=1, max_nbtime=None):
+    def calculate_time_evolution(self,
+                                 RLAGRS=None,
+                                 stepsize=1,
+                                 min_nbtime=None,
+                                 max_nbtime=None):
         if RLAGRS is None:
             RLAGRS = defaults.RLAGRS
         self.time_evolution_data = {
@@ -135,8 +139,12 @@ class snap():
             max_nbtime = self.snap_data.index.shape[0]
         else:
             max_nbtime = self.snap_data.index[self.snap_data.index <= max_nbtime].shape[0]
+        if min_nbtime is None:
+            min_nbtime = 0
+        else:
+            min_nbtime = self.snap_data.index[self.snap_data.index < min_nbtime].shape[0]
 
-        for idx in tqdm(self.snap_data.index[:max_nbtime:stepsize]):
+        for idx in tqdm(self.snap_data.index[min_nbtime:max_nbtime:stepsize]):
             nbtime = None
             try:
                 nbtime = self.load_cluster(idx, return_nbtime=True)

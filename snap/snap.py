@@ -318,6 +318,8 @@ class snap():
         return self.calc_spherical_coords()
     def calc_EKIN(self):
         self.cluster_data["EKIN"] = 0.5*self.cluster_data["M"]*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
+    def calc_EKIN_spec(self):
+        self.cluster_data["EKIN_spec"] = 0.5*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
     def calc_Eb(self):
         if "EKIN" not in self.cluster_data.columns:
             self.calc_EKIN()

@@ -88,7 +88,10 @@ def load(stdout_files):
                 elif RTIDE_line == line_count:
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
-                    data["OTHER_R"].loc[current_time] = np.float64(line[1:])
+                    try:
+                        data["OTHER_R"].loc[current_time] = np.float64(line[1:])
+                    except ValueError:
+                        continue
                 line_count += 1
     return data
 

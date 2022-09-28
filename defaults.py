@@ -16,3 +16,22 @@ RLAGRS = [0.001,
           0.95,
           0.99,
           1.0]
+
+snap_SCALAR_MAP = {
+    1: "TTOT",
+    2: "NPAIRS",
+    3: "RBAR",
+    4: "ZMBAR",
+    5: "N",
+    6: "TSTAR",
+    7: "RDENS1",
+    8: "RDENS2",
+    9: "RDENS3",
+    10: "TTOT/TCR0",
+    11: "TSCALE",
+    12: "VSTAR",
+    13: "RC",
+    14: "NC",
+    15: "VC (sigma)",
+    71: "RTIDE"
+}

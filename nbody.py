@@ -121,7 +121,10 @@ class nbody:
                     data_path = [self.data_path + "/" + i for i in self._files['nb_stdout_files']]
                     self._data[load_type] = eval(f"data_files.{load_type}.load({data_path})")
                 else:
-                    self._data[load_type] = eval(f"data_files.{load_type}.load('{data_path}')")
+                    try:
+                        self._data[load_type] = eval(f"data_files.{load_type}.load('{data_path}')")
+                    except Exception as e:
+                        print(f"Unknown error with {load_type}: {type(e)}, {str(e)}")
 
 
     def calculate_energy_evolution(self):
@@ -148,6 +151,12 @@ class nbody:
                                                      index=[i]
                                                 )))
         self._data["E"].sort_index(inplace=True)
+
+    def snap_fix_RTIDE(self):
+        if "stdout" not in self._data.keys():
+            self.load("stdout")
+        rtide = self._data["stdout"]["OTHER_R"]["RTIDE"]
+        self.snap.fix_RTIDE(rtide)
     
     def show_mem_usage(self):
         """

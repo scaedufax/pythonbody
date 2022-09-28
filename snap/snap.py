@@ -37,6 +37,7 @@ class snap():
         self.binaries_mask = None
         self.singles_mask = None
         self.time_evolution_data = None
+        self.scalar_data = {}
 
     def __getitem__(self, value):
         """
@@ -288,6 +289,9 @@ class snap():
         #self.singles_data = singles(self.cluster_data, self.binary_data)
         self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
         self.binaries_mask = ~ self.singles_mask
+
+        for scalar in defaults.snap_SCALAR_MAP.keys():
+            self.scalar_data[defaults.snap_SCALAR_MAP[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
         
         if settings.DEBUG_TIMING:
             print(f"Loading cluster data at time {time} took {dt.datetime.now() - time_debug_load_cluster}")
@@ -402,6 +406,18 @@ class snap():
 
         self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
         #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
+
+    def fix_RTIDE(self, rtide: np.array):
+        index = None
+        try:
+            index = rtide.index
+        except AttributeError:
+            index = range(0, len(rtide))
+        for idx in tqdm(index):
+            f = h5py.File(self.snap_data[self.snap_data.index == idx]["file"].values[0], "a")
+            for step in f.keys():
+                f[step]["000 Scalars"][71] = rtide[idx]
+
 
     def filter(self, value):
         if value == "BH":

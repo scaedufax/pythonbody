@@ -107,7 +107,10 @@ class snap():
             self.calc_R()
         if "Eb" not in self.cluster_data.columns:
             self.calc_Eb()
-        return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())))]
+
+        if self.scalar_data["RTIDE"] == 0:
+            return pd.DataFrame(columns=self.cluster_data.columns)
+        return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * float(self.cluster_data["M"].sum()) / float(self.scalar_data["RTIDE"])))]
 
     @property
     def binding_enegery(self, t=0, G=4.30091e-3):
@@ -191,7 +194,7 @@ class snap():
                 time_debug_M = dt.datetime.now()
             self.time_evolution_data["M"].loc[nbtime,"SINGLE_BH"] = self.cluster_data[(self.cluster_data["K*"] == 14) & self.singles_mask]["M"].sum()
             self.time_evolution_data["M"].loc[nbtime,"BH-BH"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)][["M1", "M2"]].sum().sum()
-            self.time_evolution_data["M"].loc[nbtime,"BH-Any"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)][["M", "M2"]].sum().sum()
+            self.time_evolution_data["M"].loc[nbtime,"BH-Any"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)][["M1", "M2"]].sum().sum()
             self.time_evolution_data["M"].loc[nbtime,"POTENTIAL_ESCAPERS"] = self.potential_escapers["M"].sum()
             self.time_evolution_data["M"].loc[nbtime,"SINGLES"] = self.singles["M"].sum()
             self.time_evolution_data["M"].loc[nbtime,"BINARIES"] = self.binaries["M"].sum()
@@ -414,7 +417,10 @@ class snap():
         except AttributeError:
             index = range(0, len(rtide))
         for idx in tqdm(index):
-            f = h5py.File(self.snap_data[self.snap_data.index == idx]["file"].values[0], "a")
+            try:
+                f = h5py.File(self.snap_data[self.snap_data.index == idx]["file"].values[0], "a")
+            except IndexError:
+                continue
             for step in f.keys():
                 f[step]["000 Scalars"][71] = rtide[idx]
 

@@ -27,7 +27,7 @@ def load(stdout_files):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), out_file)
 
         if len(FILES) != 1:
-            print(f"Loading {out_file} [{FILES.index(out_file) + 1}/{len(FILES)}]")
+            print(f"Loading {out_file[out_file.rfind('/'):]} [{FILES.index(out_file) + 1}/{len(FILES)}]")
 
         with open(out_file, "r") as myfile:
             cols = None

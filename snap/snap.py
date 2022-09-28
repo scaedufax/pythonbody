@@ -134,6 +134,7 @@ class snap():
                 "RLAGR_BH": nbdf(),
                 "E": nbdf(),
                 "N": nbdf(),
+                "M": nbdf(),
                 }
         if max_nbtime is None:
             max_nbtime = self.snap_data.index.shape[0]
@@ -186,7 +187,18 @@ class snap():
             self.time_evolution_data["N"].loc[nbtime,"TOT"] = self.cluster_data.shape[0]
             if settings.DEBUG_TIMING:
                 print(f"Calculating N data took {dt.datetime.now() - time_debug_N}")
+                time_debug_M = dt.datetime.now()
+            self.time_evolution_data["M"].loc[nbtime,"SINGLE_BH"] = self.cluster_data[(self.cluster_data["K*"] == 14) & self.singles_mask]["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"BH-BH"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"BH-Any"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"POTENTIAL_ESCAPERS"] = self.potential_escapers["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"SINGLES"] = self.singles["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"BINARIES"] = self.binaries["M"].sum()
+            self.time_evolution_data["M"].loc[nbtime,"TOT"] = self.cluster_data["M"].sum()
+            if settings.DEBUG_TIMING:
+                print(f"Calculating N data took {dt.datetime.now() - time_debug_M}")
                 time_debug_E = dt.datetime.now()
+
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["Eb"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].sum()

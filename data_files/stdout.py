@@ -26,6 +26,9 @@ def load(stdout_files):
         if not pathlib.Path(out_file).is_file():
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), out_file)
 
+        if len(FILES) != 1:
+            print(f"Loading {out_file} [{FILES.index(out_file) + 1}/{len(FILES)}]")
+
         with open(out_file, "r") as myfile:
             cols = None
             lines = myfile.readlines()
@@ -60,7 +63,10 @@ def load(stdout_files):
                         data["ADJUST"] = pd.DataFrame(columns=cols)
                     idx = np.float64(line[2])
                     current_time = idx
-                    data["ADJUST"].loc[idx] = np.float64([line[i] for i in range(4, len(line), 2)])
+                    try:
+                        data["ADJUST"].loc[idx] = np.float64([line[i] for i in range(4, len(line), 2)])
+                    except ValueError:
+                        continue
 
                 # the something after ADJUST lines, where we can get the total Mass
                 elif re.search("TIME\[NB\].+N.+<NB>.+NPAIRS.+NMERGE.+MULT.+NS.+NSTEP\(I,B,R,U\).+DE.+E.+M.+", line):

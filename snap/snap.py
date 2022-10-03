@@ -110,7 +110,7 @@ class snap():
 
         if self.scalar_data["RTIDE"] == 0:
             return pd.DataFrame(columns=self.cluster_data.columns)
-        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * float(self.cluster_data["M"].sum()) / float(self.scalar_data["RTIDE"])))]
+        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"] / float(self.scalar_data["RTIDE"])))]
 
     @property
     def binding_enegery(self, t=0, G=4.30091e-3):

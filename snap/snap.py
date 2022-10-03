@@ -419,7 +419,7 @@ class snap():
         for idx in tqdm(index):
             try:
                 f = h5py.File(self.snap_data[self.snap_data.index == idx]["file"].values[0], "a")
-            except IndexError:
+            except:
                 continue
             for step in f.keys():
                 f[step]["000 Scalars"][71] = rtide[idx]

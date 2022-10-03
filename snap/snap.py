@@ -204,6 +204,7 @@ class snap():
                 time_debug_E = dt.datetime.now()
 
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["Eb"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"Singles_Eb_tot"] = self.cluster_data["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["Eb"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].sum()
             self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].mean()

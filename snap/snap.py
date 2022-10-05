@@ -110,7 +110,7 @@ class snap():
             self.calc_Eb()
 
         if self.RTIDE is not None:
-            return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"] / float(self.RTIDE)))]
+            return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"] / float(self.RTIDE)))]
 
         if self.scalar_data["RTIDE"] == 0:
             return pd.DataFrame(columns=self.cluster_data.columns)
@@ -145,6 +145,7 @@ class snap():
                 "E": nbdf(),
                 "N": nbdf(),
                 "M": nbdf(),
+		"DEBUG": nbdf(),
                 }
         if max_nbtime is None:
             max_nbtime = self.snap_data.index.shape[0]
@@ -233,6 +234,10 @@ class snap():
             if settings.DEBUG_TIMING:
                 print(f"Calculating E data took {dt.datetime.now() - time_debug_E}")
                 print(f"Calculating time evolution data for NB time {idx} took {dt.datetime.now() - time_debug_time_evolution_calc}")
+
+            self.time_evolution_data["DEBUG"].loc[nbtime,"RTIDE"] = self.RTIDE
+            self.time_evolution_data["DEBUG"].loc[nbtime,"RBAR"] = self.scalar_data["RBAR"]
+
 
 
     def load_cluster(self, time, return_nbtime = False):
@@ -434,7 +439,7 @@ class snap():
             except:
                 continue
             for step in f.keys():
-                f[step]["000 Scalars"][71] = rtide[idx]
+                f[step]["000 Scalars"][70] = rtide[idx]
 
 
     def filter(self, value):

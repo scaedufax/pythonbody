@@ -38,6 +38,7 @@ class snap():
         self.singles_mask = None
         self.time_evolution_data = None
         self.scalar_data = {}
+        self.RTIDE = None
 
     def __getitem__(self, value):
         """
@@ -108,8 +109,12 @@ class snap():
         if "Eb" not in self.cluster_data.columns:
             self.calc_Eb()
 
+        if self.RTIDE is not None:
+            return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"] / float(self.RTIDE)))]
+
         if self.scalar_data["RTIDE"] == 0:
             return pd.DataFrame(columns=self.cluster_data.columns)
+
         return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"] / float(self.scalar_data["RTIDE"])))]
 
     @property
@@ -127,6 +132,7 @@ class snap():
         return self.cluster_data.iloc(*args, **kwargs)
 
     def calculate_time_evolution(self,
+                                 rtide_list=None,
                                  RLAGRS=None,
                                  stepsize=1,
                                  min_nbtime=None,
@@ -156,6 +162,11 @@ class snap():
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
+
+            # get RTIDE if list was passed
+            if rtide_list is not None:
+                self.RTIDE = rtide_list[self.time]
+
             if settings.DEBUG_TIMING:
                 time_debug_time_evolution_calc = time_debug_calc = time_debug_calc_R = dt.datetime.now()
             self.calc_R()

@@ -106,16 +106,16 @@ class snap():
             self.load_cluster(t)
         if "R" not in self.cluster_data.columns:
             self.calc_R()
-        if "Eb" not in self.cluster_data.columns:
-            self.calc_Eb()
+        if "Eb_spec" not in self.cluster_data.columns:
+            self.calc_Eb_spec()
 
         if self.RTIDE is not None:
-            return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.RTIDE)))]
+            return self.cluster_data[(self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.RTIDE)))]
 
         if self.scalar_data["RTIDE"] == 0:
             return pd.DataFrame(columns=self.cluster_data.columns)
 
-        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.scalar_data["RTIDE"])))]
+        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.scalar_data["RTIDE"])))]
 
     @property
     def binding_enegery(self, t=0, G=4.30091e-3):
@@ -237,7 +237,7 @@ class snap():
 
             self.time_evolution_data["DEBUG"].loc[nbtime,"RTIDE"] = self.RTIDE
             self.time_evolution_data["DEBUG"].loc[nbtime,"RBAR"] = self.scalar_data["RBAR"]
-            self.time_evolution_data["DEBUG"].loc[nbtime,"NAN_POT"] = np.sum(pd.isna(self.cluster_data["POT"]))
+            self.time_evolution_data["DEBUG"].loc[nbtime,"POT_NAN_OR_NULL"] = np.sum(pd.isna(self.cluster_data["POT"]) | self.cluster_data["POT"] == 0)
 
 
 

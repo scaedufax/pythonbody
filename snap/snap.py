@@ -145,7 +145,7 @@ class snap():
                 "E": nbdf(),
                 "N": nbdf(),
                 "M": nbdf(),
-		"DEBUG": nbdf(),
+                "DEBUG": nbdf(),
                 }
         if max_nbtime is None:
             max_nbtime = self.snap_data.index.shape[0]
@@ -237,6 +237,7 @@ class snap():
 
             self.time_evolution_data["DEBUG"].loc[nbtime,"RTIDE"] = self.RTIDE
             self.time_evolution_data["DEBUG"].loc[nbtime,"RBAR"] = self.scalar_data["RBAR"]
+            self.time_evolution_data["DEBUG"].loc[nbtime,"NAN_POT"] = np.sum(pd.isna(self.cluster_data["POT"]))
 
 
 

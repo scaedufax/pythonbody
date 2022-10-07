@@ -110,12 +110,12 @@ class snap():
             self.calc_Eb()
 
         if self.RTIDE is not None:
-            return self.cluster_data[(self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.RTIDE)))]
+            return self.cluster_data[(self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.RTIDE)))]
 
         if self.scalar_data["RTIDE"] == 0:
             return pd.DataFrame(columns=self.cluster_data.columns)
 
-        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.scalar_data["RTIDE"])))]
+        return self.cluster_data[self.singles_mask & (self.cluster_data["Eb"] < 0) & (self.cluster_data["Eb"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.scalar_data["RTIDE"])))]
 
     @property
     def binding_enegery(self, t=0, G=4.30091e-3):

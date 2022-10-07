@@ -179,6 +179,7 @@ class snap():
                 print(f"Calculating M/MT took {dt.datetime.now() - time_debug_calc_M_over_MT}")
                 time_debug_calc_Eb = dt.datetime.now()
             self.binaries_data.calc_Eb()
+            self.calc_Eb()
             if settings.DEBUG_TIMING:
                 stop = dt.datetime.now()
                 print(f"Calculating Eb took {stop - time_debug_calc_Eb}")

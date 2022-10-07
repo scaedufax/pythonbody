@@ -358,9 +358,9 @@ class snap():
     def calc_EKIN_spec(self):
         self.cluster_data["EKIN_spec"] = 0.5*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
     def calc_Eb(self):
-        if "EKIN" not in self.cluster_data.columns:
-            self.calc_EKIN()
-        self.cluster_data["Eb"] = self.cluster_data["EKIN"] + self.cluster_data["POT"]
+        if "EKIN_spec" not in self.cluster_data.columns:
+            self.calc_EKIN_spec()
+        self.cluster_data["Eb"] = self.cluster_data["EKIN_spec"] + self.cluster_data["POT"]
     def calc_LZ_spec(self):
         self.cluster_data["LZ_spec"] = self.cluster_data["X1"] * self.cluster_data["V2"] - self.cluster_data["X2"] * self.cluster_data["V1"]
     def calc_LZ(self):

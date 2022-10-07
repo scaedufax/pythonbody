@@ -151,13 +151,7 @@ class nbody:
                                                      index=[i]
                                                 )))
         self._data["E"].sort_index(inplace=True)
-
-    def snap_fix_RTIDE(self):
-        if "stdout" not in self._data.keys():
-            self.load("stdout")
-        rtide = self._data["stdout"]["OTHER_R"]["RTIDE"]
-        self.snap.fix_RTIDE(rtide)
-    
+ 
     def show_mem_usage(self):
         """
         Shows memory usage of nbody class instance.

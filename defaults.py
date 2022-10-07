@@ -33,5 +33,8 @@ snap_SCALAR_MAP = {
     12: "RC",
     13: "NC",
     14: "VC (sigma)",
-    70: "RTIDE"
+    26: "TIDAL1",
+    27: "TIDAL2",
+    28: "TIDAL3",
+    29: "TIDAL4",
 }

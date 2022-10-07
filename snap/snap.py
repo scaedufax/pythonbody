@@ -132,7 +132,6 @@ class snap():
         return self.cluster_data.iloc(*args, **kwargs)
 
     def calculate_time_evolution(self,
-                                 rtide_list=None,
                                  RLAGRS=None,
                                  stepsize=1,
                                  min_nbtime=None,
@@ -163,10 +162,6 @@ class snap():
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
-
-            # get RTIDE if list was passed
-            if rtide_list is not None:
-                self.RTIDE = rtide_list[self.time]
 
             if settings.DEBUG_TIMING:
                 time_debug_time_evolution_calc = time_debug_calc = time_debug_calc_R = dt.datetime.now()
@@ -314,6 +309,8 @@ class snap():
 
         for scalar in defaults.snap_SCALAR_MAP.keys():
             self.scalar_data[defaults.snap_SCALAR_MAP[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
+
+        self.RTIDE = self.scalar_data["RTIDE"] = (self.cluster_data["M"].sum()/self.scalar_data["TIDAL1"])**(1/3)
         
         if settings.DEBUG_TIMING:
             print(f"Loading cluster data at time {time} took {dt.datetime.now() - time_debug_load_cluster}")
@@ -433,21 +430,6 @@ class snap():
 
         self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
         #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
-
-    def fix_RTIDE(self, rtide: np.array):
-        index = None
-        try:
-            index = rtide.index
-        except AttributeError:
-            index = range(0, len(rtide))
-        for idx in tqdm(index):
-            try:
-                f = h5py.File(self.snap_data[self.snap_data.index == idx]["file"].values[0], "a")
-            except:
-                continue
-            for step in f.keys():
-                f[step]["000 Scalars"][70] = rtide[idx]
-
 
     def filter(self, value):
         if value == "BH":

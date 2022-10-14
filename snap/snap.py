@@ -173,7 +173,8 @@ class snap():
             if settings.DEBUG_TIMING:
                 print(f"Calculating M/MT took {dt.datetime.now() - time_debug_calc_M_over_MT}")
                 time_debug_calc_Eb = dt.datetime.now()
-            self.binaries_data.calc_Eb()
+            self.binaries_data.calc_relEb_spec()
+            self.binaries_data.calc_cmEb_spec()
             self.calc_Eb()
             if settings.DEBUG_TIMING:
                 stop = dt.datetime.now()
@@ -211,13 +212,13 @@ class snap():
                 print(f"Calculating N data took {dt.datetime.now() - time_debug_M}")
                 time_debug_E = dt.datetime.now()
 
-            self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["Eb"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["cmEb_spec"].sum()
             self.time_evolution_data["E"].loc[nbtime,"Singles_Eb_tot"] = self.cluster_data["Eb"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["Eb"].mean()
-            self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["Eb"].mean()
-            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["Eb"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["Eb"].mean()
+            self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["cmEb_spec"].mean()
+            self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["cmEb_spec"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["cmEb_spec"].mean()
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["cmEb_spec"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["cmEb_spec"].mean()
             
             # clean up zero values as nan
             self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["Any-Any_Eb_tot"] == 0,"BH-Any_Eb_tot"] = np.nan

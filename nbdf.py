@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
 
+from pythonbody.ffi import ffi
+
 class nbdf(pd.DataFrame):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -9,37 +11,60 @@ class nbdf(pd.DataFrame):
         """
         checks if passed value(s) are in currently loaded dataframe, otherwise returns snap list data
         """
+        ret = None
         try:
-            return super().__getitem__(value)
+            ret = super().__getitem__(value)
+            #return ret
         except:
-            pass
-        try:
-            return super().loc[value.values[:,0]]
-        except:
-            pass
-        try:
-            return super().loc[:,value]
-        except:
-            pass
+            ret = None
+        if ret is None:
+            try:
+                ret = super().loc[value.values[:,0]]
+                #return ret
+            except:
+                ret = None
+        if ret is None:
+            try:
+                ret = super().loc[:,value]
+                #return ret
+            except:
+                ret = None
         
         # Check if item is calulatable
-        if type(value) != list:
-            value = [value]
+        if ret is None:
+            if type(value) != list:
+                value = [value]
 
-        missing_list = []
-        for val in value:
-            if val not in self.columns:
-                missing_list += [val]
-            
-        if len(missing_list) == 0:
-            return super().__getitem__(value)
-        elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/","_over_") not in dir(self) for val in missing_list]) == 0:
-            for missing in missing_list:
-                if missing not in self.columns:
-                    eval(f"self.calc_{missing}()".replace("/","_over_"))
-            return self[value[0] if len(value) == 1 else value]
-        else:
-            raise KeyError(f"Couldn't get key(s) {missing_list}")
+            missing_list = []
+            for val in value:
+                if val not in self.columns:
+                    missing_list += [val]
+                
+            if len(missing_list) == 0:
+                ret = super().__getitem__(value)
+            elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/","_over_") not in dir(self) for val in missing_list]) == 0:
+                for missing in missing_list:
+                    if missing not in self.columns:
+                        eval(f"self.calc_{missing}()".replace("/","_over_"))
+                ret = self[value[0] if len(value) == 1 else value]
+            else:
+                raise KeyError(f"Couldn't get key(s) {missing_list}")
+
+        if type(ret) == pd.core.frame.DataFrame:
+            return self.pd_df_to_class(ret)
+        return ret
+    
+    def pd_df_to_class(self, ret):
+        """
+        Changes pandas DataFrame to instalce of self
+        """
+        return nbdf(ret)
+    
+    def __repr__(self):
+        return super().__repr__()
+    
+    def _repr_html_(self):
+        return super()._repr_html_()
 
     def calc(self, *args):
         if len(args) != 0:
@@ -53,7 +78,11 @@ class nbdf(pd.DataFrame):
             for method in methods:
                 if "calc_" in method:
                     eval(f"self.calc_{method}()".replace("/","_over_"))
-                    
+
+    def calc_all(self):
+        for func in [func for func in dir(self) if "calc_" in func and func not in ["calc_R", "calc_THETA", "calc_PHI", "calc_all"]]:
+            eval(f"self.{func}()")
+
     def calc_spherical_coords(self):
         """
         calculates spherical coordinates from cartesian ones.
@@ -79,14 +108,60 @@ class nbdf(pd.DataFrame):
 
     def calc_R(self):
         return self.calc_spherical_coords()
+
     def calc_THETA(self):
         return self.calc_spherical_coords()
+
     def calc_PHI(self):
         return self.calc_spherical_coords()
 
-    def calc_M_over_MT(self,M_col = "M"):
-        if M_col not in self.columns:
-            raise KeyError("Couldn't calculate M/MT due to missing mass column")
+    def calc_EKIN(self):
+        self["EKIN"] = 0.5*self["M"]*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
 
-        self["M/MT"] = (self[M_col]/self[M_col].sum()).cumsum()
-        self.sort_values("M/MT", inplace=True)
+    def calc_EKIN_spec(self):
+        self["EKIN_spec"] = 0.5*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
+
+    def calc_Eb_spec(self):
+        if "EKIN_spec" not in self.columns:
+            self.calc_EKIN_spec()
+        self["Eb_spec"] = self["EKIN_spec"] + self["POT"]
+
+    def calc_Eb(self):
+        if "Eb_spec" not in self.columns:
+            self.calc_Eb_spec()
+        self["Eb"] = self["Eb_spec"] * self["M"]
+
+    def calc_LZ_spec(self):
+        self["LZ_spec"] = self["X1"] * self["V2"] - self["X2"] * self["V1"]
+
+    def calc_LZ(self):
+        if "LZ_spec" not in self.columns:
+            self.calc_LZ_spec()
+        self["LZ"] = self["M"] * self["LZ_spec"] 
+
+    def calc_M_over_MT(self):
+        if "R" not in self.columns:
+            self.calc_R()
+
+        self["M/MT"] = self["M"].cumsum()/self["M"].sum()
+
+    def calc_VROT(self):
+        if "R" not in self.columns:
+            self.calc_R()
+
+        VROT = np.cross( 
+                    np.cross(
+                        self.loc[:,["X1","X2","X3"]],
+                        self.loc[:,["V1","V2","V3"]]
+                    )/(self["R"]**2).values.reshape(self.shape[0],1),
+                    self.loc[:,["X1","X2","X3"]]
+                )
+        XSIGN = np.sign(VROT[:,0]*self["X2"]/np.sqrt(self["X1"]**2 + self["X2"]**2) \
+                            - VROT[:,1]*self["X1"]/np.sqrt(self["X1"]**2 + self["X2"]**2))
+        self["VROT"] = XSIGN * np.sqrt(VROT[:,0]**2 + VROT[:,1]**2)
+
+    def calc_VROT_CUMMEAN(self):
+        if "VROT" not in self.columns:
+            self.calc_VROT()
+
+        self["VROT_CUMMEAN"] = ffi.cummean(self["VROT"].values)

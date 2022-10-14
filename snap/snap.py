@@ -45,10 +45,25 @@ class snap():
         checks if passed value(s) are in currently loaded cluster data,
         otherwise returns snap list data
         """
-        if type(value) != list:
-            value = [value]
+        """if type(value) != list:
+            value = [value]"""
 
-        missing_list = []
+        try:
+            return self.cluster_data[value]
+        except:
+            pass
+        try:
+            return self.binaries_data[value]
+        except:
+            pass
+        try:
+            return self.scalar_data[value]
+        except:
+            pass
+
+        raise ValueError(f"Couldn't find data for {value}")
+
+        """missing_list = []
         if self.cluster_data is not None:
             for val in value:
                 if val not in self.cluster_data.columns:
@@ -64,7 +79,7 @@ class snap():
             else:
                 return super().__getitem__(value)
         else:
-            return super().__getitem__(value)
+            return super().__getitem__(value)"""
 
     def __repr__(self):
         if self.cluster_data is not None:
@@ -165,17 +180,17 @@ class snap():
 
             if settings.DEBUG_TIMING:
                 time_debug_time_evolution_calc = time_debug_calc = time_debug_calc_R = dt.datetime.now()
-            self.calc_R()
+            self.cluster_data.calc_R()
             if settings.DEBUG_TIMING:
                 print(f"Calculating R took {dt.datetime.now() - time_debug_calc_R}")
                 time_debug_calc_M_over_MT = dt.datetime.now()
-            self.calc_M_over_MT()
+            self.cluster_data.calc_M_over_MT()
             if settings.DEBUG_TIMING:
                 print(f"Calculating M/MT took {dt.datetime.now() - time_debug_calc_M_over_MT}")
                 time_debug_calc_Eb = dt.datetime.now()
             self.binaries_data.calc_relEb_spec()
             self.binaries_data.calc_cmEb_spec()
-            self.calc_Eb()
+            self.cluster_data.calc_Eb()
             if settings.DEBUG_TIMING:
                 stop = dt.datetime.now()
                 print(f"Calculating Eb took {stop - time_debug_calc_Eb}")
@@ -238,8 +253,8 @@ class snap():
 
 
 
-    def load_cluster(self, time, return_nbtime = False):
-        if self.snap_data.shape == (0,3):
+    def load_cluster(self, time, return_nbtime=False):
+        if self.snap_data.shape == (0, 3):
             self._load_files()
 
         if settings.DEBUG_TIMING:
@@ -254,10 +269,10 @@ class snap():
                 "X3": "003 X3",
                 "V1": "004 V1",
                 "V2": "005 V2",
-                "V3": "006 V3",                
+                "V3": "006 V3",
                 "A1": "007 A1",
                 "A2": "008 A2",
-                "A3": "009 A3",                
+                "A3": "009 A3",
                 "POT": "025 POT",
                 "R*": "026 R*",
                 "L*": "027 L*",
@@ -265,7 +280,6 @@ class snap():
                 "K*": "031 KW",
                 "NAME": "032 Name",
                 "Type": "033 Type",
-
                 }
 
         if settings.DEBUG_TIMING:
@@ -320,119 +334,6 @@ class snap():
             return float(nbtime)
         return self.cluster_data
 
-    def calc_all(self):
-        for func in [func for func in dir(self) if "calc_" in func and func not in ["calc_R", "calc_THETA", "calc_PHI", "calc_all"]]:
-            eval(f"self.{func}()")
-
-    def calc_spherical_coords(self):
-        """
-        calculates spherical coordinates from cartesian ones.
-        See https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
-        """
-
-        self.cluster_data["R"] = np.sqrt(self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2 + self.cluster_data["X3"]**2)
-        self.cluster_data["THETA"] = np.arccos(self.cluster_data["X3"]/self.cluster_data["R"])
-        
-        mask = self.cluster_data["X1"] > 0
-        self.cluster_data.loc[mask,"PHI"] = np.arctan(self.cluster_data.loc[mask,"X2"]/self.cluster_data.loc[mask,"X1"])
-        mask = (self.cluster_data["X1"] < 0) & (self.cluster_data["X2"] >= 0)
-        self.cluster_data.loc[mask,"PHI"] = np.arctan(self.cluster_data.loc[mask,"X2"]/self.cluster_data.loc[mask,"X1"]) + np.pi
-        mask = (self.cluster_data["X1"] < 0) & (self.cluster_data["X2"] < 0)
-        self.cluster_data.loc[mask,"PHI"] = np.arctan(self.cluster_data.loc[mask,"X2"]/self.cluster_data.loc[mask,"X1"]) - np.pi
-        mask = (self.cluster_data["X1"] == 0) & (self.cluster_data["X2"] > 0)
-        self.cluster_data.loc[mask,"PHI"] = np.pi/2
-        mask = (self.cluster_data["X1"] == 0) & (self.cluster_data["X2"] < 0)
-        self.cluster_data.loc[mask,"PHI"] = -np.pi/2
-        self.cluster_data["R/Rt"] = self.cluster_data["R"]/self.cluster_data["R"].max()
-
-        self.cluster_data.sort_values("R",ignore_index=True,inplace=True)
-
-    def calc_R(self):
-        return self.calc_spherical_coords()
-    def calc_THETA(self):
-        return self.calc_spherical_coords()
-    def calc_PHI(self):
-        return self.calc_spherical_coords()
-    def calc_EKIN(self):
-        self.cluster_data["EKIN"] = 0.5*self.cluster_data["M"]*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
-    def calc_EKIN_spec(self):
-        self.cluster_data["EKIN_spec"] = 0.5*np.linalg.norm(self.cluster_data[["V1", "V2", "V3"]], axis=1)**2
-    def calc_Eb_spec(self):
-        if "EKIN_spec" not in self.cluster_data.columns:
-            self.calc_EKIN_spec()
-        self.cluster_data["Eb_spec"] = self.cluster_data["EKIN_spec"] + self.cluster_data["POT"]
-    def calc_Eb(self):
-        if "Eb_spec" not in self.cluster_data.columns:
-            self.calc_Eb_spec()
-        self.cluster_data["Eb"] = self.cluster_data["Eb_spec"] * self.cluster_data["M"]
-
-    def calc_LZ_spec(self):
-        self.cluster_data["LZ_spec"] = self.cluster_data["X1"] * self.cluster_data["V2"] - self.cluster_data["X2"] * self.cluster_data["V1"]
-    def calc_LZ(self):
-        if "LZ_spec" not in self.cluster_data.columns:
-            self.calc_LZ_spec()
-        self.cluster_data["LZ"] = self.cluster_data["M"] * self.cluster_data["LZ_spec"] 
-
-    def calc_M_over_MT(self):
-        if "R" not in self.cluster_data.columns:
-            self.calc_R()
-
-        self.cluster_data["M/MT"] = self.cluster_data["M"].cumsum()/self.cluster_data["M"].sum()
-
-    def calc_VROT(self):
-        if "R" not in self.cluster_data.columns:
-            self.calc_R()
-
-        """rvxy = self.cluster_data["X1"]*self.cluster_data["V1"] + self.cluster_data["X2"]*self.cluster_data["V2"]
-        rxy2 = self.cluster_data["X1"] **2 + self.cluster_data["X2"]**2
-        vrot1 = self.cluster_data["V1"] - rvxy* self.cluster_data["X1"]/rxy2
-        vrot2 = self.cluster_data["V2"] - rvxy* self.cluster_data["X2"]/rxy2
-        xsign = np.sign(vrot1*self.cluster_data["X2"]-vrot2*self.cluster_data["X1"])
-        self.cluster_data["VROT"] = xsign*np.sqrt(vrot1**2+vrot2**2)"""
-
-        """RR12 = self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2
-        XR12 = (self.cluster_data["V1"] * (self.cluster_data["X1"] - self.RDENS[0])) + \
-                (self.cluster_data["V2"] * (self.cluster_data["X2"] -  self.RDENS[1]))
-
-        VROT1 = self.cluster_data["V1"] - XR12/RR12 * self.cluster_data["X1"]
-        VROT2 = self.cluster_data["V2"] - XR12/RR12 * self.cluster_data["X2"]
-
-        VROTM = np.sqrt(VROT1**2 + VROT2**2)
-        XSIGN = np.sign(VROT1*self.cluster_data["X2"]/np.sqrt(RR12) - VROT2*self.cluster_data["X1"]/np.sqrt(RR12))
-
-        self.cluster_data["VROT"] = XSIGN*self.cluster_data["M"]*VROTM"""
-        VROT = np.cross( 
-                    np.cross(
-                        self.cluster_data.loc[:,["X1","X2","X3"]],
-                        self.cluster_data.loc[:,["V1","V2","V3"]]
-                    )/(self.cluster_data["R"]**2).values.reshape(self.cluster_data.shape[0],1),
-                    self.cluster_data.loc[:,["X1","X2","X3"]]
-                )
-        XSIGN = np.sign(VROT[:,0]*self.cluster_data["X2"]/np.sqrt(self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2) \
-                            - VROT[:,1]*self.cluster_data["X1"]/np.sqrt(self.cluster_data["X1"]**2 + self.cluster_data["X2"]**2))
-        self.cluster_data["VROT"] = XSIGN * np.sqrt(VROT[:,0]**2 + VROT[:,1]**2)
-
-
-        """self.cluster_data["VROT"] = np.cross(
-                self.cluster_data.loc[:,["X1","X2","X3"]],
-                self.cluster_data.loc[:,["V1","V2","V3"]]
-            )[:,2]/(self.cluster_data["R"]**2)"""
-
-        
-        """
-        self.cluster_data["VROT"] = np.linalg.norm(np.cross(
-                self.cluster_data.loc[:,["X1","X2","X3"]],
-                self.cluster_data.loc[:,["V1","V2","V3"]]
-            ), axis=1)/(self.cluster_data["R"]**2)
-        """
-
-    def calc_VROT_CUMMEAN(self):
-        if "VROT" not in self.cluster_data.columns:
-            self.calc_VROT()
-
-        self.cluster_data["VROT_CUMMEAN"] = ffi.cummean(self.cluster_data["VROT"].values)
-        #self.cluster_data["VROT_CUMMEAN"] = self.cluster_data["VROT"]
-
     def filter(self, value):
         if value == "BH":
             return self.cluster_data[self.cluster_data["K*"] == 14]
@@ -444,7 +345,6 @@ class snap():
             return self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]
         else:
             raise KeyError(f"Couldn't filter by value \"{value}\"")
-
 
     def _load_files(self):
         if self.files is None:

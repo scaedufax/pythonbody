@@ -297,7 +297,7 @@ class snap():
                 "K*2": "159 Bin KW2",
                 "NAME1": "161 Bin Name1",
                 "NAME2": "162 Bin Name2",
-                "relPOT": "143 Bin rel POT",
+                "relPOT": "143 Bin POT",
                 }
         self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
         for col in binary_cols.keys():

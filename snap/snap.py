@@ -180,6 +180,7 @@ class snap():
                 nbtime = self.load_cluster(idx, return_nbtime=True,
                                            cluster_cols=defaults.snap.time_evolution_cluster_cols,
                                            binary_cols=defaults.snap.time_evolution_binary_cols,
+                                           scalar_ids=defaults.snap.time_evolution_scalars,
                                            )
             except Exception as e:
                 warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
@@ -260,7 +261,12 @@ class snap():
 
 
 
-    def load_cluster(self, time, return_nbtime=False, cluster_cols=None, binary_cols=None):
+    def load_cluster(self,
+                     time, 
+                     return_nbtime=False, 
+                     cluster_cols=None, 
+                     binary_cols=None, 
+                     scalar_ids=None):
         if self.snap_data.shape == (0, 3):
             self._load_files()
 
@@ -271,6 +277,7 @@ class snap():
 
         default_cluster_cols = cluster_cols if cluster_cols is not None else defaults.snap.cluster_col_map.keys()
         default_binary_cols = binary_cols if binary_cols is not None else defaults.snap.binary_col_map.keys()
+        default_scalar_ids = scalar_ids if scalar_ids is not None else defaults.snap.scalar_map.keys()
         
         if settings.DEBUG_TIMING:
             time_debug_hdf5_file = dt.datetime.now()
@@ -295,7 +302,7 @@ class snap():
             self.singles_mask = np.repeat(True, self.cluster_data.shape[0])
         self.binaries_mask = ~ self.singles_mask
 
-        for scalar in defaults.snap.scalar_map.keys():
+        for scalar in default_scalar_ids:
             self.scalar_data[defaults.snap.scalar_map[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
 
         self.RTIDE = self.scalar_data["RTIDE"] = (self.cluster_data["M"].sum()/self.scalar_data["ZMBAR"]/self.scalar_data["TIDAL1"])**(1/3)

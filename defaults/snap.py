@@ -50,6 +50,14 @@ scalar_map = {
     69: "N_MERGER",
 }
 
+time_evolution_scalars = [
+    0,
+    26,
+    67,
+    68,
+    69,
+]
+
 cluster_col_map = {
     "M": "023 M",
 

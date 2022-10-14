@@ -11,6 +11,7 @@ import warnings
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
 from pythonbody.snap.binaries import Binaries
+from pythonbody import defaults
 from .. import settings
 from .. import defaults
 if settings.DEBUG_TIMING:
@@ -141,10 +142,14 @@ class snap():
     @property
     def loc(self, *args, **kwargs):
         return self.cluster_data.loc(*args, **kwargs)
-    
+
     @property
     def iloc(self, *args, **kwargs):
         return self.cluster_data.iloc(*args, **kwargs)
+
+    @property
+    def scalars(self, *args, **kwargs):
+        return self.scalar_data
 
     def calculate_time_evolution(self,
                                  RLAGRS=None,
@@ -262,69 +267,31 @@ class snap():
 
         self.time = time
         
-        default_cols = {
-                "M": "023 M",
-                "X1": "001 X1",
-                "X2": "002 X2",
-                "X3": "003 X3",
-                "V1": "004 V1",
-                "V2": "005 V2",
-                "V3": "006 V3",
-                "A1": "007 A1",
-                "A2": "008 A2",
-                "A3": "009 A3",
-                "POT": "025 POT",
-                "R*": "026 R*",
-                "L*": "027 L*",
-                "Teff*": "028 Teff*",
-                "K*": "031 KW",
-                "NAME": "032 Name",
-                "Type": "033 Type",
-                }
-
         if settings.DEBUG_TIMING:
             time_debug_hdf5_file = dt.datetime.now()
         f = h5py.File(self.snap_data.loc[time]["file"],"r")
         if settings.DEBUG_TIMING:
             print(f"Loading hdf5 file {time} took {dt.datetime.now() - time_debug_hdf5_file}")
         nbtime = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][0]
-        self.cluster_data = nbdf(columns=[key for key in default_cols.keys() if default_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
-        for col in default_cols.keys():
-            if default_cols[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
-                self.cluster_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][default_cols[col]][:]
-       
-        binary_cols = {
-                "M1": "123 Bin M1*",
-                "M2": "124 Bin M2*",
-                "cmX1": "101 Bin cm X1",
-                "cmX2": "102 Bin cm X2",
-                "cmX3": "103 Bin cm X3",
-                "cmV1": "104 Bin cm V1",
-                "cmV2": "105 Bin cm V2",
-                "cmV3": "106 Bin cm V3",
-                "relX1": "125 Bin rel X1",
-                "relX2": "126 Bin rel X2",
-                "relX3": "127 Bin rel X3",
-                "relV1": "128 Bin rel V1",
-                "relV2": "129 Bin rel V2",
-                "relV3": "130 Bin rel V3",
-                "K*1": "158 Bin KW1",
-                "K*2": "159 Bin KW2",
-                "NAME1": "161 Bin Name1",
-                "NAME2": "162 Bin Name2",
-                "relPOT": "143 Bin POT",
-                }
-        self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
-        for col in binary_cols.keys():
-            if binary_cols[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
-                self.binaries_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][binary_cols[col]][:]
+        self.cluster_data = nbdf(columns=[key for key in defaults.snap.cluster_col_map.keys() if defaults.snap.cluster_col_map[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
+        for col in defaults.snap.cluster_col_map.keys():
+            if defaults.snap.cluster_col_map[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
+                self.cluster_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][defaults.snap.cluster_col_map[col]][:]
+
+        self.binaries_data = Binaries(columns=[key for key in defaults.snap.binary_col_map.keys() if defaults.snap.binary_col_map[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
+        for col in defaults.snap.binary_col_map.keys():
+            if defaults.snap.binary_col_map[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
+                self.binaries_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][defaults.snap.binary_col_map[col]][:]
 
         #self.singles_data = singles(self.cluster_data, self.binary_data)
-        self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
+        try:
+            self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
+        except:
+            self.singles_mask = np.repeat(True, self.cluster_data.shape[0])
         self.binaries_mask = ~ self.singles_mask
 
-        for scalar in defaults.snap_SCALAR_MAP.keys():
-            self.scalar_data[defaults.snap_SCALAR_MAP[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
+        for scalar in defaults.snap.scalar_map.keys():
+            self.scalar_data[defaults.snap.scalar_map[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
 
         self.RTIDE = self.scalar_data["RTIDE"] = (self.cluster_data["M"].sum()/self.scalar_data["ZMBAR"]/self.scalar_data["TIDAL1"])**(1/3)
         

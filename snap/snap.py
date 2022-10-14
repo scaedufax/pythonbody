@@ -296,7 +296,8 @@ class snap():
                 "K*1": "158 Bin KW1",
                 "K*2": "159 Bin KW2",
                 "NAME1": "161 Bin Name1",
-                "NAME2": "162 Bin Name2", 
+                "NAME2": "162 Bin Name2",
+                "relPOT": "143 Bin rel POT",
                 }
         self.binaries_data =  Binaries(columns=[key for key in binary_cols.keys() if binary_cols[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
         for col in binary_cols.keys():
@@ -310,7 +311,7 @@ class snap():
         for scalar in defaults.snap_SCALAR_MAP.keys():
             self.scalar_data[defaults.snap_SCALAR_MAP[scalar]] = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][scalar]
 
-        self.RTIDE = self.scalar_data["RTIDE"] = (self.cluster_data["M"].sum()/self.scalar_data["TIDAL1"])**(1/3)
+        self.RTIDE = self.scalar_data["RTIDE"] = (self.cluster_data["M"].sum()/self.scalar_data["ZMBAR"]/self.scalar_data["TIDAL1"])**(1/3)
         
         if settings.DEBUG_TIMING:
             print(f"Loading cluster data at time {time} took {dt.datetime.now() - time_debug_load_cluster}")

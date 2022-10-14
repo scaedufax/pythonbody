@@ -87,6 +87,18 @@ cluster_col_map = {
     "NAME": "032 Name",
     "Type": "033 Type",
     }
+time_evolution_cluster_cols = [
+    "M",
+    "X1",
+    "X2",
+    "X3",
+    "V1",
+    "V2",
+    "V3",
+    "POT",
+    "K*",
+    "NAME",
+    ]
 
 binary_col_map = {
     "M1": "123 Bin M1*",
@@ -109,3 +121,25 @@ binary_col_map = {
     "NAME2": "162 Bin Name2",
     "relPOT": "143 Bin POT",
     }
+
+time_evolution_binary_cols = [
+    "M1",
+    "M2",
+    "cmX1",
+    "cmX2",
+    "cmX3",
+    "cmV1",
+    "cmV2",
+    "cmV3",
+    "relX1",
+    "relX2",
+    "relX3",
+    "relV1",
+    "relV2",
+    "relV3",
+    "K*1",
+    "K*2",
+    "NAME1",
+    "NAME2",
+    "relPOT",
+    ]

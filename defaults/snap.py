@@ -127,7 +127,7 @@ binary_col_map = {
     "K*2": "159 Bin KW2",
     "NAME1": "161 Bin Name1",
     "NAME2": "162 Bin Name2",
-    "relPOT": "143 Bin POT",
+    "POT_snap": "143 Bin POT",
     }
 
 time_evolution_binary_cols = [

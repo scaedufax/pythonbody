@@ -24,6 +24,9 @@ class Binaries(nbdf):
 
         return Binaries(ret)
 
+    def calc_relPOT(self, G=4.30091e-3):
+        self["relPOT"] = -G*(self["M1"] + self["M2"])/np.linalg.norm(self[["relX1", "relX2", "relX3"]], axis=1)
+
     def calc_relEb_spec(self):
         if "relEKIN_spec" not in self.columns:
             self.calc_relEKIN_spec()
@@ -66,7 +69,7 @@ class Binaries(nbdf):
         self["cmEKIN"] = self["cmEKIN_spec"] * (self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values
 
     def calc_Eb_spec(self):
-        self["Eb"] = 0.5*((self["cmV1"] + self["relV1"])**2 + (self["cmV2"] + self["relV2"])**2 + (self["cmV3"] + self["relV3"])**2)
+        self["Eb_spec"] = 0.5*((self["cmV1"] + self["relV1"])**2 + (self["cmV2"] + self["relV2"])**2 + (self["cmV3"] + self["relV3"])**2)
 
     def filter(self,value):
         if value not in self.filters:

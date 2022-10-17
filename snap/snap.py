@@ -235,21 +235,17 @@ class snap():
                 print(f"Calculating N data took {dt.datetime.now() - time_debug_M}")
                 time_debug_E = dt.datetime.now()
 
+            self.time_evolution_data["E"].loc[nbtime,"Eb_spec_tot"] = self.cluster_data["Eb_spec"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"SINGLES_Eb_spec_tot"] = self.singles["Eb_spec"].sum()
+            self.time_evolution_data["E"].loc[nbtime,"BINARIES_Eb_spec_tot"] = self.binaries["Eb_spec"].sum()
             self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_tot"] = self.binaries_data["cmEb_spec"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"Singles_Eb_tot"] = self.cluster_data["Eb"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"Any-Any_Eb_mean"] = self.binaries_data["cmEb_spec"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["cmEb_spec"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"BH-Any_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) | (self.binaries_data["K*2"] == 14)]["cmEb_spec"].mean()
             self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_tot"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["cmEb_spec"].sum()
-            self.time_evolution_data["E"].loc[nbtime,"BH-BH_Eb_mean"] = self.binaries_data[(self.binaries_data["K*1"] == 14) & (self.binaries_data["K*2"] == 14)]["cmEb_spec"].mean()
             
             # clean up zero values as nan
             self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["Any-Any_Eb_tot"] == 0,"BH-Any_Eb_tot"] = np.nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["Any-Any_Eb_mean"] == 0,"BH-Any_Eb_mean"] = np.nan
             self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-Any_Eb_tot"] == 0,"BH-Any_Eb_tot"] = np.nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-Any_Eb_mean"] == 0,"BH-Any_Eb_mean"] = np.nan
             self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-BH_Eb_tot"] == 0,"BH-BH_Eb_tot"] = np.nan
-            self.time_evolution_data["E"].loc[self.time_evolution_data["E"]["BH-BH_Eb_mean"] == 0,"BH-BH_Eb_mean"] = np.nan
 
             if settings.DEBUG_TIMING:
                 print(f"Calculating E data took {dt.datetime.now() - time_debug_E}")

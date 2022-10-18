@@ -30,7 +30,7 @@ class Binaries(nbdf):
     def calc_relEb_spec(self):
         if "relEKIN_spec" not in self.columns:
             self.calc_relEKIN_spec()
-        self["relEb_spec"] = self["POT_snap"] + self["relEKIN_spec"]
+        self["relEb_spec"] = self["relPOT"] + self["relEKIN_spec"]
     
     def calc_cmEb_spec(self):
         if "cmEKIN_spec" not in self.columns:
@@ -69,7 +69,7 @@ class Binaries(nbdf):
         self["cmEKIN"] = self["cmEKIN_spec"] * (self["M1"].values*self["M2"].values)/self[["M1","M2"]].sum(axis=1).values
 
     def calc_Eb_spec(self):
-        self["Eb_spec"] = 0.5*((self["cmV1"] + self["relV1"])**2 + (self["cmV2"] + self["relV2"])**2 + (self["cmV3"] + self["relV3"])**2)
+        self["Eb_spec"] = self["relPOT"] + self["POT_snap"] + 0.5*((self["cmV1"] + self["relV1"])**2 + (self["cmV2"] + self["relV2"])**2 + (self["cmV3"] + self["relV3"])**2)
 
     def calc_spherical_coords(self):
         """

@@ -122,9 +122,9 @@ class snap():
         if self.cluster_data is None:
             self.load_cluster(t)
         if "R" not in self.cluster_data.columns:
-            self.calc_R()
+            self.cluster_data.calc_R()
         if "Eb_spec" not in self.cluster_data.columns:
-            self.calc_Eb_spec()
+            self.cluster_data.calc_Eb_spec()
 
         if self.RTIDE is not None:
             return self.cluster_data[(self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.RTIDE)))]

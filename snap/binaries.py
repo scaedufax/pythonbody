@@ -35,7 +35,7 @@ class Binaries(nbdf):
     def calc_cmEb_spec(self):
         if "cmEKIN_spec" not in self.columns:
             self.calc_cmEKIN_spec()
-        self["cmEb_spec"] = self["relPOT"] + self["cmEKIN_spec"]
+        self["cmEb_spec"] = self["POT_snap"] + self["cmEKIN_spec"]
 
     def calc_relLZ_spec(self):
         self["relLZ_spec"] = self["relX1"]*self["relV2"] - self["relX2"]*self["relV1"]

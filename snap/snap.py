@@ -183,6 +183,7 @@ class snap():
                                            scalar_ids=defaults.snap.time_evolution_scalars,
                                            )
             except Exception as e:
+                print(f"Snap file: {self.snap_data.loc[idx,'file']}, error:\n{str(e)}")
                 warnings.warn(f"Error with hdf5 file \"{self.snap_data.loc[idx,'file']}\". Exception:\n{str(e)}", Warning)
                 continue
 

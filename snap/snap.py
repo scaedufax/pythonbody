@@ -356,7 +356,7 @@ class snap():
                 self.snap_data.index = self.snap_data["time"].values
         self.snap_data.sort_index(inplace=True)
 
-    def _analyze_files(self):
+    def analyze_files(self):
         if self.files is None:
             logging.error("Couldn't find any snap files to load")
             return 0

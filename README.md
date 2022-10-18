@@ -2,17 +2,19 @@
 This project is currently under high development and might break with each update or commit. Furthermore as of now it is not very well documented.
 
 ## Requirements
-It is known to work with Python 3.7.14 and the latest pandas & numpy versions for Python 3.7.14
+It is known to work with Python 3.7.14 and the latest pandas & numpy versions for Python 3.7.14. As well as with any versions above that.
+
+Furthermore it is known to NOT work with python 3.6.8 and pandas 1.1.5.
 
 ## Installing pythonbody
 
 ### the local way
 
-pythonbody is not very well packaged, and dependencies not very well tested. The simplest way of trying pythonbody is cloning the repo into the folder where your Jupyter notebook is located.
+pythonbody is not very well packaged, and dependencies are not very well tested. The simplest way of trying pythonbody is cloning the repo into the folder where your Jupyter notebook is or will be located.
 
     git clone https://gitlab.com/shad0wfax/pythonbody.git
 
-afterwards we need to build the ffi C-Libararies which pythonbody uses for enhanced performance
+afterwards C-FFI-libraries need to be built, which pythonbody uses for enhanced performance
 
     # move into the ffi directory
     cd pythonbody/ffi
@@ -25,7 +27,7 @@ afterwards we need to build the ffi C-Libararies which pythonbody uses for enhan
     ./configure
     make clean && make
 
-last but not least install requirements
+last but not least install dependencies (pandas, numpy, h5py, tqdm)
 
     pip install -r requirements.txt
 
@@ -33,4 +35,4 @@ enjoy using it.
 
 ## Using pythonbody
 
-As already mentioned, pythonbody is not very well documented. have a look at the examples folder, that might give you a hints on how to use this package.
+As already mentioned, pythonbody is not very well documented. have a look at the examples folder, that might give you a hint on how to use this package.

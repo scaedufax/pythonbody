@@ -149,5 +149,5 @@ time_evolution_binary_cols = [
     "K*2",
     "NAME1",
     "NAME2",
-    "relPOT",
+    "POT_snap",
     ]

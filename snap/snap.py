@@ -37,6 +37,8 @@ class snap():
         self.binaries_mask = None
         self.singles_mask = None
         self.time_evolution_data = None
+        self.cluster_data_mask = None
+        self.binaries_data_mask = None
         self.scalar_data = {}
         self.RTIDE = None
 
@@ -154,7 +156,9 @@ class snap():
                                  RLAGRS=None,
                                  stepsize=1,
                                  min_nbtime=None,
-                                 max_nbtime=None):
+                                 max_nbtime=None,
+                                 *args,
+                                 **kwargs):
         if RLAGRS is None:
             RLAGRS = defaults.RLAGRS
         self.time_evolution_data = {
@@ -177,7 +181,8 @@ class snap():
         for idx in tqdm(self.snap_data.index[min_nbtime:max_nbtime:stepsize]):
             nbtime = None
             try:
-                nbtime = self.load_cluster(idx, return_nbtime=True,
+                nbtime = self.load_cluster(idx, **kwargs,
+                                           return_nbtime=True,
                                            cluster_cols=defaults.snap.time_evolution_cluster_cols,
                                            binary_cols=defaults.snap.time_evolution_binary_cols,
                                            scalar_ids=defaults.snap.time_evolution_scalars,
@@ -263,7 +268,9 @@ class snap():
                      return_nbtime=False, 
                      cluster_cols=None, 
                      binary_cols=None, 
-                     scalar_ids=None):
+                     scalar_ids=None,
+                     cluster_data_filter=None,
+                     binaries_data_filter=None):
         if self.snap_data.shape == (0, 3):
             self._load_files()
 
@@ -306,8 +313,16 @@ class snap():
         
         if settings.DEBUG_TIMING:
             print(f"Loading cluster data at time {time} took {dt.datetime.now() - time_debug_load_cluster}")
+        
+        # apply filters
+        if cluster_data_filter is not None:
+            self.cluster_data = self.cluster_data[eval(cluster_data_filter)]
+        if binaries_data_filter is not None:
+            self.binaries_data = self.binaries_data[eval(binaries_data_filter)]
+
         if return_nbtime:
             return float(nbtime)
+
         return self.cluster_data
 
     def filter(self, value):

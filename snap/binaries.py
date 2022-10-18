@@ -71,6 +71,28 @@ class Binaries(nbdf):
     def calc_Eb_spec(self):
         self["Eb_spec"] = 0.5*((self["cmV1"] + self["relV1"])**2 + (self["cmV2"] + self["relV2"])**2 + (self["cmV3"] + self["relV3"])**2)
 
+    def calc_spherical_coords(self):
+        """
+        Redefinition for binaries as the cols are now named cmX1, cmX2 and cmX3
+        See https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
+        """
+
+        self["R"] = np.sqrt(self["cmX1"]**2 + self["cmX2"]**2 + self["cmX3"]**2)
+        self["THETA"] = np.arccos(self["cmX3"]/self["R"])
+
+        mask = self["cmX1"] > 0
+        self.loc[mask,"PHI"] = np.arctan(self.loc[mask,"cmX2"]/self.loc[mask,"cmX1"])
+        mask = (self["cmX1"] < 0) & (self["cmX2"] >= 0)
+        self.loc[mask,"PHI"] = np.arctan(self.loc[mask,"cmX2"]/self.loc[mask,"cmX1"]) + np.pi
+        mask = (self["cmX1"] < 0) & (self["cmX2"] < 0)
+        self.loc[mask,"PHI"] = np.arctan(self.loc[mask,"cmX2"]/self.loc[mask,"cmX1"]) - np.pi
+        mask = (self["cmX1"] == 0) & (self["cmX2"] > 0)
+        self.loc[mask,"PHI"] = np.pi/2
+        mask = (self["cmX1"] == 0) & (self["cmX2"] < 0)
+        self.loc[mask,"PHI"] = -np.pi/2
+        self["R/Rt"] = self["R"]/self["R"].max()
+
+        self.sort_values("R",ignore_index=True,inplace=True)
     def filter(self,value):
         if value not in self.filters:
             raise KeyError(f"{value} is not a filter type. Available filters: {self.filters}")

@@ -1,5 +1,5 @@
 # pythonbody
-
+This project is currently under high development and might break with each update or commit. Furthermore as of now it is not very well documented.
 
 
 ## Getting started

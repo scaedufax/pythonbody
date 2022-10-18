@@ -316,8 +316,10 @@ class snap():
         
         # apply filters
         if cluster_data_filter is not None:
+            self.cluster_data.calc_spherical_coords()
             self.cluster_data = self.cluster_data[eval(cluster_data_filter)]
         if binaries_data_filter is not None:
+            self.binaries_data.calc_spherical_coords()
             self.binaries_data = self.binaries_data[eval(binaries_data_filter)]
 
         if return_nbtime:

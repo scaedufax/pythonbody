@@ -321,6 +321,9 @@ class snap():
         if binaries_data_filter is not None:
             self.binaries_data.calc_spherical_coords()
             self.binaries_data = self.binaries_data[eval(binaries_data_filter)]
+        self.cluster_data.calc_EKIN_spec()
+        self.cluster_data = self.cluster_data[self.cluster_data["EKIN_spec"] < 10*self.cluster_data["EKIN_spec"].std()]
+
 
         if return_nbtime:
             return float(nbtime)

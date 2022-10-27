@@ -1,7 +1,4 @@
 import numpy as np
-#import pandas as pd
-import pdb
-
 
 class BrokenPowerLaw:
     def __init__(self, breakpoints: list, alphas: list, scale: float = 1):

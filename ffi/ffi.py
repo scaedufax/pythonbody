@@ -1,4 +1,5 @@
 from ctypes import cdll, c_int, c_float, c_void_p, byref
+import os
 import numpy as np
 import pandas as pd
 import pathlib
@@ -6,6 +7,8 @@ import pathlib
 
 class FFI:
     def __init__(self, p_id: int = None, d_id: int = None):
+        cwd = os.path.realpath(__file__)
+        cwd = cwd[:cwd.rfind("/") + 1]
         if pathlib.Path("pythonbody/ffi/.libs/libpythonbody.so").is_file():
             self.lib = cdll.LoadLibrary(
                     "pythonbody/ffi/.libs/libpythonbody.so"
@@ -14,6 +17,8 @@ class FFI:
             self.lib = cdll.LoadLibrary("ffi/.libs/libpythonbody.so")
         elif pathlib.Path(".libs/libpythonbody.so").is_file():
             self.lib = cdll.LoadLibrary(".libs/libpythonbody.so")
+        elif pathlib.Path(cwd + ".libs/libpythonbody.so").is_file():
+            self.lib = cdll.LoadLibrary(cwd + ".libs/libpythonbody.so")
         else:
             raise Exception("Couldn't load libpythonbody.so!")
         try:

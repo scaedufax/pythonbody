@@ -4,22 +4,22 @@ from scipy.optimize import curve_fit
 from . import distributions
 
 
-class Kroupa:
+class SimplePowerLaw:
     def __init__(
             self,
-            breakpoints=[0.08, 0.5],
-            alphas=[0.3, 1.3, 2.3],
+            alpha=2.3,
             scale=1,
-            *args, **kwargs):
-        self.distrib = distributions.BrokenPowerLaw(
-                breakpoints=breakpoints,
-                alphas=alphas,
+            ):
+        self.alpha = alpha,
+        self.scale = scale,
+        self.distrib = distributions.PowerLaw(
+                alpha=alpha,
                 scale=scale
                 )
 
-    def __call__(self, m, scale=None):
-        return self.distrib.__call__(m, scale)
-    
+    def __call__(self, m, alpha: float = None, scale: float = None):
+        return self.distrib.__call__(m, alpha, scale)
+
     def fit(self, m, dm: float = None, fit_mask=None, *args, **kwargs):
         if fit_mask is not None:
             if type(fit_mask) == str:
@@ -29,10 +29,9 @@ class Kroupa:
         if dm is None:
             dm = (m.max()-m.min())/1000
 
-
         hist = np.histogram(
                 m,
-                #density=True,
+                # density=True,
                 bins=int((m.max() - m.min())/dm)
                 )
 
@@ -42,5 +41,4 @@ class Kroupa:
                                ) 
         return popt, pcov
 
-
-kroupa = Kroupa()
+simplepowerlaw = SimplePowerLaw()

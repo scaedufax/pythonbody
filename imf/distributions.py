@@ -21,7 +21,11 @@ class PowerLaw:
         return scale*m**(-alpha)
 
 class BrokenPowerLaw:
-    def __init__(self, breakpoints: list, alphas: list, scale: float = 1):
+    def __init__(self,
+                 breakpoints: list,
+                 alphas: list,
+                 scale: float = 1,
+                 ):
 
         # check for errors
         if len(breakpoints) + 1 != len(alphas):
@@ -30,10 +34,23 @@ class BrokenPowerLaw:
         if not (np.diff(breakpoints) > 0).all():
             raise ValueError("Breakpoints must be in sequential order" +
                              "from low to high!")
-
+        
         self.breakpoints = breakpoints
         self.alphas = alphas
         self.scale = scale
+       
+        # introduce scaling between breakpoints
+        self.alphas_scale = []
+        for i in range(len(breakpoints) + 1, 0, -1):
+            if i == len(self.breakpoints) + 1:
+                self.alphas_scale = [1] + self.alphas_scale
+                continue
+            self.alphas_scale = ([
+                    (self.breakpoints[i-1]**(-self.alphas[i])) 
+                    / (self.breakpoints[i-1]**(-self.alphas[i-1]))
+                    * self.alphas_scale[0]]
+
+                                 + self.alphas_scale)
 
     def __call__(self, m, scale=None):
         if type(m) in [int, float]:
@@ -57,13 +74,6 @@ class BrokenPowerLaw:
             if mask is None:
                 raise ValueError("Something went terribly wrong as mask is None")
 
-            ret[mask] = m[mask]**(-self.alphas[i-1])#
-            if i <= len(self.breakpoints) and np.where(mask == True)[0].shape[0] > 0:
-                #first = np.where(mask == True)[0][0]
-                idx_last = np.where(mask == True)[0][np.where(mask == True)[0].shape[0]-1]
-                if mask.sum() > 0 and m.shape[0] > idx_last + 1:
-                    ret[mask] = ret[mask] * ret[idx_last + 1]/ret[idx_last]
-
-
+            ret[mask] = self.alphas_scale[i-1] * m[mask]**(-self.alphas[i-1])
 
         return scale * ret

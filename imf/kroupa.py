@@ -2,9 +2,10 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from . import distributions
+from .imf import IMF
 
 
-class Kroupa:
+class Kroupa(IMF):
     def __init__(
             self,
             breakpoints=[0.08, 0.5],
@@ -20,7 +21,7 @@ class Kroupa:
     def __call__(self, m, scale=None):
         return self.distrib.__call__(m, scale)
     
-    def fit(self, m, dm: float = None, fit_mask=None, *args, **kwargs):
+    """def fit(self, m, dm: float = None, fit_mask=None, *args, **kwargs):
         if fit_mask is not None:
             if type(fit_mask) == str:
                 fit_mask = eval(fit_mask)
@@ -59,7 +60,7 @@ class Kroupa:
 
         #print(f"Took {count} rounds to draw {n}")
 
-        return ret
+        return ret"""
 
 
 

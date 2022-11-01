@@ -1,5 +1,5 @@
-import numpy as np
-from scipy.optimize import curve_fit
+#import numpy as np
+#from scipy.optimize import curve_fit
 
 from . import distributions
 from .powerlaw import SimplePowerLaw

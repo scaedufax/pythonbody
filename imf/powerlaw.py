@@ -2,9 +2,10 @@ import numpy as np
 from scipy.optimize import curve_fit
 
 from . import distributions
+from .imf import IMF
 
 
-class SimplePowerLaw:
+class SimplePowerLaw(IMF):
     def __init__(
             self,
             alpha=2.3,
@@ -20,7 +21,7 @@ class SimplePowerLaw:
     def __call__(self, m, alpha: float = None, scale: float = None):
         return self.distrib.__call__(m, alpha, scale)
 
-    def fit(self, m, dm: float = None, fit_mask=None, *args, **kwargs):
+    """def fit(self, m, dm: float = None, fit_mask=None, *args, **kwargs):
         if fit_mask is not None:
             if type(fit_mask) == str:
                 fit_mask = eval(fit_mask)
@@ -39,6 +40,6 @@ class SimplePowerLaw:
                                hist[1][1:],
                                hist[0],
                                ) 
-        return popt, pcov
+        return popt, pcov"""
 
 simplepowerlaw = SimplePowerLaw()

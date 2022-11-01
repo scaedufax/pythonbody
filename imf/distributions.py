@@ -1,8 +1,26 @@
 import numpy as np
 
+class Distribution():
+    def draw(self, n: int, mmin: float = 0.03, mmax: float = 120):
+        if type(n) != int:
+            raise ValueError(f"N needs to be an integer but is of type {type(n)}")
+        
+        ret = np.array([])
+        count = 0
+        while True:
+            trial_draw_x = np.random.rand(n)*(mmax-mmin) + mmin
+            ref_y = self.__call__(trial_draw_x)
+            trial_draw_y = np.random.rand(n)*(ref_y.max()-ref_y.min()) + ref_y.min()
+            ret = np.concatenate([ret, trial_draw_x[trial_draw_y <= ref_y]])
+            count += 1
+            if ret.shape[0] >= n:
+                break
+        return ret
 
-class PowerLaw:
+
+class PowerLaw(Distribution):
     def __init__(self, alpha: float, scale: float = 1):
+
         self.alpha = alpha
         self.scale = scale
 
@@ -20,7 +38,7 @@ class PowerLaw:
 
         return scale*m**(-alpha)
 
-class BrokenPowerLaw:
+class BrokenPowerLaw(Distribution):
     def __init__(self,
                  breakpoints: list,
                  alphas: list,
@@ -77,3 +95,9 @@ class BrokenPowerLaw:
             ret[mask] = self.alphas_scale[i-1] * m[mask]**(-self.alphas[i-1])
 
         return scale * ret
+
+
+
+
+
+

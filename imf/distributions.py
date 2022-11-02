@@ -37,6 +37,20 @@ class PowerLaw(Distribution):
             m = np.array(m)
 
         return scale*m**(-alpha)
+    
+    def _call_fixed_alpha(self, m, scale: float = None):
+        alpha = self.alpha
+        if scale is None:
+            scale = self.scale
+        if type(m) in [int, float]:
+            m = np.array([m]) 
+
+        if type(m) != np.ndarray:
+            m = np.array(m)
+        
+        return scale*m**(-alpha)
+
+
 
 class BrokenPowerLaw(Distribution):
     def __init__(self,

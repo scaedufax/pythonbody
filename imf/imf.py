@@ -39,11 +39,9 @@ class IMF:
                 # density=True,
                 bins=int((m.max() - m.min())/dm)
                 )
-        
+
         # fit only bins containing more than fit_n_geq
         n_geq_mask = hist[0] >= fit_n_geq
-
-        print(type(self) == Salpeter)
 
         popt, pcov = curve_fit(self.distrib.__call__,
                                hist[1][1:][n_geq_mask],

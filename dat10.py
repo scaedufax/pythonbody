@@ -40,6 +40,8 @@ class dat10():
         self._default_cols = ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
         self._G = G
 
+        self._L = None
+
         if file_path is not None:
             self.file_path = file_path
             self.load(self.file_path)
@@ -80,6 +82,9 @@ class dat10():
     
     def __repr__(self):
         return self._data.__repr__()
+
+    def _repr_html_(self):
+        return self._data._repr_html_()
 
     @property
     def iloc(self):
@@ -140,10 +145,27 @@ class dat10():
         self._data[key] = item
 
     def __getitem__(self, key):
-        if type(key) in [int, list]:
-            return self._data.iloc[:,key]
-        else:
-            return self._data[key]
+        #if type(key) == int, list]:
+        #    return self._data.iloc[:,key]
+        #else:
+        return self._data[key]
+
+    @property
+    def L(self):
+        if self._L is None:
+            self._calc_L()
+        return self._L
+
+    def _calc_L(self):
+        R = self[["X1","X2","X3"]] - self.COM
+        L = np.cross(R, self[["V1","V2","V3"]].values * self[["M"]].values)
+        self._L = L.mean(axis=0)
+        self._data["Lx"] = L[:,0]
+        self._data["Ly"] = L[:,1]
+        self._data["Lz"] = L[:,2]
+        self._data["L"] = np.linalg.norm(L,axis=1)
+        pass
+
 
     def _check_non_empty(self):
         if not self._data:

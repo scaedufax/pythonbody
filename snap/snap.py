@@ -290,12 +290,12 @@ class snap():
         if settings.DEBUG_TIMING:
             print(f"Loading hdf5 file {time} took {dt.datetime.now() - time_debug_hdf5_file}")
         nbtime = f["Step#" + self.snap_data.loc[time]["step"]]["000 Scalars"][0]
-        self.cluster_data = nbdf(columns=[key for key in defaults.snap.cluster_col_map.keys() if defaults.snap.cluster_col_map[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
+        self.cluster_data = nbdf(columns=default_cluster_cols)
         for col in default_cluster_cols:
             if defaults.snap.cluster_col_map[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
                 self.cluster_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][defaults.snap.cluster_col_map[col]][:]
 
-        self.binaries_data = Binaries(columns=[key for key in defaults.snap.binary_col_map.keys() if defaults.snap.binary_col_map[key] in f["Step#" + self.snap_data.loc[time]["step"]].keys()])
+        self.binaries_data = Binaries(columns=default_binary_cols)
         for col in default_binary_cols:
             if defaults.snap.binary_col_map[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
                 self.binaries_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][defaults.snap.binary_col_map[col]][:]

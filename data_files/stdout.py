@@ -5,7 +5,7 @@ import errno
 import re
 from tqdm import tqdm
 import numpy as np
-import multiprocessing as mp
+# import multiprocessing as mp
 
 COLS = None
 
@@ -13,9 +13,11 @@ COLS = None
 FILES = None
 
 data = {}
-def analyze_line(line):
+
+
+"""def analyze_line(line):
     global data
-    cols = None
+    cols = None"""
 
 def load(stdout_files):
     #global COLS,REGEX,FILES
@@ -35,13 +37,19 @@ def load(stdout_files):
             current_time = None
             line_count = 0
             RTIDE_line = None
+
+            block_RLAGR = False
+            block_ELLAN = False
+
             for line in tqdm(lines):
                 if re.search("TIME.*M/MT:", line):
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
                     cols = [float(i) for i in line[2:len(line)-1]] + [line[len(line)-1]]
                     cols = np.array(cols, dtype=str)
-                elif re.search("RLAGR:|RSLAGR:|RBLAGR:|AVMASS:|NPARTC:|SIGR2:|SIGT2:|VROT:", line):
+                    block_RLAGR = True
+                    block_ELLAN = False
+                elif re.search("RLAGR:|RSLAGR:|RBLAGR:|AVMASS:|NPARTC:|SIGR2:|SIGT2:|VROT:", line) and block_RLAGR:
                     line = re.sub("\s+", " ",line.replace("\n","")).strip()
                     line_data = line.split(" ")
 
@@ -54,6 +62,13 @@ def load(stdout_files):
                     idx = np.float64(line_data[0].replace("D", "E"))
                     current_time = idx
                     data[which].loc[idx] = np.float64(line_data[2:])
+                elif re.search("TIME.*E/ET:", line):
+                    line = re.sub("\s+", " ", line).strip()
+                    line = line.split(" ")
+                    cols = [float(i) for i in line[2:len(line)-1]] + [line[len(line)-1]]
+                    cols = np.array(cols, dtype=str)
+                    block_RLAGR = False
+                    block_ELLAN = True
 
                 elif re.search("ADJUST", line):
                     line = re.sub("\s+", " ", line).strip()
@@ -70,6 +85,8 @@ def load(stdout_files):
 
                 # the something after ADJUST lines, where we can get the total Mass
                 elif re.search("TIME\[NB\].+N.+<NB>.+NPAIRS.+NMERGE.+MULT.+NS.+NSTEP\(I,B,R,U\).+DE.+E.+M.+", line):
+                    block_RLAGR = False
+                    block_ELLAN = False
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
 

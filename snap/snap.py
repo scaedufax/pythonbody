@@ -375,5 +375,5 @@ class snap():
                     self.snap_data.__init__(self.snap_data.append({"time": f[step]['000 Scalars'][0],
                                                   "file": file,
                                                   "step": step.replace("Step#","")}, ignore_index=True))
-            #self..index = self.snap_data["time"].values
+            self.snap_data.index = self.snap_data["time"].values
             f.close() 

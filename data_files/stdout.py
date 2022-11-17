@@ -115,6 +115,17 @@ def load(stdout_files):
                         data["OTHER_R"].loc[current_time] = np.float64(line[1:])
                     except ValueError:
                         continue
+                # scalar blocks
+                elif re.search("TIDAL PARAMETERS:.*TSCALE =.*  RTIDE =.*", line):
+                    line = re.sub("\s+", " ", line).strip()
+                    line = line.split(" ")
+                    if "SCALARS" not in data.keys():
+                        data["SCALARS"] = {}
+
+                    data["SCALARS"]["TIDAL"] = np.float64(line[2:6])
+                    data["SCALARS"]["TSCALE"] = np.float64(line[8])
+                    data["SCALARS"]["RTIDE"] = np.float64(line[11])
+
                 line_count += 1
     return data
 

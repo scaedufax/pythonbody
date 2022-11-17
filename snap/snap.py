@@ -369,11 +369,11 @@ class snap():
 
             for step in f.keys():
 
-                if version.parse(pd.__version__) >= version.parse("1.3.0") :
+                if version.parse(pd.__version__) >= version.parse("1.4.0") :
                     self.snap_data.loc[f[step]['000 Scalars'][0]] = [f[step]['000 Scalars'][0],file, step.replace("Step#","")]
                 else:
                     self.snap_data.__init__(self.snap_data.append({"time": f[step]['000 Scalars'][0],
                                                   "file": file,
                                                   "step": step.replace("Step#","")}, ignore_index=True))
-                    self.index = self.snap_data["time"].values
+            #self..index = self.snap_data["time"].values
             f.close() 

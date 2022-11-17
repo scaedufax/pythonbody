@@ -7,6 +7,7 @@ import sys
 from tqdm import tqdm
 import pathlib
 import warnings
+from packaging import version
 
 from pythonbody.ffi import ffi
 from pythonbody.nbdf import nbdf
@@ -368,10 +369,7 @@ class snap():
 
             for step in f.keys():
 
-                # if else clause should do the same, but kepler complains about setting new row with loc
-                # newer python versions complain about appending... so either way...
-                # TODO: change python ver to pandas ver
-                if sys.version_info.minor >= 10:
+                if version.parse(pd.__version__) >= version.parse("1.3.0") :
                     self.snap_data.loc[f[step]['000 Scalars'][0]] = [f[step]['000 Scalars'][0],file, step.replace("Step#","")]
                 else:
                     self.snap_data.__init__(self.snap_data.append({"time": f[step]['000 Scalars'][0],

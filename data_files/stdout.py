@@ -42,6 +42,7 @@ def load(stdout_files):
             block_ELLAN = False
 
             for line in tqdm(lines):
+                # LAGR Block
                 if re.search("TIME.*M/MT:", line):
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
@@ -49,10 +50,11 @@ def load(stdout_files):
                     cols = np.array(cols, dtype=str)
                     block_RLAGR = True
                     block_ELLAN = False
-                elif re.search("RLAGR:|RSLAGR:|RBLAGR:|AVMASS:|NPARTC:|SIGR2:|SIGT2:|VROT:", line) and block_RLAGR:
+                elif block_RLAGR and re.search("RLAGR:|RSLAGR:|RBLAGR:|AVMASS:|NPARTC:|SIGR2:|SIGT2:|VROT:", line):
                     line = re.sub("\s+", " ",line.replace("\n","")).strip()
                     line_data = line.split(" ")
 
+                    # drop ":"
                     which = line_data[1]
                     which = which[:len(which) - 1]
 
@@ -62,13 +64,34 @@ def load(stdout_files):
                     idx = np.float64(line_data[0].replace("D", "E"))
                     current_time = idx
                     data[which].loc[idx] = np.float64(line_data[2:])
+                
+                # ELLAN Block
                 elif re.search("TIME.*E/ET:", line):
+                    block_ELLAN = True
+                    block_RLAGR = False
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
-                    cols = [float(i) for i in line[2:len(line)-1]] + [line[len(line)-1]]
+                    cols = line[2:]
                     cols = np.array(cols, dtype=str)
-                    block_RLAGR = False
-                    block_ELLAN = True
+                elif block_ELLAN and re.search("MSHELL:|MCUM:|NPART:|NCUM:|AVMASS:|R3AV:|R2AV:|ZAV:|VROTEQ:|VRAV:|VZAV:|SGR2EQ:|SIGPH2:|SIGZ2:|B/A:|C/A:|TAU:", line):
+                    line = re.sub("\s+", " ",line.replace("\n","")).strip()
+                    line_data = line.split(" ")
+
+                    # drop ":"
+                    which = line_data[1]
+                    which = which[:len(which) - 1]
+
+                    if "ellan" not in data.keys():
+                        data["ellan"] = {}
+
+                    if which not in data["ellan"].keys():
+                        # Some don't include < RC, needs to be filter with len(line_...)
+                        data["ellan"][which] = pd.DataFrame(columns=cols[:len(line_data[2:])])
+                    idx = np.float64(line_data[0].replace("D", "E"))
+                    current_time = idx
+                    data["ellan"][which].loc[idx] = np.float64(line_data[2:])
+
+
 
                 elif re.search("ADJUST", line):
                     line = re.sub("\s+", " ", line).strip()

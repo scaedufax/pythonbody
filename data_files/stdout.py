@@ -71,7 +71,7 @@ def load(stdout_files):
                     block_RLAGR = False
                     line = re.sub("\s+", " ", line).strip()
                     line = line.split(" ")
-                    cols = line[2:]
+                    cols = [float(i) for i in line[2:len(line)-1]] + [line[len(line)-1]]
                     cols = np.array(cols, dtype=str)
                 elif block_ELLAN and re.search("MSHELL:|MCUM:|NPART:|NCUM:|AVMASS:|R3AV:|R2AV:|ZAV:|VROTEQ:|VRAV:|VZAV:|SGR2EQ:|SIGPH2:|SIGZ2:|B/A:|C/A:|TAU:", line):
                     line = re.sub("\s+", " ",line.replace("\n","")).strip()

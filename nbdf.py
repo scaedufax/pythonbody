@@ -145,6 +145,11 @@ class nbdf(pd.DataFrame):
 
         self["M/MT"] = self["M"].cumsum()/self["M"].sum()
 
+    def calc_R_over_RT(self):
+        if "R" not in self.columns:
+            self.calc_R()
+        self["R/RT"] = self["R"].cumsum()/self["R"].sum()
+
     def calc_VROT(self):
         if "R" not in self.columns:
             self.calc_R()

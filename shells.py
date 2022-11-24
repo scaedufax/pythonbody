@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import logging
 
+from . import nbdf
+
 def calc_shell_data(data: pd.DataFrame,n_shells=100, by="M"):
     if by not in data.columns:
         raise KeyError(f"Couldn't find Key '{by}' in the data!")
@@ -10,7 +12,9 @@ def calc_shell_data(data: pd.DataFrame,n_shells=100, by="M"):
     by_max = data[by].max()
     by_step = (by_max - by_min)/n_shells
 
-    df = pd.DataFrame(columns=["N"] + list(data.columns))
+    #data = data.sort_values(by="R")
+
+    df = nbdf(columns=["N"] + list(data.columns))
     
     empty_count = 0
     for i in range(0,n_shells):

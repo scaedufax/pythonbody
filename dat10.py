@@ -159,6 +159,10 @@ class dat10():
         if self._L is None:
             self._calc_L()
         return self._L
+    
+    @property
+    def L_norm(self):
+        return self.L/np.linalg.norm(self.L)
 
     def _calc_L(self):
         R = self[["X1","X2","X3"]] - self.COM

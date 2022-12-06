@@ -1,7 +1,7 @@
 import numpy as np
 import re
 
-from . import nbdf
+from .nbdf import nbdf
 
 def calc_shell_data(data: nbdf,
                     n_shells: int = 100,

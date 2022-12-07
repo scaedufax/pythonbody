@@ -140,23 +140,23 @@ class nbdf(pd.DataFrame):
         self["LZ"] = self["M"] * self["LZ_spec"]
 
     def calc_L_spec(self):
-        R = self.cluster_data[["X1", "X2", "X3"]]
-        V = self.cluster_data[["V1", "V2", "V3"]]
+        R = self[["X1", "X2", "X3"]]
+        V = self[["V1", "V2", "V3"]]
         L_spec = np.cross(R, V) 
-        self.cluster_data["L_spec"] = np.linalg.norm(L_spec, axis=1) 
-        self.cluster_data["LX_spec"] = L_spec[:, 0]
-        self.cluster_data["LY_spec"] = L_spec[:, 1]
-        self.cluster_data["LZ_spec"] = L_spec[:, 2]
+        self["L_spec"] = np.linalg.norm(L_spec, axis=1) 
+        self["LX_spec"] = L_spec[:, 0]
+        self["LY_spec"] = L_spec[:, 1]
+        self["LZ_spec"] = L_spec[:, 2]
 
     def calc_L(self):
-        R = self.cluster_data[["X1", "X2", "X3"]]
-        V = self.cluster_data[["V1", "V2", "V3"]]
+        R = self[["X1", "X2", "X3"]]
+        V = self[["V1", "V2", "V3"]]
 
         L = np.cross(R, V) * self[["M"]].values
-        self.cluster_data["L"] = np.linalg.norm(L, axis=1) 
-        self.cluster_data["LX"] = L[:, 0]
-        self.cluster_data["LY"] = L[:, 1]
-        self.cluster_data["LZ"] = L[:, 2]
+        self["L"] = np.linalg.norm(L, axis=1) 
+        self["LX"] = L[:, 0]
+        self["LY"] = L[:, 1]
+        self["LZ"] = L[:, 2]
 
     def calc_M_over_MT(self):
         if "R" not in self.columns:

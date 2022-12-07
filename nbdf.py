@@ -153,7 +153,19 @@ class nbdf(pd.DataFrame):
     def calc_VROT(self):
         if "R" not in self.columns:
             self.calc_R()
+        
+        """
+        # nbody style
+        rvxy = self["X1"]*self["V1"] + self["X2"] * self["V2"]
+        rxy2 = self["X1"]**2 + self["X2"]**2
+        vrot1 = self["V1"] - rvxy * self["X1"]/rxy2
+        vrot2 = self["V2"] - rvxy * self["X2"]/rxy2
+        self["VROT"] = np.sqrt(vrot1**2 + vrot2**2)
+        mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
+        self.cluster_data.loc[mask,"VROT"] = - self.cluster_data.loc[mask,"VROT"]
+        """
 
+        # pythonbody style
         VROT = np.cross( 
                     np.cross(
                         self.loc[:,["X1","X2","X3"]],

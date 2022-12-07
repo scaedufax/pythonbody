@@ -140,7 +140,47 @@ def load(stdout_files):
                 data["OTHER_R"].loc[current_time] = np.float64(line[1:])
             except ValueError:
                 continue
-        # scalar blocks
+        # Scalar & Scalings blocks
+        elif re.search("SCALING:.*SX =.*E =.*M\(1\) =.*M\(N\) =.*<M> =.*Q =.*", line):
+            line = re.sub("\s+", " ", line).strip()
+            line = line.split(" ")
+            if "SCALING" not in data["SCALARS"].keys():
+                data["SCALARS"]["SCALING"] = {}
+
+            for i, (key, value) in enumerate(zip(line[1::3], line[3::3])):
+                data["SCALARS"]["SCALING"][key] = np.float64(value)
+        elif re.search("TIME SCALES:.*TRH =.* TCR = .* 2<R>/<V> = .*", line):
+            line = re.sub("\s+", " ", line).strip()
+            line = line.split(" ")
+            if "TIME_SCALES" not in data["SCALARS"].keys():
+                data["SCALARS"]["TIME_SCALES"] = {}
+
+            for i, (key, value) in enumerate(zip(line[2::3], line[4::3])):
+                data["SCALARS"]["TIME_SCALES"][key] = np.float64(value)
+        elif re.search("PHYSICAL SCALING:.* R\* = .* M\* = .* V\* = .* T\* = .* <M> = .* SU = .*", line):
+            line = re.sub("\s+", " ", line).strip()
+            line = line.split(" ")
+            if "PHYSICAL_SCALING" not in data["SCALARS"].keys():
+                data["SCALARS"]["PHYSICAL_SCALING"] = {}
+
+            for i, (key, value) in enumerate(zip(line[2::3], line[4::3])):
+                data["SCALARS"]["PHYSICAL_SCALING"][key] = np.float64(value)
+        elif re.search("GR SCALING: .* V\* = .* C = .* RZ = .*", line):
+            line = re.sub("\s+", " ", line).strip()
+            line = line.split(" ")
+            if "GR_SCALING" not in data["SCALARS"].keys():
+                data["SCALARS"]["GR_SCALING"] = {}
+
+            for i, (key, value) in enumerate(zip(line[2::3], line[4::3])):
+                data["SCALARS"]["GR_SCALING"][key] = np.float64(value)
+        elif re.search("POINT-MASS MODEL \(NB unit\):.*MG = .* RG = .* OMEGA = .* RTIDE = .* RBAR = .*", line):
+            line = re.sub("\s+", " ", line).strip()
+            line = line.split(" ")
+            if "POINT-MASS_MODEL" not in data["SCALARS"].keys():
+                data["SCALARS"]["POINT-MASS_MODEL"] = {}
+
+            for i, (key, value) in enumerate(zip(line[4::3], line[6::3])):
+                data["SCALARS"]["POINT-MASS_MODEL"][key] = np.float64(value)
         elif re.search("TIDAL PARAMETERS:.*TSCALE =.*  RTIDE =.*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")

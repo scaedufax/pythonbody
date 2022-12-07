@@ -137,7 +137,26 @@ class nbdf(pd.DataFrame):
     def calc_LZ(self):
         if "LZ_spec" not in self.columns:
             self.calc_LZ_spec()
-        self["LZ"] = self["M"] * self["LZ_spec"] 
+        self["LZ"] = self["M"] * self["LZ_spec"]
+
+    def calc_L_spec(self):
+        R = self.cluster_data[["X1", "X2", "X3"]]
+        V = self.cluster_data[["V1", "V2", "V3"]]
+        L_spec = np.cross(R, V) 
+        self.cluster_data["L_spec"] = np.linalg.norm(L_spec, axis=1) 
+        self.cluster_data["LX_spec"] = L_spec[:, 0]
+        self.cluster_data["LY_spec"] = L_spec[:, 1]
+        self.cluster_data["LZ_spec"] = L_spec[:, 2]
+
+    def calc_L(self):
+        R = self.cluster_data[["X1", "X2", "X3"]]
+        V = self.cluster_data[["V1", "V2", "V3"]]
+
+        L = np.cross(R, V) * self[["M"]].values
+        self.cluster_data["L"] = np.linalg.norm(L, axis=1) 
+        self.cluster_data["LX"] = L[:, 0]
+        self.cluster_data["LY"] = L[:, 1]
+        self.cluster_data["LZ"] = L[:, 2]
 
     def calc_M_over_MT(self):
         if "R" not in self.columns:

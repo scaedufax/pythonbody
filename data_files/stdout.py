@@ -144,6 +144,8 @@ def load(stdout_files):
         elif re.search("SCALING:.*SX =.*E =.*M\(1\) =.*M\(N\) =.*<M> =.*Q =.*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
+            if "SCALARS" not in data.keys():
+                data["SCALARS"] = {}
             if "SCALING" not in data["SCALARS"].keys():
                 data["SCALARS"]["SCALING"] = {}
 
@@ -152,6 +154,8 @@ def load(stdout_files):
         elif re.search("TIME SCALES:.*TRH =.* TCR = .* 2<R>/<V> = .*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
+            if "SCALARS" not in data.keys():
+                data["SCALARS"] = {}
             if "TIME_SCALES" not in data["SCALARS"].keys():
                 data["SCALARS"]["TIME_SCALES"] = {}
 
@@ -160,6 +164,8 @@ def load(stdout_files):
         elif re.search("PHYSICAL SCALING:.* R\* = .* M\* = .* V\* = .* T\* = .* <M> = .* SU = .*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
+            if "SCALARS" not in data.keys():
+                data["SCALARS"] = {}
             if "PHYSICAL_SCALING" not in data["SCALARS"].keys():
                 data["SCALARS"]["PHYSICAL_SCALING"] = {}
 
@@ -168,6 +174,8 @@ def load(stdout_files):
         elif re.search("GR SCALING: .* V\* = .* C = .* RZ = .*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
+            if "SCALARS" not in data.keys():
+                data["SCALARS"] = {}
             if "GR_SCALING" not in data["SCALARS"].keys():
                 data["SCALARS"]["GR_SCALING"] = {}
 
@@ -176,6 +184,8 @@ def load(stdout_files):
         elif re.search("POINT-MASS MODEL \(NB unit\):.*MG = .* RG = .* OMEGA = .* RTIDE = .* RBAR = .*", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
+            if "SCALARS" not in data.keys():
+                data["SCALARS"] = {}
             if "POINT-MASS_MODEL" not in data["SCALARS"].keys():
                 data["SCALARS"]["POINT-MASS_MODEL"] = {}
 

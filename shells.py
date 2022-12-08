@@ -6,7 +6,8 @@ from .nbdf import nbdf
 def calc_shell_data(data: nbdf,
                     n_shells: int = 100,
                     by: str = "M",
-                    cumulative: bool = False):
+                    cumulative: bool = False,
+                    cumsum: bool = False):
     """
     Divides the given data into shells, and calculates the averages
     within these shells.
@@ -17,6 +18,7 @@ def calc_shell_data(data: nbdf,
         by (str): column name to sort and divide into shells by.
         cumulative (bool): use spheres instead of shells, average over
             all values, that are below each shell threshold.
+        cumsum (bool): take cumulative sum within shells instead of mean
 
     Returns:
         nbdf: Nbody Dataframe containing the shell data.
@@ -45,20 +47,21 @@ def calc_shell_data(data: nbdf,
     
     empty_count = 0
     for i in range(0, n_shells):
+        N = np.sum((data[by] > by_min + i*by_step) & (data[by] <= by_min + (i+1)*by_step))
+        if N == 0:
+            empty_count += 1
+            continue
+
         if not cumulative:
-            N = np.sum((data[by] > by_min + i*by_step) & (data[by] <= by_min + (i+1)*by_step))
-            if N == 0:
-                empty_count += 1
-                continue
             df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] > by_min + i*by_step) & (data[by] <= by_min + (i+1)*by_step)].mean()
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
-        else:
-            N = np.sum(data[by] <= by_min + (i+1)*by_step)
-            if N == 0:
-                empty_count += 1
-                continue
+        elif cumulative:
             df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] <= by_min + (i+1)*by_step)].mean()
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
+        elif cumsum:
+            df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] <= by_min + (i+1)*by_step)].sum()
+            df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
+
 
     return df
 

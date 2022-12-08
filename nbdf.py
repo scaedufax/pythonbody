@@ -161,7 +161,7 @@ class nbdf(pd.DataFrame):
         """
 
         if normalize not in ["unit", "system", False]:
-            raise ValueError(f"normalize must be 'unit', 'system' or False, but is {unit}")
+            raise ValueError(f"normalize must be 'unit', 'system' or False, but is {normalize}")
 
         R = self[["X1", "X2", "X3"]]
         V = self[["V1", "V2", "V3"]]

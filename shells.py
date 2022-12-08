@@ -6,6 +6,7 @@ from .nbdf import nbdf
 def calc_shell_data(data: nbdf,
                     n_shells: int = 100,
                     by: str = "M",
+                    method: str = "mean"
                     cumulative: bool = False,
                     cumsum: bool = False):
     """
@@ -16,13 +17,18 @@ def calc_shell_data(data: nbdf,
         data (nbdf): data to divide into shells
         n_shells (int): number of shells to create
         by (str): column name to sort and divide into shells by.
-        cumulative (bool): use spheres instead of shells, average over
-            all values, that are below each shell threshold.
-        cumsum (bool): take cumulative sum within shells instead of mean
+        method (str): can be 'sum', 'mean', 'cumsum', 'cummean' defaults to mean
+            sum: take sum of each value per shell
+            mean: takes average of each value per shell
+            cumsum: Sum of all values below the shell threshold
+            cummean: Average of all values below the shell threshold
 
     Returns:
         nbdf: Nbody Dataframe containing the shell data.
     """
+
+    if method not in ["sum", "mean", "cumsum", "cummean"]:
+        raise ValueError(f"Method must be one of 'sum', 'mean', 'cumsum' or 'cummean', but is {method}")
 
     if by not in data.columns:
         try:
@@ -52,13 +58,16 @@ def calc_shell_data(data: nbdf,
             empty_count += 1
             continue
 
-        if not cumulative:
+        if method == "mean":
             df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] > by_min + i*by_step) & (data[by] <= by_min + (i+1)*by_step)].mean()
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
-        elif cumulative:
+        if method == "sum":
+            df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] > by_min + i*by_step) & (data[by] <= by_min + (i+1)*by_step)].sum()
+            df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
+        elif method == "cummean":
             df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] <= by_min + (i+1)*by_step)].mean()
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
-        elif cumsum:
+        elif method == "cumsum":
             df.loc[(by_min + (i+1)*by_step)/by_max] = data.loc[(data[by] <= by_min + (i+1)*by_step)].sum()
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
 

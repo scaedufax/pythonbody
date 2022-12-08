@@ -17,3 +17,5 @@ ffi/config.log
 ffi/config.status
 ffi/*~
 ffi/libtool
+docs/build
+docs/source/generated

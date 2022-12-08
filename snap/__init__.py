@@ -1,3 +1,3 @@
-from pythonbody.snap.snap import snap
-from pythonbody.snap.binaries import Binaries
-from pythonbody.snap.singles import Singles
+from .snap import snap
+from .binaries import Binaries
+from .singles import Singles

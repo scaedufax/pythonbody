@@ -13,7 +13,8 @@ author = 'Uli Roth'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary']
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -25,3 +26,9 @@ exclude_patterns = []
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+
+
+import pathlib
+import sys
+sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+sys.path.insert(0, pathlib.Path(__file__).parents[3].resolve().as_posix())

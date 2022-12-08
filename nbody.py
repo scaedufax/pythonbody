@@ -21,23 +21,17 @@ class UnknownDataLoad(Exception):
 
 class nbody:
     """
-    Class for handling nbody results
-
-    Attributes:
-        data_path (str): Path where output files of nbody can be found
-        nb_stdout_files (list or str): path to nbody standard output data
-
-        _data (dict): contains data from nbody simulation
-        _files (dict): contains files related to the simulation
-
+    Class for handling and nbody run or project
     """
+
     def __init__(self, data_path: str = None, nb_stdout_files: list = None):
         """
-        Initializes class with data
-       
-        Parameters:
-            data_path (str): Path where output files of nbody can be found
-            nbody_stdout_files (list): list of file from nbody stdout
+        nbody class initializer (with data)
+
+        :param data_path: Path where output file of Nbody can be found
+        :type data_path: str or None
+        :param nb_stdout_files: Name(s) of the Nbody standard output files
+        :type nb_stdout_files: list[str] or str or None       
         """
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -86,12 +80,10 @@ class nbody:
     def load(self, *what):
         """
         Loads data into the self._data from files associated with nbody.
-         
-        Parameters:        
-            what (list): Type of data the function is supposed to load.
-                         See SUPPORTED_DATA_FILES and SUPPORTED_DATA_COLS
+        
+        :param what: which data type to load, available data types: {SUPPORTED_DATA_FILES} and {SUPPORTED_COLS}
+        :type what: list[str] or str or 'all' or None
         """
-
         if len(what) == 0:
             return self.load(*SUPPORTED_DATA_FILES)
 

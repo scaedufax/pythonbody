@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 import logging
 
 from pythonbody.ffi import ffi
@@ -11,23 +10,16 @@ class dat10():
     """
     Class for reading and modifying dat.10 files
     for nbody.
-
-    Attributes:
-        com (float): center of mass
-        EKIN (float): kinetic energy
-        EPOT (float): potential energy
-        ETOT (float) EPOT+EKIN
-
-        ZMBAR: Calculates ZMBAR for use in nbody input files
-        RBAR: Calculates RBAR for use in nbody input files
-        AVMASS: prints average Mass of system
-
     """
-    def __init__(self, file_path: str = None, G=1):
+
+    def __init__(self, file_path: str = None, G: float = 1):
         """
         dat10 constructor
-        Parameters:
-            file_path (str): path to dat.10 file
+        
+        :param file_path: path to dat.10 file
+        :type file_path: str or None
+        :param G: gravitational constant
+        :type G: float
         """
         self._setup_logger()
         self._data = None

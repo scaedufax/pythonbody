@@ -21,7 +21,16 @@ if settings.DEBUG_TIMING:
 
 
 class snap():
+    """
+    Base class for handling snap (HDF5) files
+    """
     def __init__(self, data_path=None):
+        """
+        Snap class initializer
+
+        :param data_path: Optional path to (snap) data
+        :type data_path: str or None
+        """
         self.snap_data = pd.DataFrame(columns=["time", "file", "step"])
         if not pathlib.Path(data_path).is_dir():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
@@ -48,9 +57,6 @@ class snap():
         checks if passed value(s) are in currently loaded cluster data,
         otherwise returns snap list data
         """
-        """if type(value) != list:
-            value = [value]"""
-
         try:
             return self.cluster_data[value]
         except:

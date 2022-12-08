@@ -7,6 +7,20 @@ def calc_shell_data(data: nbdf,
                     n_shells: int = 100,
                     by: str = "M",
                     cumulative: bool = False):
+    """
+    Divides the given data into shells, and calculates the averages
+    within these shells.
+
+    Parameters:
+        data (nbdf): data to divide into shells
+        n_shells (int): number of shells to create
+        by (str): column name to sort and divide into shells by.
+        cumulative (bool): use spheres instead of shells, average over
+            all values, that are below each shell threshold.
+
+    Returns:
+        nbdf: Nbody Dataframe containing the shell data.
+    """
 
     if by not in data.columns:
         try:
@@ -26,7 +40,6 @@ def calc_shell_data(data: nbdf,
     by_min = data[by].min()
     by_max = data[by].max()
     by_step = (by_max - by_min)/n_shells
-
 
     df = nbdf(columns=["N"] + list(data.columns))
     
@@ -48,6 +61,7 @@ def calc_shell_data(data: nbdf,
             df.loc[(by_min + (i+1)*by_step)/by_max,"N"] = N
 
     return df
+
 
 """class shells(pd.DataFrame):
     def __init__(self, N: int, data: pd.Dataframe, by="M"):

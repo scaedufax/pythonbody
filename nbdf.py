@@ -148,7 +148,21 @@ class nbdf(pd.DataFrame):
         self["LY_spec"] = L_spec[:, 1]
         self["LZ_spec"] = L_spec[:, 2]
 
-    def calc_L(self):
+    def calc_L(self, normalize=False):
+        """
+        calculate angular momentum L, and stores the values in LX, LY, LZ,
+        and the norm into L.
+
+        Parameters:
+            normalize (str or bool): can be 'unit', 'system' or False. 'unit'
+                normalizes each vector to one, and system normalizes such that
+                the total angular momentum of the system is 1.
+
+        """
+
+        if normalize not in ["unit", "system", False]:
+            raise ValueError(f"normalize must be 'unit', 'system' or False, but is {unit}")
+
         R = self[["X1", "X2", "X3"]]
         V = self[["V1", "V2", "V3"]]
 
@@ -157,6 +171,15 @@ class nbdf(pd.DataFrame):
         self["LX"] = L[:, 0]
         self["LY"] = L[:, 1]
         self["LZ"] = L[:, 2]
+
+        if normalize == "unit":
+            self.loc[:, ["LX", "LY", "LZ"]] = self.loc[:, ["LX", "LY", "LZ"]] / np.full((3,self.shape[0]), self.loc[:,"L"].values).T
+            self.loc[:, "L"] = 1
+        if normalize == "system":
+            self.loc[:, ["LX", "LY", "LZ"]] = self.loc[:, ["LX", "LY", "LZ"]] / self.loc[:, ["L"]].values.sum()
+            self.loc[:, "L"] = self.loc["L"]/self.loc["L"].sum()
+
+
 
     def calc_M_over_MT(self):
         if "R" not in self.columns:

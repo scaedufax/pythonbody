@@ -6,7 +6,7 @@ from .nbdf import nbdf
 def calc_shell_data(data: nbdf,
                     n_shells: int = 100,
                     by: str = "M",
-                    method: str = "mean"
+                    method: str = "mean",
                     cumulative: bool = False,
                     cumsum: bool = False):
     """

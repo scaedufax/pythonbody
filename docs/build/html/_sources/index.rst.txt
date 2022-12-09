@@ -12,19 +12,15 @@ Welcome to pythonbody's documentation!
    
    This project is under high active development.
 
+Contents
+========
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-
-Autosummary
-===========
-.. autosummary::
-   :recursive:
-   :toctree: generated
-
-   pythonbody.nbody
-   pythonbody.dat10
+   nbody.rst
+   dat10.rst
+   snap.rst
 
 
 Indices and tables

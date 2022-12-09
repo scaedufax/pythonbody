@@ -8,14 +8,11 @@ from pythonbody.ffi import ffi
 
 class dat10():
     """
-    Class for reading and modifying dat.10 files
-    for nbody.
+    Class for reading and modifying dat.10 files for nbody.
     """
 
     def __init__(self, file_path: str = None, G: float = 1):
         """
-        dat10 constructor
-        
         :param file_path: path to dat.10 file
         :type file_path: str or None
         :param G: gravitational constant
@@ -40,10 +37,10 @@ class dat10():
 
     def load(self, file_path: str):
         """
-        function to load data from dat.10 file
+        function to load data from dat.10 file into class
 
-        Parameters:
-            file_path (str): path to dat.10 file
+        :param file_path: path to dat.10 file
+        :type file_path: str
         """
         self._data = pd.read_csv(
                 file_path,
@@ -61,8 +58,8 @@ class dat10():
         Will only save the relevant cols for nbody, not any other cols you've
         created
 
-        Parameters:
-            file (str): path to file to save output to.
+        :param file: path to file to save output to.
+        :type file: str
         """
         self._data[self._default_cols].to_csv(
             file,
@@ -100,19 +97,36 @@ class dat10():
 
     @property
     def ETOT(self):
+        """
+        :return: Total energy (kinetic + potential)
+        :rtype: float
+        """
+
         if self._ETOT is None:
             self._ETOT = self.EKIN + self.EPOT
         return self._ETOT
     
     @property
     def EKIN(self):
+        """
+        :return: Kinetic energy
+        :rtype: float
+        """
         if self._EKIN is None:
             self._data["EKIN"] = 1/2 * self.loc[:,"M"]*np.linalg.norm(self.loc[:, ["V1", "V2", "V3"]], axis=1)**2
             self._EKIN = self._data["EKIN"].sum()
         return self._EKIN
     
     @property
-    def EPOT(self, G=1):
+    def EPOT(self, G: float = 1):
+        """
+        :param G: gravitational constant
+        :type G: float
+
+        :return: Potential energy (needs to be calculated)
+        :rtype: float
+        """
+
         """if self._EPOT is None:
             self._data["EPOT"] = self._G * grav_pot(self._data[["M", "X1", "X2", "X3"]])
             self._EPOT = self._data["EPOT"].sum()
@@ -121,39 +135,60 @@ class dat10():
 
     @property
     def ZMBAR(self):
+        """
+        :return: Average mass
+        :rtype: float
+        """
         return self._data.loc[:, "M"].mean()
     
     @property
     def RBAR(self):
+        """
+        :return: Average radius
+        :rtype: float
+        """
         return np.linalg.norm(self.loc[:, ["X1", "X2", "X3"]], axis=1).mean()
     
     @property
     def COM(self):
+        """
+        :return: Center of mass
+        :rtype: float[3]
+        """
         if self._com is None:
             self._com = 1/self.loc[:, "M"].sum() * np.sum(self.loc[:, ["X1", "X2", "X3"]].multiply(self.loc[:, "M"], axis=0))
         return self._com
     
     @property
     def AVMASS(self):
+        """
+        :return: Average Mass
+        :rtype: float
+        """
         return self._data.loc[:, "M"].mean()   
         
     def __setitem__(self, key, item):
         self._data[key] = item
 
     def __getitem__(self, key):
-        #if type(key) == int, list]:
-        #    return self._data.iloc[:,key]
-        #else:
         return self._data[key]
 
     @property
     def L(self):
+        """
+        :return: Angular momentum vector
+        :rtype: float[3]
+        """
         if self._L is None:
             self._calc_L()
         return self._L
     
     @property
     def L_norm(self):
+        """
+        :return: Normalized (to 1) angular momentum vector
+        :rtype: float[3]
+        """
         return self.L/np.linalg.norm(self.L)
 
     def _calc_L(self):
@@ -173,12 +208,15 @@ class dat10():
     
     def rotate(self, yaw: float = 0, pitch: float = 0, roll: float = 0):
         """
-        Rotates position (and velocities if available)
+        Rotates positions (and velocities if available) by yaw, pitch and
+        roll.
 
-        Parameters:
-            yaw (float): yaw in radians
-            pitch (float): pitch in radians
-            roll (float): roll in radians
+        :param yaw: yaw in radians
+        :type yaw: float
+        :param pitch: pitch in radians
+        :type pitch: float
+        :param roll: roll in radians
+        :type roll: float
         """
 
         # initialize rotation matrices
@@ -213,12 +251,15 @@ class dat10():
 
     def rotate_axis(self, axis: np.array, angle: float):
         """
-        Rotates position (and velocities if available) around a given axis by angle
-
-        Parameters:
-            axis (np.array, list): axis to rotate around, must contain 3 values
-            angle (float): angle to rotate by
+        Rotates position (and velocities if available) around a given `axis`
+        by `angle`.
+        
+        :param axis: Axis to rotate around.
+        :type axis: float[3]
+        :param angle: Angle to rotate around axis by.
+        :type angle: float
         """
+
         if type(axis) == list:
             axis = np.array(axis)
         if axis.shape != (3,):

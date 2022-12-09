@@ -5,9 +5,9 @@ from tqdm import tqdm
 import pandas as pd
 import sys
 
-from pythonbody.snap import snap
-from pythonbody.cluster import cluster
-from pythonbody import data_files
+from .snap import snap
+from .cluster import cluster
+from . import data_files
 
 
 SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))]

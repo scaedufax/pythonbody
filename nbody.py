@@ -76,6 +76,12 @@ class nbody:
 
     def __delitem__(self, key):
         del self._data[key]
+
+    def keys(self):
+        """
+        return available keys (examined data files) in data.
+        """
+        return self._data.keys()
  
     def load(self, *what):
         """
@@ -84,7 +90,7 @@ class nbody:
         :param what: which data type to load, available data types: {SUPPORTED_DATA_FILES} and {SUPPORTED_COLS}
         :type what: list[str] or str or 'all' or None
         """
-        if len(what) == 0:
+        if len(what) == 0 or what is None:
             return self.load(*SUPPORTED_DATA_FILES)
 
         for load_type in what:
@@ -117,6 +123,51 @@ class nbody:
                         self._data[load_type] = eval(f"data_files.{load_type}.load('{data_path}')")
                     except Exception as e:
                         print(f"Unknown error with {load_type}: {type(e)}, {str(e)}")
+
+    @property
+    def esc(self):
+        """
+        :returns: data from esc.11
+        :rtype: pd.DataFrame or None
+        """
+        if "esc" in self.keys():
+            return self._data["esc"]
+        else:
+            return None
+    
+    @property
+    def globals(self):
+        """
+        :returns: data from global.30
+        :rtype: pd.DataFrame or None
+        """
+        if "globals" in self.keys():
+            return self._data["globals"]
+        else:
+            return None
+    
+    @property
+    def lagr(self):
+        """
+        :returns: data from lagr.7
+        :rtype: pd.DataFrame or None
+        """
+        if "lagr" in self.keys():
+            return self._data["lagr"]
+        else:
+            return None
+
+    @property
+    def stdout(self):
+        """
+        :returns: data from stdout
+        :rtype: pd.DataFrame or None
+        """
+        if "stdout" in self.keys():
+            return self._data["stdout"]
+        else:
+            return None
+
 
 
     def calculate_energy_evolution(self):

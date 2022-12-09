@@ -27,8 +27,11 @@ def load(stdout_files):
     load the contents from stdout files
 
     :param stdout_files: Names of the stdout files
-    :type stdout_files: list[str]
+    :type stdout_files: list[str] or str
     """
+
+    if type(stdout_files == str):
+        stdout_files = [stdout_files]
 
     FILES = stdout_files 
 

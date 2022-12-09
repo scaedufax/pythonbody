@@ -1,3 +1,6 @@
+"""
+Handle the nbody stdout file, and load (most of) its content.
+"""
 import pandas as pd
 import pathlib
 import os
@@ -20,8 +23,14 @@ data = {}
     cols = None"""
 
 def load(stdout_files):
-    #global COLS,REGEX,FILES
-    FILES=stdout_files 
+    """
+    load the contents from stdout files
+
+    :param stdout_files: Names of the stdout files
+    :type stdout_files: list[str]
+    """
+
+    FILES = stdout_files 
 
     data = {}
     lines = []

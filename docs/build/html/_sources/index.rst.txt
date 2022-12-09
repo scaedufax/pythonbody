@@ -15,22 +15,26 @@ Welcome to pythonbody's documentation!
 Installation
 ============
 
-Preparation
------------
-
-pip install -r requirements.txt
-
+.. toctree::
+   :maxdepth: 2
+   
+   installation.rst
+   usage.rst
 
 Classes and modules
 ===================
 .. toctree::
    :maxdepth: 1
-   :caption: Classes and modules:
+   :caption: Classes:
 
    nbody.rst
    dat10.rst
-   snap/index.rst
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Modules
+
+   snap/index.rst
 
 Indices and tables
 ==================

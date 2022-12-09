@@ -35,6 +35,7 @@ Classes and modules
    :caption: Modules
 
    snap/index.rst
+   data_files/index.rst
 
 Indices and tables
 ==================

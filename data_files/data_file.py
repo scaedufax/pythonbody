@@ -24,3 +24,6 @@ class DataFile(pd.DataFrame):
 
             return self[key]
 
+#def read_csv(self, *args, **kwargs):
+#    return self.__init__(pd.read_csv(*args, **kwargs))
+

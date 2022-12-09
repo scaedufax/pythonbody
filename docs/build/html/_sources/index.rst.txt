@@ -12,15 +12,24 @@ Welcome to pythonbody's documentation!
    
    This project is under high active development.
 
-Contents
-========
+Installation
+============
+
+Preparation
+-----------
+
+pip install -r requirements.txt
+
+
+Classes and modules
+===================
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Classes and modules:
 
    nbody.rst
    dat10.rst
-   snap.rst
+   snap/index.rst
 
 
 Indices and tables

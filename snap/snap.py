@@ -9,10 +9,10 @@ import pathlib
 import warnings
 from packaging import version
 
-from pythonbody.ffi import ffi
-from pythonbody.nbdf import nbdf
-from pythonbody.snap.binaries import Binaries
-from pythonbody import defaults
+from ..ffi import ffi
+from ..nbdf import nbdf
+from .binaries import Binaries
+from .. import defaults
 from .. import settings
 if settings.DEBUG_TIMING:
     import datetime as dt

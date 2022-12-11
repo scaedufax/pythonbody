@@ -26,7 +26,8 @@ autodoc_member_order = "groupwise"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'alabaster'
+html_theme = 'furo'
+#html_theme = 'alabaster'
 #html_theme = 'classic'
 html_static_path = ['_static']
 

@@ -21,7 +21,8 @@ class FFI:
             self.lib = cdll.LoadLibrary(cwd + ".libs/libpythonbody.so")
         else:
             print("FFI: Couldn't load libpythonbody.so, FFI will not be working!")
-            return 0
+            self.OpenCL = False
+            return None
         try:
             self._ocl_init(p_id, d_id)
             self.default_cfunc = "ocl"

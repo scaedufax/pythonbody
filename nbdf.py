@@ -148,19 +148,28 @@ class nbdf(pd.DataFrame):
         self["LY_spec"] = L_spec[:, 1]
         self["LZ_spec"] = L_spec[:, 2]
 
-    def calc_L(self, normalize=False):
+    def calc_L(self, normalize: str = None):
         """
         calculate angular momentum L, and stores the values in LX, LY, LZ,
         and the norm into L.
 
-        Parameters:
-            normalize (str or bool): can be 'unit', 'system' or False. 'unit'
-                normalizes each vector to one, and system normalizes such that
-                the total angular momentum of the system is 1.
+        :param normalize: Optional noramlize angular momentum. Can be ``unit``,
+            ``system``, ``mean`` or ``None``.
+            
+            ``unit`` normalizes each vector to one, system normalizes such that
+            the total angular momentum of the system is 1
 
+            ``system`` normalizes the entire system to average the angular
+            momentum to one
+            
+            ``mean`` normalizes such that the mean of the enitre system is one.
+
+            ``None`` leave everything as is
+
+        :type normalize: str or None 
         """
 
-        if normalize not in ["unit", "system", False]:
+        if normalize not in ["unit", "system", "mean", None]:
             raise ValueError(f"normalize must be 'unit', 'system' or False, but is {normalize}")
 
         R = self[["X1", "X2", "X3"]]
@@ -178,6 +187,8 @@ class nbdf(pd.DataFrame):
         elif normalize == "system":
             self.loc[:, ["LX", "LY", "LZ"]] = self.loc[:, ["LX", "LY", "LZ"]] / self.loc[:, ["L"]].values.sum()
             self.loc[:, "L"] = self.loc[:, "L"]/self.loc[:, "L"].sum()
+        elif normalize == "mean":
+            self.loc[:, ["LX", "LY", "LZ", "L"]] = self.loc[:, ["LX", "LY", "LZ", "L"]] / self.loc[:, "L"].mean()
 
 
 
@@ -196,7 +207,7 @@ class nbdf(pd.DataFrame):
         """
         calculate rotational velocity.
         
-        :param method: which method to use, either standard ``nbody`` way or
+        :param method: Optional which method to use, either standard ``nbody`` way or
             the ``pythonbody`` way, which does not require the system to rotate
             along the z-axis.
         :type method: str ["python" or "nbody"]

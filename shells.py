@@ -3,12 +3,12 @@ import re
 
 from .nbdf import nbdf
 
+
 def calc_shell_data(data: nbdf,
                     n_shells: int = 100,
                     by: str = "M",
                     method: str = "mean",
-                    cumulative: bool = False,
-                    cumsum: bool = False):
+                   ):
     """
     Divides the given data into shells, and calculates the averages
     within these shells.

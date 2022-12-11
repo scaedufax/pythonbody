@@ -29,6 +29,7 @@ Classes and modules
 
    nbody.rst
    dat10.rst
+   nbdf.rst
 
 .. toctree::
    :maxdepth: 2

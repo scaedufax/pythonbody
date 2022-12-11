@@ -23,6 +23,11 @@ class nbody:
     """
     Class for handling and nbody run or project
 
+    :param data_path: Path where output file of Nbody can be found
+    :type data_path: str or None
+    :param nb_stdout_files: Name(s) of the Nbody standard output files
+    :type nb_stdout_files: list[str] or str or None
+
     Basically a `dict` type. When given a ``data_path`` and ``nb_stdout_files``
     you can use the ``load()`` function to automatically load everything.
 
@@ -63,8 +68,7 @@ class nbody:
         2944.0  0.068826  0.090216  0.104810  0.164519  ...  8.204566  15.934179  51.527380  0.359200
         2945.0  0.073164  0.110651  0.149710  0.181364  ...  8.216966  15.939291  51.687435  0.392462
 
-        [2954 rows x 19 columns]
-
+        [2954 rows x 19 columns]        
     """
 
     def __init__(self, data_path: str = None, nb_stdout_files: list = None):
@@ -134,7 +138,11 @@ class nbody:
         If there is nothing passed, automatically all available data_files
         will be loaded.
         
-        :param what: which data type to load, available data types: {SUPPORTED_DATA_FILES} and {SUPPORTED_COLS}
+        :param what: which data type to load, available values are ``esc``,
+            ``globals`` ``lagr``, ``stdout``. 
+
+            If there is nothing passed, 
+            automatically all available data_files will be loaded.
         :type what: list[str] or str or 'all' or None
         """
         if len(what) == 0 or what is None:

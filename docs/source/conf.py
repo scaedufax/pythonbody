@@ -20,7 +20,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # -- Options for autodoc -----------------------------------------------------
-autoclass_content = "both"
+autoclass_content = "class"
 autodoc_member_order = "groupwise"
 
 # -- Options for HTML output -------------------------------------------------

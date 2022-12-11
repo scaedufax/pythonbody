@@ -50,7 +50,7 @@ def load(stdout_files, max_nb_time: float = None):
             lines += myfile.readlines()
 
     cols = None
-    current_time = None
+    current_time = -1
     line_count = 0
     RTIDE_line = None
 

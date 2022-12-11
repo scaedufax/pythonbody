@@ -130,7 +130,7 @@ class nbody:
         """
         return self._data.keys()
  
-    def load(self, *what):
+    def load(self, *what, max_nb_time: float = None):
         """
         Loads data into the self._data from files associated with nbody.
 
@@ -144,9 +144,13 @@ class nbody:
             If there is nothing passed, 
             automatically all available data_files will be loaded.
         :type what: list[str] or str or 'all' or None
+        :param max_nb_time: Optional do not read anything above max_nb_time. Currently
+            only applies to stdout data_file, as everything else is quite
+            fast anyway.
+        :type max_nb_time: float or None
         """
         if len(what) == 0 or what is None:
-            return self.load(*SUPPORTED_DATA_FILES)
+            return self.load(*SUPPORTED_DATA_FILES, max_nb_time=max_nb_time)
 
         for load_type in what:
             
@@ -161,7 +165,7 @@ class nbody:
                         data_path = self.data_path
                         if key == "stdout":
                             data_path = [self.data_path + "/" + i for i in self._files['nb_stdout_files']]
-                            self._data[key] = eval(f"data_files.{key}.load({data_path})")
+                            self._data[key] = eval(f"data_files.{key}.load({data_path}, max_nb_time={max_nb_time})")
                             break
                         else:
                             self._data[key] = eval(f"data_files.{key}.load('{data_path}')")
@@ -172,7 +176,7 @@ class nbody:
                 data_path = self.data_path
                 if load_type == "stdout":
                     data_path = [self.data_path + "/" + i for i in self._files['nb_stdout_files']]
-                    self._data[load_type] = eval(f"data_files.{load_type}.load({data_path})")
+                    self._data[load_type] = eval(f"data_files.{load_type}.load({data_path}, max_nb_time={max_nb_time})")
                 else:
                     try:
                         self._data[load_type] = eval(f"data_files.{load_type}.load('{data_path}')")

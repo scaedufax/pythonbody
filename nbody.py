@@ -28,6 +28,9 @@ class nbody:
     :param nb_stdout_files: Name(s) of the Nbody standard output files
     :type nb_stdout_files: list[str] or str or None
 
+    Usage
+    _____
+
     Basically a `dict` type. When given a ``data_path`` and ``nb_stdout_files``
     you can use the ``load()`` function to automatically load everything.
 
@@ -69,6 +72,9 @@ class nbody:
         2945.0  0.073164  0.110651  0.149710  0.181364  ...  8.216966  15.939291  51.687435  0.392462
 
         [2954 rows x 19 columns]        
+
+    Methods and Properties
+    ----------------------
     """
 
     def __init__(self, data_path: str = None, nb_stdout_files: list = None):

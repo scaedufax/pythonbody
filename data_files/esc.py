@@ -6,9 +6,6 @@ import numpy as np
 import re
 
 from .data_file import DataFile as pbdf
-"""
-handle esc.11 output file, containing info about escapers.
-"""
 
 COLS = None
 
@@ -17,6 +14,14 @@ REGEX = None
 FILES = ["esc.11"]
 
 def load(data_path="."):
+    """
+    handle esc.11 output file, containing info about escapers.
+
+    :param data_path: Path to nbody run
+    :type data_path: str
+    :return: data concerning escapers
+    :rtype: pbdf
+    """
     global COLS, REGEX, FILES
 
     for f in FILES:

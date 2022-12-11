@@ -10,8 +10,8 @@ from .cluster import cluster
 from . import data_files
 
 
-SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))]
-SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and (i != "data_file"))}
+SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))]
+SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))}
 CALCABLE_DATA = {key: [i for i in eval(f"dir(data_files.{key})") if "calc_" in i] for key in SUPPORTED_DATA_FILES}
 
 
@@ -22,6 +22,16 @@ class UnknownDataLoad(Exception):
 class nbody:
     """
     Class for handling and nbody run or project
+
+    Basically a `dict` type. When given a ``data_path`` and ``nb_stdout_files``
+    you can use the ``load()`` function to automatically load everything.
+
+    .. code-block:: python
+
+        >>> n100k = nbody(data_path="/path/to/nbody/run",
+                          nb_stdout_files = ["N100k_1.out", "N100k_2.out"])
+
+        >>> n100k.load() # try to load all the data
     """
 
     def __init__(self, data_path: str = None, nb_stdout_files: list = None):
@@ -86,6 +96,10 @@ class nbody:
     def load(self, *what):
         """
         Loads data into the self._data from files associated with nbody.
+
+        Available `what` values are `esc`, `globals` `lagr`, `stdout`.
+        If there is nothing passed, automatically all available data_files
+        will be loaded.
         
         :param what: which data type to load, available data types: {SUPPORTED_DATA_FILES} and {SUPPORTED_COLS}
         :type what: list[str] or str or 'all' or None
@@ -127,6 +141,8 @@ class nbody:
     @property
     def esc(self):
         """
+        See :doc:`data_files/esc`.
+
         :returns: data from esc.11
         :rtype: pd.DataFrame or None
         """
@@ -138,6 +154,8 @@ class nbody:
     @property
     def globals(self):
         """
+        See :doc:`data_files/globals`.
+
         :returns: data from global.30
         :rtype: pd.DataFrame or None
         """
@@ -149,6 +167,8 @@ class nbody:
     @property
     def lagr(self):
         """
+        See :doc:`data_files/lagr`.
+
         :returns: data from lagr.7
         :rtype: pd.DataFrame or None
         """
@@ -160,6 +180,8 @@ class nbody:
     @property
     def stdout(self):
         """
+        See :doc:`data_files/stdout`.
+
         :returns: data from stdout
         :rtype: pd.DataFrame or None
         """

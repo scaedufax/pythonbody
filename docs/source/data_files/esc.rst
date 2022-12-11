@@ -3,6 +3,9 @@ esc
 
 Load the output from `esc.11` files, containing data about escaping stars.
 
+.. automodule:: pythonbody.data_files.esc
+   :members: load
+
 Use directly,
 
 .. code-block:: python

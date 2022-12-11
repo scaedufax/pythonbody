@@ -2,7 +2,14 @@ import pandas as pd
 import ast
 from pythonbody import data_files
 
+
 class DataFile(pd.DataFrame):
+    """
+    extends pandas.DataFrame
+
+    will calculate a missing column if calc_{NAME} is available in the
+    referenced file type.
+    """
     def __init__(self, name: str = None, *args):
         super().__init__(*args)
         self.__name__ = name

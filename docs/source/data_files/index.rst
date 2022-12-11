@@ -5,6 +5,7 @@ data_files (ANSI Output)
    :maxdepth: 1
    :caption: Contents
 
+   pbdf.rst
    esc.rst
    globals.rst
    lagr.rst

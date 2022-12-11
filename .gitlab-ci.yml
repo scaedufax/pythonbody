@@ -5,7 +5,7 @@ pages:
   stage: deploy
   image: python:3.9-slim
   before_script:
-    - apt-get update && apt-get install make build-essential --no-install-recommends -y
+    - apt-get update && apt-get install make build-essential automake --no-install-recommends -y
     - python -m pip install sphinx furo
     - python -m pip install -r requirements.txt
   script:

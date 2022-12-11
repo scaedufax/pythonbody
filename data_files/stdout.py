@@ -87,7 +87,7 @@ def load(stdout_files):
             line = line.split(" ")
             cols = [float(i) for i in line[2:]]
             cols = np.array(cols, dtype=str)
-        elif block_ELLAN and re.search("MSHELL:|MCUM:|NPART:|NCUM:|AVMASS:|R3AV:|R2AV:|ZAV:|VROTEQ:|VRAV:|VZAV:|SGR2EQ:|SIGPH2:|SIGZ2:|B/A:|C/A:|TAU:|THETA[1-3]:|PHI[1-3]:", line):
+        elif block_ELLAN and re.search("MSHELL:|MCUM:|EROT:|EROTCM:|ANGM:|ANGMCM:|NPART:|NCUM:|AVMASS:|R3AV:|R2AV:|ZAV:|VROTEQ:|VRAV:|VZAV:|SGR2EQ:|SIGPH2:|SIGZ2:|B/A:|C/A:|TAU:|THETA[1-3]:|PHI[1-3]:", line):
             line = re.sub("\s+", " ",line.replace("\n","")).strip()
             line_data = line.split(" ")
 

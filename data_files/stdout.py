@@ -30,7 +30,7 @@ def load(stdout_files):
     :type stdout_files: list[str] or str
     """
 
-    if type(stdout_files == str):
+    if type(stdout_files) == str:
         stdout_files = [stdout_files]
 
     FILES = stdout_files 

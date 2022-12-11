@@ -22,12 +22,14 @@ data = {}
     global data
     cols = None"""
 
-def load(stdout_files):
+def load(stdout_files, max_nb_time: float = None):
     """
     load the contents from stdout files
 
     :param stdout_files: Names of the stdout files
     :type stdout_files: list[str] or str
+    :param max_nb_time: stop when NB time unit is reached.
+    :type max_nb_time: float or None
     """
 
     if type(stdout_files) == str:
@@ -56,6 +58,8 @@ def load(stdout_files):
     block_ELLAN = False
 
     for line in tqdm(lines):
+        if max_nb_time is not None and current_time > max_nb_time:
+            break
         # LAGR Block
         if re.search("TIME.*M/MT:", line):
             line = re.sub("\s+", " ", line).strip()
@@ -104,8 +108,6 @@ def load(stdout_files):
             idx = np.float64(line_data[0].replace("D", "E"))
             current_time = idx
             data["ellan"][which].loc[idx] = np.float64(line_data[2:])
-
-
 
         elif re.search("ADJUST", line):
             line = re.sub("\s+", " ", line).strip()

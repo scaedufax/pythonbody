@@ -9,7 +9,7 @@ pages:
     - python -m pip install sphinx furo
     - python -m pip install -r requirements.txt
   script:
-    - cd ffi && ./configure && make && make clean && cd ..
+    - cd ffi && ./configure && make clean && make && cd ..
     - cd docs && make html
   after_script:
     - mv docs/build/html/ ./public/

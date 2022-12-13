@@ -1,10 +1,11 @@
 # pythonbody
 This project is currently under high development and might break with each update or commit. Furthermore as of now it is not very well documented.
-# Documentation
-### https://shad0wfax.gitlab.io/pythonbody
 
 ### READ ONLY GITHUB Mirror: https://github.com/shad0wfax-de/pythonbody
 ### DEVELOPMENT GITLAB Mirror: https://gitlab.com/shad0wfax/pythonbody
+
+# Documentation
+### https://shad0wfax.gitlab.io/pythonbody
 
 ## Requirements
 It is known to work with Python 3.7.14 and the latest pandas & numpy versions for Python 3.7.14. As well as with any versions above that.

@@ -9,15 +9,14 @@ from pythonbody.ffi import ffi
 class dat10():
     """
     Class for reading and modifying dat.10 files for nbody.
+        
+    :param file_path: path to dat.10 file
+    :type file_path: str or None
+    :param G: gravitational constant
+    :type G: float
     """
 
     def __init__(self, file_path: str = None, G: float = 1):
-        """
-        :param file_path: path to dat.10 file
-        :type file_path: str or None
-        :param G: gravitational constant
-        :type G: float
-        """
         self._setup_logger()
         self._data = None
         self._com = None
@@ -176,7 +175,7 @@ class dat10():
         :rtype: float[3]
         """
         if self._L is None:
-            self._calc_L()
+            self.calc_L()
         return self._L
     
     @property
@@ -187,15 +186,42 @@ class dat10():
         """
         return self.L/np.linalg.norm(self.L)
 
-    def _calc_L(self):
-        R = self[["X1","X2","X3"]] - self.COM
-        L = np.cross(R, self[["V1","V2","V3"]].values * self[["M"]].values)
+    def calc_L(self, method="pythonbody"):
+        """
+        calculate angular Momentum for each particle
+
+        :param method: user ``pythonbody`` or ``nbody`` style
+
+            ``nbody`` uses nbody definition for positive and negative vrot
+
+            ``pythonbody`` plain calculation of angular momentum
+        :type method: str
+        """
+        if method == "pythonbody":
+            return self._calc_L_pythonbody()
+        elif method == "nbody":
+            return self._calc_L_nbody()
+        else:
+            raise ValueError(f"method must be 'pythonbody' or 'nbody' but is {method}")
+
+    def _calc_L_pythonbody(self):
+        R = self[["X1", "X2", "X3"]] - self.COM
+        L = np.cross(R, self[["V1", "V2", "V3"]].values * self[["M"]].values)
         self._L = L.mean(axis=0)
-        self._data["Lx"] = L[:,0]
-        self._data["Ly"] = L[:,1]
-        self._data["Lz"] = L[:,2]
-        self._data["L"] = np.linalg.norm(L,axis=1)
-        pass
+        self._data["Lx"] = L[:, 0]
+        self._data["Ly"] = L[:, 1]
+        self._data["Lz"] = L[:, 2]
+        self._data["L"] = np.linalg.norm(L, axis=1)
+
+    """def _calc_L_nbody(self):
+        RR = np.linalg.norm(self[["X1"]]
+        rvxy = self["X1"]*self["V1"] + self["X2"] * self["V2"]
+        rxy2 = self["X1"]**2 + self["X2"]**2
+        vrot1 = self["V1"] - rvxy * self["X1"]/rxy2
+        vrot2 = self["V2"] - rvxy * self["X2"]/rxy2
+        vrot = np.sqrt(vrot1**2 + vrot2**2)
+        mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
+        vrot[mask] = - vrot[mask]"""
 
 
     def _check_non_empty(self):

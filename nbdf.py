@@ -4,6 +4,15 @@ import numpy as np
 from pythonbody.ffi import ffi
 
 class nbdf(pd.DataFrame):
+    """
+    Basic DataFrame used most of the time. Extends pandas.DataFrame, adds a lot
+    of calculatable values from the raw data.
+
+    This is the base class for handling an entire cluster with all it's data
+
+    :param \*args: see pandas.DataFrame documentation
+    :param \*\*kwargs: see pandas.DataFrame documentation
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -14,19 +23,16 @@ class nbdf(pd.DataFrame):
         ret = None
         try:
             ret = super().__getitem__(value)
-            #return ret
         except:
             ret = None
         if ret is None:
             try:
                 ret = super().loc[value.values[:,0]]
-                #return ret
             except:
                 ret = None
         if ret is None:
             try:
                 ret = super().loc[:,value]
-                #return ret
             except:
                 ret = None
         
@@ -56,7 +62,7 @@ class nbdf(pd.DataFrame):
     
     def pd_df_to_class(self, ret):
         """
-        Changes pandas DataFrame to instalce of self
+        Changes pandas DataFrame to instalce of nbody_data_frame
         """
         return nbdf(ret)
     
@@ -87,6 +93,9 @@ class nbdf(pd.DataFrame):
         """
         calculates spherical coordinates from cartesian ones.
         See https://en.wikipedia.org/wiki/Spherical_coordinate_system#Cartesian_coordinates
+
+        | Required columns: ``X1``, ``X2``, ``X3``        
+        | Output columns: ``R``, ``THETA``, ``PHI``
         """
 
         self["R"] = np.sqrt(self["X1"]**2 + self["X2"]**2 + self["X3"]**2)
@@ -107,39 +116,97 @@ class nbdf(pd.DataFrame):
         self.sort_values("R",ignore_index=True,inplace=True)
 
     def calc_R(self):
+        """
+        maps to calc_spherical_coords
+        """
         return self.calc_spherical_coords()
 
     def calc_THETA(self):
+        """
+        maps to calc_spherical_coords
+        """
         return self.calc_spherical_coords()
 
     def calc_PHI(self):
+        """
+        maps to calc_spherical_coords
+        """
         return self.calc_spherical_coords()
 
     def calc_EKIN(self):
+        """
+        calculates kinetic energy into ``EKIN`` column. 
+
+        | Required columns: ``M``, ``V1``, ``V2``, ``V3``        
+        | Output columns: ``EKIN``
+        """
         self["EKIN"] = 0.5*self["M"]*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
 
     def calc_EKIN_spec(self):
+        """
+        calculates specific kinetic energy into ``EKIN_spec`` column. 
+
+        | Required columns: ``V1``, ``V2``, ``V3``        
+        | Output columns: ``EKIN_spec``
+        """
         self["EKIN_spec"] = 0.5*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
 
     def calc_Eb_spec(self):
+        """
+        calculate specific binding energy (E_b = E_kin + E_pot).
+
+        | Required columns: ``V1``, ``V2``, ``V3``, ``POT``
+        | Intermediary columns: ``EKIN_spec``
+        | Output columns ``Eb_spec``
+        """
         if "EKIN_spec" not in self.columns:
             self.calc_EKIN_spec()
         self["Eb_spec"] = self["EKIN_spec"] + self["POT"]
 
     def calc_Eb(self):
+        """
+        calculate binding energy (E_b = E_kin + E_pot), and uses Eb_spec
+        as intermediate result.
+
+        | Required columns: ``V1``, ``V2``, ``V3``, ``POT``
+        | Intermediary columns: ``Eb_spec``, ``EKIN_spec``
+        | Output columns: ``Eb``
+        """
+
         if "Eb_spec" not in self.columns:
             self.calc_Eb_spec()
         self["Eb"] = self["Eb_spec"] * self["M"]
 
     def calc_LZ_spec(self):
+        """
+        calculates specific angular Momentum in z-Direction
+
+        | Required columns: ``X1``, ``X2``, ``V1``, ``V2``
+        | Output columns: ``LZ_spec``
+        """
         self["LZ_spec"] = self["X1"] * self["V2"] - self["X2"] * self["V1"]
 
     def calc_LZ(self):
+        """
+        calculates specific angular Momentum in z-Direction, using LZ_spec
+        as an intermediate result.
+
+        | Required columns: ``X1``, ``X2``, ``V1``, ``V2``
+        | Intermediate columns: ``LZ_spec``
+        | Output columns: ``LZ``
+        """
         if "LZ_spec" not in self.columns:
             self.calc_LZ_spec()
         self["LZ"] = self["M"] * self["LZ_spec"]
 
     def calc_L_spec(self):
+        """
+        calculate full specific angular Momentum vector.
+
+        | Required columns: ``X1``, ``X2``, ``X3``, ``V1``, ``V2``, ``V3``
+        | Output columns: ``L_spec`` (norm), ``LX_spec``, ``LY_spec``, 
+          ``LZ_spec``
+        """
         R = self[["X1", "X2", "X3"]]
         V = self[["V1", "V2", "V3"]]
         L_spec = np.cross(R, V) 
@@ -152,20 +219,23 @@ class nbdf(pd.DataFrame):
         """
         calculate angular momentum L, and stores the values in LX, LY, LZ,
         and the norm into L.
+        
+        | Required columns: ``X1``, ``X2``, ``X3``, ``V1``, ``V2``, ``V3``
+        | Output columns: ``L`` (norm), ``LX``, ``LY``, ``LZ``
 
         :param normalize: Optional noramlize angular momentum. Can be ``unit``,
-            ``system``, ``mean`` or ``None``.
+            ``system``, ``mean`` or ``None``.            
             
             ``unit`` normalizes each vector to one, system normalizes such that
             the total angular momentum of the system is 1
-
-            ``system`` normalizes the entire system to average the angular
-            momentum to one
+            
+            ``system`` normalizes the entire system to a total angular momentum
+            of one            
             
             ``mean`` normalizes such that the mean of the enitre system is one.
-
+            
             ``None`` leave everything as is
-
+        
         :type normalize: str or None 
         """
 
@@ -193,12 +263,26 @@ class nbdf(pd.DataFrame):
 
 
     def calc_M_over_MT(self):
+        """
+        calculate M/M_T within the shell below
+
+        | Required columns: ((``X1``, ``X2``, ``X3``) or ``R``), ``M``
+        | Intermediate columns: ``R``
+        | Output columns: ``M/MT``
+        """
         if "R" not in self.columns:
             self.calc_R()
 
         self["M/MT"] = self["M"].cumsum()/self["M"].sum()
 
     def calc_R_over_RT(self):
+        """
+        calculate R/R_T within the shell below
+
+        | Required columns: (``X1``, ``X2``, ``X3``) or ``R``
+        | Intermediate columns: ``R``
+        | Output columns: ``R/RT``
+        """
         if "R" not in self.columns:
             self.calc_R()
         self["R/RT"] = self["R"].cumsum()/self["R"].sum()
@@ -206,24 +290,28 @@ class nbdf(pd.DataFrame):
     def calc_VROT(self, method: str = "pythonbody"):
         """
         calculate rotational velocity.
+
+        | Required columns: ``X1``, ``X2``, ``X3``, ``V1``, ``V2``, ``V3``
+        | Intermediate columns: ``R``
+        | Output columns: ``VROT``
         
         :param method: Optional which method to use, either standard ``nbody`` way or
             the ``pythonbody`` way, which does not require the system to rotate
             along the z-axis.
-        :type method: str ["python" or "nbody"]
+        :type method: str ["pythonbody" or "nbody"]
         """
 
         if "R" not in self.columns:
             self.calc_R()
 
         if method == "pythonbody":
-            return self.calc_VROT_pythonbody()
+            return self._calc_VROT_pythonbody()
         elif method == "nbody":
-            return self.calc_VROT_nbody()
+            return self._calc_VROT_nbody()
         else:
             raise ValueError(f"Method must be either 'nbody' or 'pythonbody' but is {method}")
         
-    def calc_VROT_nbody(self):
+    def _calc_VROT_nbody(self):
         rvxy = self["X1"]*self["V1"] + self["X2"] * self["V2"]
         rxy2 = self["X1"]**2 + self["X2"]**2
         vrot1 = self["V1"] - rvxy * self["X1"]/rxy2
@@ -232,7 +320,7 @@ class nbdf(pd.DataFrame):
         mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
         self.cluster_data.loc[mask,"VROT"] = - self.cluster_data.loc[mask,"VROT"]
 
-    def calc_VROT_pythonbody(self):
+    def _calc_VROT_pythonbody(self):
         VROT = np.cross( 
                     np.cross(
                         self.loc[:,["X1","X2","X3"]],

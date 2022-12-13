@@ -269,11 +269,6 @@ class nbody:
         self._data["E"].sort_index(inplace=True)
  
     def show_mem_usage(self):
-        """
-        Shows memory usage of nbody class instance.
-    
-        The memory usage is shown for each data type, sorted from highest memory usage to lowest
-        """
         mem_usage = []
         for key in self._data.keys():
             mem_usage += [(key, "%.03f M" % (sys.getsizeof(self._data[key])/1024/1024))]

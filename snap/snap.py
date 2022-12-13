@@ -18,15 +18,78 @@ if settings.DEBUG_TIMING:
     import datetime as dt
 
 
+class NotAvailableException(Exception):
+    """
+    Exception if cluster hasn't been loaded yet
+    """
+
+
 class snap():
     """
     Base class for handling snap (HDF5) files
     
-    :param data_path: Optional path to (snap) data
+    :param data_path: path to (snap) data -> nbody project run.
     :type data_path: str or None
+
+    .. note::
+    
+        By default only looks at step 0 of each snap file. See 
+        `analyze_files() <#pythonbody.snap.analyze_files>`_ for reading all steps in snap files
+
+    Usage
+    -----
+    
+    setting up
+    
+    .. code-block:: python
+
+        >>> from pythonbody import snap
+
+        >>> n100k = snap(data_path="/path/to/nbody/run")
+        [...]
+        >>> n100k.snap_data
+                  time                           file step
+        0.0        0.0  /path/to/nbody/run/snap.40...    0
+        1.0        1.0  /path/to/nbody/run/snap.40...    0
+        2.0        2.0  /path/to/nbody/run/snap.40...    0
+        3.0        3.0  /path/to/nbody/run/snap.40...    0
+        4.0        4.0  /path/to/nbody/run/snap.40...    0
+        ...        ...                            ...  ...
+        2940.0  2940.0  /path/to/nbody/run/snap.40...    0
+        2941.0  2941.0  /path/to/nbody/run/snap.40...    0
+        2942.0  2942.0  /path/to/nbody/run/snap.40...    0
+        2943.0  2943.0  /path/to/nbody/run/snap.40...    0
+        2944.0  2944.0  /path/to/nbody/run/snap.40...    0
+
+        [2945 rows x 3 columns]
+
+    
+    loading some data
+    
+    .. code-block:: python
+
+        >>> n100k.load_cluster(0)
+        [...]
+        >>> n100k.cluster_data
+                      M         X1        X2        X3         V1  ...  RC*  MC*  K*   NAME  Type
+        0      0.128024   2.385841 -4.204420  2.512420   3.158618  ...  0.0  0.0   0   7288     0
+        1      1.175865   2.385809 -4.204371  2.512364   0.118995  ...  0.0  0.0   1   7287     0
+        2      0.659138  -1.386117  0.442578 -0.864308  -3.723401  ...  0.0  0.0   0   2944     0
+        3      0.270822  -1.386078  0.442543 -0.864313   0.623611  ...  0.0  0.0   0   2943     0
+        4      0.245347   1.012453  0.333743 -0.990999  18.138487  ...  0.0  0.0   0   5860     0
+        ...         ...        ...       ...       ...        ...  ...  ...  ...  ..    ...   ...
+        98357  0.463962   7.346551 -2.370663  1.295420  -0.873880  ...  0.0  0.0   0  40565     0
+        98358  0.173271   5.372622 -4.724232  1.189188  -2.692101  ...  0.0  0.0   0  77253     0
+        98359  0.610795 -21.684790  5.551836 -5.083984   0.649133  ...  0.0  0.0   0  32193     0
+        98360  0.174317 -27.157290  3.586303 -9.307677  -0.874081  ...  0.0  0.0   0  77022     0
+        98361  0.194638   5.186951 -3.153325  5.327578   1.225115  ...  0.0  0.0   0  72237     0
+
+
+    Methods and Properties
+    ----------------------
     """
-    def __init__(self, data_path=None):
-        self.snap_data = pd.DataFrame(columns=["time", "file", "step"])
+    def __init__(self, data_path):
+        self._snap_data = pd.DataFrame(columns=["time", "file", "step"])
         if not pathlib.Path(data_path).is_dir():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
@@ -37,8 +100,8 @@ class snap():
             self.files = sorted(glob.glob(self.data_path + "/snap*"))
             self._load_files()
 
-        self.cluster_data = None
-        self.binaries_data = None
+        self._cluster_data = None
+        self._binaries_data = None
         self.binaries_mask = None
         self.singles_mask = None
         self.time_evolution_data = None
@@ -67,24 +130,6 @@ class snap():
 
         raise ValueError(f"Couldn't find data for {value}")
 
-        """missing_list = []
-        if self.cluster_data is not None:
-            for val in value:
-                if val not in self.cluster_data.columns:
-                    missing_list += [val]
-
-            if len(missing_list) == 0:
-                return self.cluster_data[value]
-            elif len(missing_list) > 0 and np.sum([f"calc_{val}".replace("/", "_over_") not in dir(self) for val in missing_list]) == 0:
-                for missing in missing_list:
-                    if missing not in self.cluster_data.columns:
-                        eval(f"self.calc_{missing}()".replace("/", "_over_"))
-                return self.cluster_data[value]
-            else:
-                return super().__getitem__(value)
-        else:
-            return super().__getitem__(value)"""
-
     def __repr__(self):
         if self.cluster_data is not None:
             return self.cluster_data.__repr__()
@@ -96,33 +141,90 @@ class snap():
         return self.snap_data._repr_html_()
 
     @property
+    def cluster_data(self):
+        """
+        :return: Full data of cluster read from snap file
+        :rtype: nbdf
+        """
+        if self._cluster_data is None:
+            raise NotAvailableException("Couldn't get cluster data, have you "
+                                        " used the load() function?")
+        return self._cluster_data
+
+    @cluster_data.setter
+    def cluster_data(self, value):
+        self._cluster_data = value
+
+    @property
+    def binaries_data(self):
+        """
+        :return: Full data of binaries read from snap file
+        :rtype: nbdf
+        """
+        if self._binaries_data is None:
+            raise NotAvailableException("Couldn't get cluster data, have you "
+                                        " used the load() function?")
+        return self._binaries_data
+    
+    @binaries_data.setter
+    def binaries_data(self, value):
+        self._binaries_data = value
+    
+    @property
+    def snap_data(self):
+        """
+        :return: known data about snap files
+        :rtype: nbdf
+        """
+        if self._snap_data is None:
+            raise NotAvailableException("Couldn't get snap data? That's weird "
+                                        "This should really not be happending")
+        return self._snap_data
+
+    @snap_data.setter
+    def snap_data(self, value):
+        self._snap_data = value
+
+    @property
     def reduced(self):
         if self.snap_data.shape[0] == 0:
             self._load_files()
         return self.snap_data[self.snap_data["time"] == self.snap_data["time"].values.astype(int)]
 
     @property
-    def binaries(self, t=0):
+    def binaries(self):
+        """
+        :return: cluster data filtered by binaries only
+        :rtype: nbdf
+        """
         if self.binaries_mask is None:
-            self.load_cluster(t)
+            raise NotAvailableException("Couldn't get binaries, have you used "
+                                        "load() function?")
         return self.cluster_data[self.binaries_mask]
 
     @property
-    def singles(self, t=0):
+    def singles(self):
+        """
+        :return: cluster data filtered by singles only
+        :rtype: nbdf
+        """
         if self.singles_mask is None:
-            self.load_cluster(t)
+            raise NotAvailableException("Couldn't get single, have you used "
+                                        "load() function?")
         return self.cluster_data[self.singles_mask]
 
     @property
     def time_evolution(self):
+        """
+        :return: time evolution data
+        :rtype: nbdf
+        """
         if self.time_evolution_data is None:
             self.calculate_time_evolution()
         return self.time_evolution_data
 
     @property
-    def potential_escapers(self, t=0, G=4.30091e-3):
-        if self.cluster_data is None:
-            self.load_cluster(t)
+    def potential_escapers(self, G=4.30091e-3):
         if "R" not in self.cluster_data.columns:
             self.cluster_data.calc_R()
         if "Eb_spec" not in self.cluster_data.columns:
@@ -136,11 +238,9 @@ class snap():
 
         return self.cluster_data[self.singles_mask & (self.cluster_data["Eb_spec"] < 0) & (self.cluster_data["Eb_spec"] > (-1.5 * G * self.cluster_data["M"].sum() / float(self.scalar_data["RTIDE"])))]
 
-    @property
-    def binding_enegery(self, t=0, G=4.30091e-3):
-        if self.cluster_data is None:
-            self.load_cluster(t)
-        return -1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())
+    """@property
+    def binding_enegery(self, G=4.30091e-3):
+        return -1.5 * G * float(self.cluster_data["M"].sum()) / float(self.cluster_data["R"].max())"""
 
     @property
     def loc(self, *args, **kwargs):
@@ -155,12 +255,33 @@ class snap():
         return self.scalar_data
 
     def calculate_time_evolution(self,
-                                 RLAGRS=None,
-                                 stepsize=1,
-                                 min_nbtime=None,
-                                 max_nbtime=None,
+                                 RLAGRS: list[float] = None,
+                                 stepsize: int = 1,
+                                 min_nbtime: float = None,
+                                 max_nbtime: float = None,
                                  *args,
                                  **kwargs):
+        """
+        calculate time evolution of some data
+
+        :param RLAGRS: list of Lagrangian radii spheres to look at
+        :type RLAGRS: list[float]
+        :param stepsize: Step size when going through
+            `snap_data <#pythonbody.snap.snap_data>`_
+            This uses the stepsize on the index of
+            `snap_data <#pythonbody.snap.snap_data>`_,
+            this is not the time step!
+        :type stepsize: int
+        :param min_nbtime: offset to start at NB time unit when calculating
+            time evolution
+        :type min_nbtime: float
+        :param max_nbtime: stop calulating time evolution at NB time unit
+        :type max_nbtime: float
+        :param \*args: will be passed to
+            `load_cluster() <#pythonbody.snap.load_cluster>`_
+        :param \*\*kwargs: will be passed to
+            `load_cluster() <#pythonbody.snap.load_cluster>`_
+        """
         if RLAGRS is None:
             RLAGRS = defaults.RLAGRS
         self.time_evolution_data = {
@@ -263,16 +384,38 @@ class snap():
             self.time_evolution_data["DEBUG"].loc[nbtime,"RBAR"] = self.scalar_data["RBAR"]
             self.time_evolution_data["DEBUG"].loc[nbtime,"POT_NAN_OR_NULL"] = np.sum(pd.isna(self.cluster_data["POT"]) | self.cluster_data["POT"] == 0)
 
-
-
     def load_cluster(self,
-                     time, 
-                     return_nbtime=False, 
-                     cluster_cols=None, 
-                     binary_cols=None, 
-                     scalar_ids=None,
-                     cluster_data_filter=None,
-                     binaries_data_filter=None):
+                     time: float,
+                     return_nbtime: bool = False,
+                     cluster_cols: list[str] = None,
+                     binary_cols: list[str] = None,
+                     scalar_ids: list[int] = None,
+                     cluster_data_filter: str = None,
+                     binaries_data_filter: str = None):
+        """
+        Load cluster at a given time step
+
+        :param time: load cluster at time from snap files
+        :type time: float
+        :param return_nbtime: return time in nbody units which was loaded
+        :type return_nbtime: bool
+        :param cluster_cols: specify columns to load in general
+        :type cluster_cols: list[str]
+        :param binary_cols: specify columns to load for binaries
+        :type binary_cols: list[str]
+        :param scalar_ids: specify the ids to load from scalars in snap files.
+        :type scalar_ids: list[in]
+        :param cluster_data_filter: filter cluster_data, the passed string will
+            be called using ``eval``. The internals need to be known and
+            understood to properly use this.
+
+        :type cluster_data: str
+        :param binaries_data_filter: filter binaries_data, the passed string
+            will be called using ``eval``. The internals need to be known and
+            understood to properly use this.
+
+        :type binaries_data_filter: str
+        """
         if self.snap_data.shape == (0, 3):
             self._load_files()
 
@@ -359,6 +502,14 @@ class snap():
         self.snap_data.sort_index(inplace=True)
 
     def analyze_files(self):
+        """
+        analyze snap files to read all steps from each snap file.
+
+        .. note::
+            
+            depending on the size of the project run, reading all the snap
+            files might take some time!
+        """
         if self.files is None:
             logging.error("Couldn't find any snap files to load")
             return 0

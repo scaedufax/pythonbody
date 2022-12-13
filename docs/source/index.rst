@@ -30,6 +30,7 @@ Classes and modules
    nbody.rst
    dat10.rst
    nbdf.rst
+   snap/snap.rst
 
 .. toctree::
    :maxdepth: 2

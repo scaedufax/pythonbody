@@ -65,6 +65,14 @@ class nbdf(pd.DataFrame):
         Changes pandas DataFrame to instalce of nbody_data_frame
         """
         return nbdf(ret)
+
+    @property
+    def COM(self):
+        """
+        return: center of mass
+        rtype: float[3]
+        """
+        return 1/self.loc[:, "M"].sum() * np.sum(self.loc[:, ["X1", "X2", "X3"]].multiply(self.loc[:, "M"], axis=0))
     
     def __repr__(self):
         return super().__repr__()
@@ -151,6 +159,35 @@ class nbdf(pd.DataFrame):
         """
         self["EKIN_spec"] = 0.5*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
 
+    def calc_EPOT(self, G: float = 1):
+        """
+        calculates potential energy.
+
+        :param G: gravitational constant
+        :type G: float
+
+        | Required columns: ``M``, ``X1``, ``X2``, ``X3``
+        | Output columns: ``EPOT``
+        """
+        self["EPOT"] = G * ffi.grav_pot(self.loc[:, ["M", "X1", "X2", "X3"]])
+    
+    def calc_EPOT_spec(self, G: float = 1):
+        """
+        calculates specific potential energy.
+
+        :param G: gravitational constant
+        :type G: float
+
+        | Required columns: ``M``, ``X1``, ``X2``, ``X3``
+        | Output columns: ``EPOT``
+        """
+        if "EPOT" not in self.columns:
+            self["EPOT"] = G * ffi.grav_pot(
+                                self.loc[:, ["M", "X1", "X2", "X3"]]
+                                )
+        self["EPOT_spec"] = self.loc[:, "EPOT"].values \
+                                / self.loc[:, "M"].values
+
     def calc_Eb_spec(self):
         """
         calculate specific binding energy (E_b = E_kin + E_pot).
@@ -184,7 +221,16 @@ class nbdf(pd.DataFrame):
         | Required columns: ``X1``, ``X2``, ``V1``, ``V2``
         | Output columns: ``LZ_spec``
         """
-        self["LZ_spec"] = self["X1"] * self["V2"] - self["X2"] * self["V1"]
+        X1 = self["X1"]
+        X2 = self["X2"]
+        V1 = self["V1"]
+        V2 = self["V2"]
+
+        if not np.allclose(self.COM, (0, 0, 0)):
+            X1 = X1 - self.COM.values[0]
+            X2 = X2 - self.COM.values[1]
+
+        self["LZ_spec"] = X1 * V2 - X2 * V1
 
     def calc_LZ(self):
         """
@@ -209,6 +255,10 @@ class nbdf(pd.DataFrame):
         """
         R = self[["X1", "X2", "X3"]]
         V = self[["V1", "V2", "V3"]]
+        
+        if not np.allclose(self.COM, (0, 0, 0)):
+            R = R - self.COM
+
         L_spec = np.cross(R, V) 
         self["L_spec"] = np.linalg.norm(L_spec, axis=1) 
         self["LX_spec"] = L_spec[:, 0]
@@ -242,8 +292,11 @@ class nbdf(pd.DataFrame):
         if normalize not in ["unit", "system", "mean", None]:
             raise ValueError(f"normalize must be 'unit', 'system' or False, but is {normalize}")
 
-        R = self[["X1", "X2", "X3"]]
-        V = self[["V1", "V2", "V3"]]
+        R = self[["X1", "X2", "X3"]].values
+        V = self[["V1", "V2", "V3"]].values
+        
+        if not np.allclose(self.COM, (0, 0, 0)):
+            R = R - self.COM.values
 
         L = np.cross(R, V) * self[["M"]].values
         self["L"] = np.linalg.norm(L, axis=1) 

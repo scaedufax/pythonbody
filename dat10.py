@@ -1,38 +1,35 @@
 import pandas as pd
 import numpy as np
 import logging
+import warnings
 
-from pythonbody.ffi import ffi
+from .ffi import ffi
+from .nbdf import nbdf
 
-# TODO: Do something more reasonable with G.
 
-class dat10():
+
+class dat10(nbdf):
     """
     Class for reading and modifying dat.10 files for nbody.
         
     :param file_path: path to dat.10 file
     :type file_path: str or None
-    :param G: gravitational constant
-    :type G: float
     """
 
-    def __init__(self, file_path: str = None, G: float = 1):
-        self._setup_logger()
-        self._data = None
-        self._com = None
-
-        self._ETOT = None
-        self._EKIN = None
-        self._EPOT = None
-
-        self._default_cols = ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
-        self._G = G
-
-        self._L = None
-
+    def __init__(self, file_path: str = None, *args, **kwargs):
+        warnings.filterwarnings(action='ignore', category=UserWarning)
         if file_path is not None:
-            self.file_path = file_path
-            self.load(self.file_path)
+            default_cols = ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
+            pd_df = pd.read_csv(
+                file_path,
+                header=None,
+                index_col=False,
+                delim_whitespace=True,
+                usecols=range(0, 7),
+                names=default_cols
+                )
+            super().__init__(data=pd_df, *args, **kwargs)
+        self._default_cols = ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
 
     def load(self, file_path: str):
         """
@@ -41,15 +38,16 @@ class dat10():
         :param file_path: path to dat.10 file
         :type file_path: str
         """
-        self._data = pd.read_csv(
+        pd_df = pd.read_csv(
                 file_path,
                 header=None,
                 index_col=False,
-                #delimiter=" ",
                 delim_whitespace=True,
-                usecols=range(0,7),
+                usecols=range(0, 7),
                 names=self._default_cols
                 )
+        super().__init__(data=pd_df)
+
     def save(self, file: str):
         """
         save (modified) dat.10 file
@@ -60,7 +58,7 @@ class dat10():
         :param file: path to file to save output to.
         :type file: str
         """
-        self._data[self._default_cols].to_csv(
+        self[self._default_cols].to_csv(
             file,
             sep=" ",
             header=False,
@@ -68,32 +66,6 @@ class dat10():
             float_format="%.6f"
         )
     
-    def __repr__(self):
-        return self._data.__repr__()
-
-    def _repr_html_(self):
-        return self._data._repr_html_()
-
-    @property
-    def loc(self):
-        return self._data.loc
-
-    @property
-    def iloc(self):
-        return self._data.iloc
-    
-    @property
-    def shape(self):
-        return self._data.shape
-    
-    @property
-    def index(self):
-        return self._data.index
-    
-    @index.setter
-    def index(self, idx):
-        self._data.index = idx
-
     @property
     def ETOT(self):
         """
@@ -101,9 +73,7 @@ class dat10():
         :rtype: float
         """
 
-        if self._ETOT is None:
-            self._ETOT = self.EKIN + self.EPOT
-        return self._ETOT
+        return self.EKIN + self.EPOT
     
     @property
     def EKIN(self):
@@ -111,22 +81,19 @@ class dat10():
         :return: Kinetic energy
         :rtype: float
         """
-        if self._EKIN is None:
-            self._data["EKIN"] = 1/2 * self.loc[:,"M"]*np.linalg.norm(self.loc[:, ["V1", "V2", "V3"]], axis=1)**2
-            self._EKIN = self._data["EKIN"].sum()
-        return self._EKIN
+        if "EKIN" not in self.columns:
+            self["EKIN"] = 1/2 * self.loc[:, "M"]*np.linalg.norm(self.loc[:, ["V1", "V2", "V3"]], axis=1)**2
+        return self["EKIN"].sum()
     
     @property
-    def EPOT(self, G: float = 1):
+    def EPOT(self):
         """
-        :param G: gravitational constant
-        :type G: float
-
         :return: Potential energy (needs to be calculated)
         :rtype: float
         """
-
-        return np.sum(self._G * ffi.grav_pot(self._data[["M", "X1", "X2", "X3"]]))
+        if "EPOT" not in self.columns:
+            self.calc_EPOT()
+        return self.loc[:,"EPOT"].sum()
 
     @property
     def ZMBAR(self):
@@ -134,7 +101,7 @@ class dat10():
         :return: Average mass
         :rtype: float
         """
-        return self._data.loc[:, "M"].mean()
+        return self.loc[:, "M"].mean()
     
     @property
     def RBAR(self):
@@ -143,40 +110,24 @@ class dat10():
         :rtype: float
         """
         return np.linalg.norm(self.loc[:, ["X1", "X2", "X3"]], axis=1).mean()
-    
-    @property
-    def COM(self):
-        """
-        :return: Center of mass
-        :rtype: float[3]
-        """
-        if self._com is None:
-            self._com = 1/self.loc[:, "M"].sum() * np.sum(self.loc[:, ["X1", "X2", "X3"]].multiply(self.loc[:, "M"], axis=0))
-        return self._com
-    
+     
     @property
     def AVMASS(self):
         """
         :return: Average Mass
         :rtype: float
         """
-        return self._data.loc[:, "M"].mean()   
-        
-    def __setitem__(self, key, item):
-        self._data[key] = item
-
-    def __getitem__(self, key):
-        return self._data[key]
-
+        return self.loc[:, "M"].mean()   
+    
     @property
     def L(self):
         """
         :return: Angular momentum vector
         :rtype: float[3]
         """
-        if self._L is None:
+        if "L" not in self.columns:
             self.calc_L()
-        return self._L
+        return self.loc[:, ["LX", "LY", "LZ"]].mean()
     
     @property
     def L_norm(self):
@@ -185,49 +136,7 @@ class dat10():
         :rtype: float[3]
         """
         return self.L/np.linalg.norm(self.L)
-
-    def calc_L(self, method="pythonbody"):
-        """
-        calculate angular Momentum for each particle
-
-        :param method: user ``pythonbody`` or ``nbody`` style
-
-            ``nbody`` uses nbody definition for positive and negative vrot
-
-            ``pythonbody`` plain calculation of angular momentum
-        :type method: str
-        """
-        if method == "pythonbody":
-            return self._calc_L_pythonbody()
-        elif method == "nbody":
-            return self._calc_L_nbody()
-        else:
-            raise ValueError(f"method must be 'pythonbody' or 'nbody' but is {method}")
-
-    def _calc_L_pythonbody(self):
-        R = self[["X1", "X2", "X3"]] - self.COM
-        L = np.cross(R, self[["V1", "V2", "V3"]].values * self[["M"]].values)
-        self._L = L.mean(axis=0)
-        self._data["Lx"] = L[:, 0]
-        self._data["Ly"] = L[:, 1]
-        self._data["Lz"] = L[:, 2]
-        self._data["L"] = np.linalg.norm(L, axis=1)
-
-    """def _calc_L_nbody(self):
-        RR = np.linalg.norm(self[["X1"]]
-        rvxy = self["X1"]*self["V1"] + self["X2"] * self["V2"]
-        rxy2 = self["X1"]**2 + self["X2"]**2
-        vrot1 = self["V1"] - rvxy * self["X1"]/rxy2
-        vrot2 = self["V2"] - rvxy * self["X2"]/rxy2
-        vrot = np.sqrt(vrot1**2 + vrot2**2)
-        mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
-        vrot[mask] = - vrot[mask]"""
-
-
-    def _check_non_empty(self):
-        if not self._data:
-            self.logger.warning("Data is empty, have you loaded the file?")
-    
+ 
     def rotate(self, yaw: float = 0, pitch: float = 0, roll: float = 0):
         """
         Rotates positions (and velocities if available) by yaw, pitch and
@@ -269,7 +178,9 @@ class dat10():
         self[["V1", "V2", "V3"]] = rot_mat.dot(self[["V1", "V2", "V3"]].T.values).T
         # rotate positions
         self[["X1", "X2", "X3"]] = rot_mat.dot(self[["X1", "X2", "X3"]].T.values).T
-        self._L = None
+
+        # drop Angular Momentum after rotation
+        for i in ["LX", "LY", "LZ", "L"]: self.drop(i,axis=1,inplace=True) if i in self.columns else None
 
     def rotate_axis(self, axis: np.array, angle: float):
         """
@@ -305,7 +216,8 @@ class dat10():
         self[["V1", "V2", "V3"]] = rot_mat.dot(self[["V1", "V2", "V3"]].T.values).T
         # rotate positions
         self[["X1", "X2", "X3"]] = rot_mat.dot(self[["X1", "X2", "X3"]].T.values).T
-        self._L = None
+        # drop Angular Momentum after rotation
+        for i in ["LX", "LY", "LZ", "L"]: self.drop(i,axis=1,inplace=True) if i in self.columns else None
 
     def rotate_angular_momentum_along_zaxis(self):
         """
@@ -313,9 +225,9 @@ class dat10():
         aligned with z-axis
         """
 
-        momentum = self.L
+        momentum = self.L.values
         # calculate normal between angular momentum and z-axis.
-        normal = np.cross(self.L, (0, 0, 1))
+        normal = np.cross(momentum, (0, 0, 1))
 
         # normalize angular momentum and normal
         momentum = momentum/np.linalg.norm(momentum)
@@ -324,17 +236,15 @@ class dat10():
         # calculate angle to rotate along normal by
         angle = np.arccos(momentum.dot((0, 0, 1)))
 
-        self.rotate_axis(normal, angle)
+        print(normal,angle)
 
-    def len(self):
-        return self._data.shape[0]
-     
+        self.rotate_axis(normal, angle)
+ 
     def adjust_com(self):
         """
         Changes positions into center of mass system
         """
-        self._data.loc[:, ["X1", "X2", "X3"]] = self._data.loc[:, ["X1", "X2", "X3"]] - self.COM
-        self._com = None
+        self.loc[:, ["X1", "X2", "X3"]] = self.loc[:, ["X1", "X2", "X3"]] - self.COM
     
     def _setup_logger(self):
         self.logger = logging.getLogger(__name__)

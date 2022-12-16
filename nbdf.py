@@ -159,6 +159,40 @@ class nbdf(pd.DataFrame):
         """
         self["EKIN_spec"] = 0.5*np.linalg.norm(self[["V1", "V2", "V3"]], axis=1)**2
 
+    def calc_EROT_spec(self, kwargs_calc_vrot: dict = {}):
+        """
+        calculates specific rotational energy from VROT
+
+        | Required columns: ``X1``, ``X2``, ``X3``, ``V1``, ``V2``, ``V3``
+        | Intermediary columns: ``VROT``
+        | Output columns: ``EROT_spec``
+
+        :param kwargs_calc_vrot: parameters for calc_VROT()
+            e.g. { "method": "nbody", "sign_nbody": True}
+        :type kwargs_calc_vrot: dict
+        """
+        if "VROT" not in self.columns:
+            self.calc_VROT(**kwargs_calc_vrot)
+        
+        self["EROT_spec"] = 0.5*self.loc[:, "VROT"]**2
+    
+    def calc_EROT(self, kwargs_calc_vrot: dict = {}):
+        """
+        calculates rotational energy from VROT
+
+        | Required columns: ``M``, ``X1``, ``X2``, ``X3``, ``V1``, ``V2``, ``V3``
+        | Intermediary columns: ``VROT``
+        | Output columns: ``EROT``
+
+        :param kwargs_calc_vrot: parameters for calc_VROT()
+            e.g. { "method": "nbody", "sign_nbody": True}
+        :type kwargs_calc_vrot: dict
+        """
+        if "VROT" not in self.columns:
+            self.calc_VROT(**kwargs_calc_vrot)
+        
+        self["EROT"] = 0.5*self.loc[:, "VROT"]**2 * self.loc[:, "M"]
+
     def calc_EPOT(self, G: float = 1):
         """
         calculates potential energy.
@@ -179,12 +213,12 @@ class nbdf(pd.DataFrame):
         :type G: float
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
-        | Output columns: ``EPOT``
+        | Intermediary columns: ``EPOT``
+        | Output columns: ``EPOT_spec``
         """
         if "EPOT" not in self.columns:
-            self["EPOT"] = G * ffi.grav_pot(
-                                self.loc[:, ["M", "X1", "X2", "X3"]]
-                                )
+            self.calc_EPOT(G)
+
         self["EPOT_spec"] = self.loc[:, "EPOT"].values \
                                 / self.loc[:, "M"].values
 
@@ -340,7 +374,7 @@ class nbdf(pd.DataFrame):
             self.calc_R()
         self["R/RT"] = self["R"].cumsum()/self["R"].sum()
 
-    def calc_VROT(self, method: str = "pythonbody"):
+    def calc_VROT(self, method: str = "pythonbody", sign_nbody: bool = True):
         """
         calculate rotational velocity.
 
@@ -352,28 +386,32 @@ class nbdf(pd.DataFrame):
             the ``pythonbody`` way, which does not require the system to rotate
             along the z-axis.
         :type method: str ["pythonbody" or "nbody"]
+        
+        :param sign_nbody: Use the sign convention for VROT from nbody
+        :type sign_nbody: bool
         """
 
         if "R" not in self.columns:
             self.calc_R()
 
         if method == "pythonbody":
-            return self._calc_VROT_pythonbody()
+            return self._calc_VROT_pythonbody(sign_nbody)
         elif method == "nbody":
-            return self._calc_VROT_nbody()
+            return self._calc_VROT_nbody(sign_nbody)
         else:
             raise ValueError(f"Method must be either 'nbody' or 'pythonbody' but is {method}")
         
-    def _calc_VROT_nbody(self):
+    def _calc_VROT_nbody(self, sign_nbody):
         rvxy = self["X1"]*self["V1"] + self["X2"] * self["V2"]
         rxy2 = self["X1"]**2 + self["X2"]**2
         vrot1 = self["V1"] - rvxy * self["X1"]/rxy2
         vrot2 = self["V2"] - rvxy * self["X2"]/rxy2
         self["VROT"] = np.sqrt(vrot1**2 + vrot2**2)
-        mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
-        self.cluster_data.loc[mask,"VROT"] = - self.cluster_data.loc[mask,"VROT"]
+        if sign_nbody:
+            mask = (vrot1*self["X2"] - vrot2*self["X1"]) < 0
+            self.cluster_data.loc[mask,"VROT"] = - self.cluster_data.loc[mask,"VROT"]
 
-    def _calc_VROT_pythonbody(self):
+    def _calc_VROT_pythonbody(self, sign_nbody):
         VROT = np.cross( 
                     np.cross(
                         self.loc[:,["X1","X2","X3"]],
@@ -381,12 +419,14 @@ class nbdf(pd.DataFrame):
                     )/(self["R"]**2).values.reshape(self.shape[0],1),
                     self.loc[:,["X1","X2","X3"]]
                 )
-        XSIGN = np.sign(VROT[:,0]*self["X2"]/np.sqrt(self["X1"]**2 + self["X2"]**2) \
-                            - VROT[:,1]*self["X1"]/np.sqrt(self["X1"]**2 + self["X2"]**2))
-        self["VROT"] = XSIGN * np.linalg.norm(VROT, axis=1)
         self["VROTX"] = VROT[:,0]
         self["VROTY"] = VROT[:,1]
         self["VROTZ"] = VROT[:,2]
+        XSIGN = 1
+        if sign_nbody:
+            XSIGN = np.sign(VROT[:,0]*self["X2"]/np.sqrt(self["X1"]**2 + self["X2"]**2) \
+                                - VROT[:,1]*self["X1"]/np.sqrt(self["X1"]**2 + self["X2"]**2))
+        self["VROT"] = XSIGN * np.linalg.norm(VROT, axis=1)
 
     def calc_VROT_CUMMEAN(self):
         if "VROT" not in self.columns:

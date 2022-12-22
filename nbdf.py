@@ -428,14 +428,14 @@ class nbdf(pd.DataFrame):
                                 - VROT[:,1]*self["X1"]/np.sqrt(self["X1"]**2 + self["X2"]**2))
         self["VROT"] = XSIGN * np.linalg.norm(VROT, axis=1)
 
-    def _calc_NEIGHBOUR_RHO(self, n_neigh: int = 80):
+    def _calc_NEIGHBOUR_RHO(self, n_neigh: int = 80, omp_n_procs: int = None):
         res = ffi.neighbour_density(self[["M", "X1", "X2", "X3"]],
-                                    n_neigh=n_neigh)
+                                    n_neigh=n_neigh, omp_n_procs=omp_n_procs)
 
         self["NEIGHBOUR_RHO_N"] = res[0]
         self["NEIGHBOUR_RHO_M"] = res[1]
 
-    def calc_NEIGHBOUR_RHO_N(self, n_neigh: int = 80):
+    def calc_NEIGHBOUR_RHO_N(self, n_neigh: int = 80, omp_n_procs: int = None):
         """
         calculate neighbour density n, meaning in this case simply 1/(4/3*pi*r_bar^3)
         where r_bar is the average distance of the neighbours to the star.
@@ -446,9 +446,9 @@ class nbdf(pd.DataFrame):
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
         | Output columns: ``NEIGHBOUR_RHO_N``, ``NEIGHBOUR_RHO_M``
         """
-        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh)
+        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh, omp_n_procs=omp_n_procs)
     
-    def calc_NEIGHBOUR_RHO_M(self, n_neigh: int = 80):
+    def calc_NEIGHBOUR_RHO_M(self, n_neigh: int = 80, omp_n_procs: int = None):
         """
         calculate neighbour density n, meaning in this case simply m_bar/(4/3*pi*r_bar^3)
         where r_bar is the average distance of the neighbours to the star, and
@@ -460,7 +460,7 @@ class nbdf(pd.DataFrame):
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
         | Output columns: ``NEIGHBOUR_RHO_m``, ``NEIGHBOUR_RHO_N``
         """
-        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh)
+        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh, omp_n_procs=omp_n_procs)
 
 
     def calc_VROT_CUMMEAN(self):

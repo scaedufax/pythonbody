@@ -1,4 +1,4 @@
-from ctypes import cdll, c_int, c_float, c_void_p, byref
+from ctypes import cdll, c_int, c_float, c_void_p, byref, POINTER
 import os
 import numpy as np
 import pandas as pd
@@ -142,7 +142,8 @@ class FFI:
                           data: pd.DataFrame,
                           num_threads: int = None,
                           c_func: str = "omp",
-                          n_neigh: int = 80):
+                          n_neigh: int = 80,
+                          omp_n_procs: int = None):
 
         func = self.lib.neighbour_density_omp
         N = data.shape[0]
@@ -157,7 +158,8 @@ class FFI:
                 c_float * N,  # rho_n
                 c_float * N,  # rho_m
                 c_int,        # N_TOT
-                c_int,        # N_NEIGH
+                c_int,        # N_NEIGH,
+                c_void_p,
                 ]
         func.restype = c_void_p
 
@@ -168,7 +170,8 @@ class FFI:
               rho_n,
               rho_m,
               n_neigh,
-              N)
+              N,
+              byref(c_int(omp_n_procs)) if omp_n_procs else POINTER(c_int)())
         return np.array((rho_n, rho_m))
 
 

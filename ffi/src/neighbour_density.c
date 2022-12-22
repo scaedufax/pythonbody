@@ -5,7 +5,7 @@
 #include "ocl.h"
 #include "neighbour_density.h"
 
-#define N 10000
+#define N 100000
 #define SEED 314159
 
 //#if HAVE_OMP_H == 1
@@ -16,7 +16,13 @@ void neighbour_density_omp(float *m,
 							 float *neighbour_density_n,
 							 float *neighbour_density_m,
 							 int n_neigh,
-							 int n_tot) {
+							 int n_tot,
+							 int *n_procs) {
+	if (n_procs != NULL) {
+		omp_set_dynamic(0);
+		omp_set_num_threads(*n_procs);
+
+	}
 	#pragma omp parallel
     {
         #pragma omp for
@@ -93,6 +99,8 @@ void neighbour_density_omp(float *m,
 				avg_dist += dist_list[j]/n_neigh;
 				avg_mass += m[dist_idx_list[j]]/n_neigh;
 			}
+			free(dist_list);
+			free(dist_idx_list);
 			neighbour_density_n[i] = 1/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
 			neighbour_density_m[i] = avg_mass/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
 			/*neighbour_density_n[i] = avg_dist;
@@ -117,8 +125,8 @@ void neighbour_density_omp(float *m,
 		X2[i] = (float) rand()/RAND_MAX;
 		X3[i] = (float) rand()/RAND_MAX;
 	}
-
-	neighbour_density_omp(M,X1,X2,X3,neighbour_density_n,neighbour_density_m, 80, N);
+	int n_procs = 4;
+	neighbour_density_omp(M,X1,X2,X3,neighbour_density_n,neighbour_density_m, 80, N, &n_procs);
 
 	for (int i = 0; i < N; i++) {
 		printf("Star %d, M: %f, X1: %f, X2: %f, X3 %f, rho_n: %f, rho_m %f\n", i, M[i], X1[i], X2[i], X3[i], neighbour_density_n[i], neighbour_density_m[i]);

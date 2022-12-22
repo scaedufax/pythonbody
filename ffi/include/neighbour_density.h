@@ -9,7 +9,15 @@ int ocl_init_grav_pot(void);
 void ocl_free_grav_pot(void);
 #endif
 
-void neighbour_density_omp(float *m, float *x1, float *x2, float *x3, float *neighbour_density_n, float *neighbour_density_m, int n_neigh, int n_tot);
+void neighbour_density_omp(float *m,
+	   					   float *x1,
+						   float *x2,
+						   float *x3,
+						   float *neighbour_density_n,
+						   float *neighbour_density_m,
+						   int n_neigh,
+						   int n_tot,
+						   int *n_procs);
 /*double grav_pot_ocl(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);*/
 

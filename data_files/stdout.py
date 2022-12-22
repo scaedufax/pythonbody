@@ -60,8 +60,18 @@ def load(stdout_files, max_nb_time: float = None):
     for line in tqdm(lines):
         if max_nb_time is not None and current_time > max_nb_time:
             break
+
+        line = line.strip()
+
+        # Skip KS-reg data for enhanced performance
+        if (line.startswith("NEW KSREG") 
+            or line.startswith("BEG KSRECT")
+            or line.startswith("END KSREG")
+            ):
+            continue
+
         # LAGR Block
-        if re.search("TIME.*M/MT:", line):
+        elif re.search("TIME.*M/MT:", line):
             line = re.sub("\s+", " ", line).strip()
             line = line.split(" ")
             cols = [float(i) for i in line[2:len(line)-1]] + [line[len(line)-1]]

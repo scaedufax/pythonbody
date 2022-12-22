@@ -255,7 +255,7 @@ class snap():
         return self.scalar_data
 
     def calculate_time_evolution(self,
-                                 RLAGRS: list[float] = None,
+                                 RLAGRS: list = None,
                                  stepsize: int = 1,
                                  min_nbtime: float = None,
                                  max_nbtime: float = None,
@@ -387,9 +387,9 @@ class snap():
     def load_cluster(self,
                      time: float,
                      return_nbtime: bool = False,
-                     cluster_cols: list[str] = None,
-                     binary_cols: list[str] = None,
-                     scalar_ids: list[int] = None,
+                     cluster_cols: list = None,
+                     binary_cols: list = None,
+                     scalar_ids: list = None,
                      cluster_data_filter: str = None,
                      binaries_data_filter: str = None):
         """
@@ -404,7 +404,7 @@ class snap():
         :param binary_cols: specify columns to load for binaries
         :type binary_cols: list[str]
         :param scalar_ids: specify the ids to load from scalars in snap files.
-        :type scalar_ids: list[in]
+        :type scalar_ids: list[int]
         :param cluster_data_filter: filter cluster_data, the passed string will
             be called using ``eval``. The internals need to be known and
             understood to properly use this.

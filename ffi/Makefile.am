@@ -5,7 +5,7 @@ CFLAGS= -std=c99
 AUTOMAKE_OPTIONS = foreign subdir-objects
 AM_CFLAGS = -I./include/
 lib_LTLIBRARIES = libpythonbody.la #libgrav_pot.la libcummean.la libpythonbody.la
-libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c
+libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
 libpythonbody_la_CFLAGS = -I./include 
 libpythonbody_la_LDFLAGS = -lm 
 

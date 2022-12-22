@@ -143,7 +143,8 @@ libpythonbody_la_LIBADD =
 am__dirstamp = $(am__leading_dot)dirstamp
 am_libpythonbody_la_OBJECTS = src/libpythonbody_la-ocl.lo \
 	src/libpythonbody_la-cummean.lo \
-	src/libpythonbody_la-grav_pot.lo
+	src/libpythonbody_la-grav_pot.lo \
+	src/libpythonbody_la-neighbour_density.lo
 libpythonbody_la_OBJECTS = $(am_libpythonbody_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -181,6 +182,7 @@ depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = src/$(DEPDIR)/libpythonbody_la-cummean.Plo \
 	src/$(DEPDIR)/libpythonbody_la-grav_pot.Plo \
+	src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo \
 	src/$(DEPDIR)/libpythonbody_la-ocl.Plo \
 	src/$(DEPDIR)/tests-cummean.Po src/$(DEPDIR)/tests-grav_pot.Po \
 	src/$(DEPDIR)/tests-ocl.Po src/$(DEPDIR)/tests-tests.Po
@@ -373,7 +375,7 @@ ACLOCAL_AMFLAGS = -I m4
 AUTOMAKE_OPTIONS = foreign subdir-objects
 AM_CFLAGS = -I./include/
 lib_LTLIBRARIES = libpythonbody.la #libgrav_pot.la libcummean.la libpythonbody.la
-libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c
+libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
 libpythonbody_la_CFLAGS = -I./include $(am__append_1) $(am__append_2)
 libpythonbody_la_LDFLAGS = -lm $(am__append_3) $(am__append_4)
 @OPENCL_TRUE@tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c
@@ -512,6 +514,8 @@ src/libpythonbody_la-cummean.lo: src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/libpythonbody_la-grav_pot.lo: src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/libpythonbody_la-neighbour_density.lo: src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 libpythonbody.la: $(libpythonbody_la_OBJECTS) $(libpythonbody_la_DEPENDENCIES) $(EXTRA_libpythonbody_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(libpythonbody_la_LINK) -rpath $(libdir) $(libpythonbody_la_OBJECTS) $(libpythonbody_la_LIBADD) $(LIBS)
@@ -538,6 +542,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libpythonbody_la-cummean.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libpythonbody_la-grav_pot.Plo@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libpythonbody_la-ocl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-cummean.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-grav_pot.Po@am__quote@ # am--include-marker
@@ -594,6 +599,13 @@ src/libpythonbody_la-grav_pot.lo: src/grav_pot.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/grav_pot.c' object='src/libpythonbody_la-grav_pot.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpythonbody_la_CFLAGS) $(CFLAGS) -c -o src/libpythonbody_la-grav_pot.lo `test -f 'src/grav_pot.c' || echo '$(srcdir)/'`src/grav_pot.c
+
+src/libpythonbody_la-neighbour_density.lo: src/neighbour_density.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpythonbody_la_CFLAGS) $(CFLAGS) -MT src/libpythonbody_la-neighbour_density.lo -MD -MP -MF src/$(DEPDIR)/libpythonbody_la-neighbour_density.Tpo -c -o src/libpythonbody_la-neighbour_density.lo `test -f 'src/neighbour_density.c' || echo '$(srcdir)/'`src/neighbour_density.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/libpythonbody_la-neighbour_density.Tpo src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/neighbour_density.c' object='src/libpythonbody_la-neighbour_density.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpythonbody_la_CFLAGS) $(CFLAGS) -c -o src/libpythonbody_la-neighbour_density.lo `test -f 'src/neighbour_density.c' || echo '$(srcdir)/'`src/neighbour_density.c
 
 src/tests-tests.o: src/tests.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -MT src/tests-tests.o -MD -MP -MF src/$(DEPDIR)/tests-tests.Tpo -c -o src/tests-tests.o `test -f 'src/tests.c' || echo '$(srcdir)/'`src/tests.c
@@ -941,6 +953,7 @@ distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 		-rm -f src/$(DEPDIR)/libpythonbody_la-cummean.Plo
 	-rm -f src/$(DEPDIR)/libpythonbody_la-grav_pot.Plo
+	-rm -f src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo
 	-rm -f src/$(DEPDIR)/libpythonbody_la-ocl.Plo
 	-rm -f src/$(DEPDIR)/tests-cummean.Po
 	-rm -f src/$(DEPDIR)/tests-grav_pot.Po
@@ -995,6 +1008,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -rf $(top_srcdir)/autom4te.cache
 		-rm -f src/$(DEPDIR)/libpythonbody_la-cummean.Plo
 	-rm -f src/$(DEPDIR)/libpythonbody_la-grav_pot.Plo
+	-rm -f src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo
 	-rm -f src/$(DEPDIR)/libpythonbody_la-ocl.Plo
 	-rm -f src/$(DEPDIR)/tests-cummean.Po
 	-rm -f src/$(DEPDIR)/tests-grav_pot.Po

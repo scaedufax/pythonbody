@@ -138,4 +138,39 @@ class FFI:
                     )
         return np.array(EPOT)
 
+    def neighbour_density(self,
+                          data: pd.DataFrame,
+                          num_threads: int = None,
+                          c_func: str = "omp",
+                          n_neigh: int = 80):
+
+        func = self.lib.neighbour_density_omp
+        N = data.shape[0]
+        rho_n = (c_float * N) (*np.zeros(N))
+        rho_m = (c_float * N) (*np.zeros(N))
+
+        func.argtypes = [
+                c_float * N,  # M 
+                c_float * N,  # X1
+                c_float * N,  # X2
+                c_float * N,  # X3
+                c_float * N,  # rho_n
+                c_float * N,  # rho_m
+                c_int,        # N_TOT
+                c_int,        # N_NEIGH
+                ]
+        func.restype = c_void_p
+
+        func( (c_float * N) (*data["M"].values),
+              (c_float * N) (*data["X1"].values),
+              (c_float * N) (*data["X2"].values),
+              (c_float * N) (*data["X3"].values),
+              rho_n,
+              rho_m,
+              n_neigh,
+              N)
+        return np.array((rho_n, rho_m))
+
+
+
 ffi = FFI()

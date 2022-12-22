@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+#if HAVE_CL_OPENCL_H == 1
 #include "ocl.h"
+#endif
 #include "cummean.h"
 
 #if HAVE_OMP_H == 1

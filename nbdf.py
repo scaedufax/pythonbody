@@ -442,6 +442,8 @@ class nbdf(pd.DataFrame):
 
         :param n_neigh: number of neighbour to average over
         :type n_neigh: int
+        :param omp_n_procs: number of threads omp is supposed to use
+        :type omp_n_procs: int
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
         | Output columns: ``NEIGHBOUR_RHO_N``, ``NEIGHBOUR_RHO_M``
@@ -456,6 +458,8 @@ class nbdf(pd.DataFrame):
 
         :param n_neigh: number of neighbour to average over
         :type n_neigh: int
+        :param omp_n_procs: number of threads omp is supposed to use
+        :type omp_n_procs: int
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
         | Output columns: ``NEIGHBOUR_RHO_m``, ``NEIGHBOUR_RHO_N``

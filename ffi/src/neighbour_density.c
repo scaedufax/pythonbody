@@ -3,7 +3,6 @@
 #include <omp.h>
 #include <math.h>
 #include "ocl.h"
-#include <CL/opencl.h>
 #include "neighbour_density.h"
 
 #if HAVE_OMP_H == 1

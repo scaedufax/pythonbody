@@ -49,6 +49,7 @@ class FFI:
             raise Exception("Error initialize OpenCL")
         self._ocl_init_cummean()
         self._ocl_init_grav_pot()
+        self._ocl_init_neighbour_density()
 
     def _ocl_init_cummean(self):
         func = self.lib.ocl_init_cummean
@@ -57,8 +58,17 @@ class FFI:
         err = func()
         if err != 0:
             raise Exception("Error initialize OpenCL")
+    
     def _ocl_init_grav_pot(self):
         func = self.lib.ocl_init_grav_pot
+        func.restype = c_int
+
+        err = func()
+        if err != 0:
+            raise Exception("Error initialize OpenCL")
+    
+    def _ocl_init_neighbour_density(self):
+        func = self.lib.ocl_init_neighbour_density
         func.restype = c_int
 
         err = func()
@@ -145,7 +155,10 @@ class FFI:
                           n_neigh: int = 80,
                           omp_n_procs: int = None):
 
-        func = self.lib.neighbour_density_omp
+        if c_func == "ocl" and n_neigh != 80:
+            raise ValueError("OpenCL only allows n_neigh to be equal to 80!")
+
+        func = eval(f"self.lib.neighbour_density_{c_func}")
         N = data.shape[0]
         rho_n = (c_float * N) (*np.zeros(N))
         rho_m = (c_float * N) (*np.zeros(N))
@@ -159,7 +172,7 @@ class FFI:
                 c_float * N,  # rho_m
                 c_int,        # N_TOT
                 c_int,        # N_NEIGH,
-                c_void_p,
+                c_void_p,     # n_proc
                 ]
         func.restype = c_void_p
 

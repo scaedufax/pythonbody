@@ -94,6 +94,7 @@ host_triplet = @host@
 @OMP_TRUE@am__append_3 = $(OPENMP_LDFLAGS) 
 @OPENCL_TRUE@am__append_4 = -lOpenCL 
 @OPENCL_TRUE@bin_PROGRAMS = tests$(EXEEXT)
+@DEBUG_TRUE@@OPENCL_TRUE@am__append_5 = -g
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -155,11 +156,12 @@ libpythonbody_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(libpythonbody_la_CFLAGS) $(CFLAGS) \
 	$(libpythonbody_la_LDFLAGS) $(LDFLAGS) -o $@
 am__tests_SOURCES_DIST = src/tests.c src/ocl.c src/cummean.c \
-	src/grav_pot.c
+	src/grav_pot.c src/neighbour_density.c
 @OPENCL_TRUE@am_tests_OBJECTS = src/tests-tests.$(OBJEXT) \
 @OPENCL_TRUE@	src/tests-ocl.$(OBJEXT) \
 @OPENCL_TRUE@	src/tests-cummean.$(OBJEXT) \
-@OPENCL_TRUE@	src/tests-grav_pot.$(OBJEXT)
+@OPENCL_TRUE@	src/tests-grav_pot.$(OBJEXT) \
+@OPENCL_TRUE@	src/tests-neighbour_density.$(OBJEXT)
 tests_OBJECTS = $(am_tests_OBJECTS)
 tests_LDADD = $(LDADD)
 tests_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -185,6 +187,7 @@ am__depfiles_remade = src/$(DEPDIR)/libpythonbody_la-cummean.Plo \
 	src/$(DEPDIR)/libpythonbody_la-neighbour_density.Plo \
 	src/$(DEPDIR)/libpythonbody_la-ocl.Plo \
 	src/$(DEPDIR)/tests-cummean.Po src/$(DEPDIR)/tests-grav_pot.Po \
+	src/$(DEPDIR)/tests-neighbour_density.Po \
 	src/$(DEPDIR)/tests-ocl.Po src/$(DEPDIR)/tests-tests.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
@@ -378,8 +381,9 @@ lib_LTLIBRARIES = libpythonbody.la #libgrav_pot.la libcummean.la libpythonbody.l
 libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
 libpythonbody_la_CFLAGS = -I./include $(am__append_1) $(am__append_2)
 libpythonbody_la_LDFLAGS = -lm $(am__append_3) $(am__append_4)
-@OPENCL_TRUE@tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c
-@OPENCL_TRUE@tests_CFLAGS = -I./include $(OPENMP_CFLAGS) -g
+@OPENCL_TRUE@tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
+@OPENCL_TRUE@tests_CFLAGS = -I./include $(OPENMP_CFLAGS) \
+@OPENCL_TRUE@	$(am__append_5)
 @OPENCL_TRUE@tests_LDFLAGS = -lm $(OPENMP_LDFLAGS) -lOpenCL
 all: all-am
 
@@ -527,6 +531,8 @@ src/tests-cummean.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
 src/tests-grav_pot.$(OBJEXT): src/$(am__dirstamp) \
 	src/$(DEPDIR)/$(am__dirstamp)
+src/tests-neighbour_density.$(OBJEXT): src/$(am__dirstamp) \
+	src/$(DEPDIR)/$(am__dirstamp)
 
 tests$(EXEEXT): $(tests_OBJECTS) $(tests_DEPENDENCIES) $(EXTRA_tests_DEPENDENCIES) 
 	@rm -f tests$(EXEEXT)
@@ -546,6 +552,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/libpythonbody_la-ocl.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-cummean.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-grav_pot.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-neighbour_density.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-ocl.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@src/$(DEPDIR)/tests-tests.Po@am__quote@ # am--include-marker
 
@@ -662,6 +669,20 @@ src/tests-grav_pot.obj: src/grav_pot.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/grav_pot.c' object='src/tests-grav_pot.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -c -o src/tests-grav_pot.obj `if test -f 'src/grav_pot.c'; then $(CYGPATH_W) 'src/grav_pot.c'; else $(CYGPATH_W) '$(srcdir)/src/grav_pot.c'; fi`
+
+src/tests-neighbour_density.o: src/neighbour_density.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -MT src/tests-neighbour_density.o -MD -MP -MF src/$(DEPDIR)/tests-neighbour_density.Tpo -c -o src/tests-neighbour_density.o `test -f 'src/neighbour_density.c' || echo '$(srcdir)/'`src/neighbour_density.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests-neighbour_density.Tpo src/$(DEPDIR)/tests-neighbour_density.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/neighbour_density.c' object='src/tests-neighbour_density.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -c -o src/tests-neighbour_density.o `test -f 'src/neighbour_density.c' || echo '$(srcdir)/'`src/neighbour_density.c
+
+src/tests-neighbour_density.obj: src/neighbour_density.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -MT src/tests-neighbour_density.obj -MD -MP -MF src/$(DEPDIR)/tests-neighbour_density.Tpo -c -o src/tests-neighbour_density.obj `if test -f 'src/neighbour_density.c'; then $(CYGPATH_W) 'src/neighbour_density.c'; else $(CYGPATH_W) '$(srcdir)/src/neighbour_density.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) src/$(DEPDIR)/tests-neighbour_density.Tpo src/$(DEPDIR)/tests-neighbour_density.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='src/neighbour_density.c' object='src/tests-neighbour_density.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(tests_CFLAGS) $(CFLAGS) -c -o src/tests-neighbour_density.obj `if test -f 'src/neighbour_density.c'; then $(CYGPATH_W) 'src/neighbour_density.c'; else $(CYGPATH_W) '$(srcdir)/src/neighbour_density.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -957,6 +978,7 @@ distclean: distclean-am
 	-rm -f src/$(DEPDIR)/libpythonbody_la-ocl.Plo
 	-rm -f src/$(DEPDIR)/tests-cummean.Po
 	-rm -f src/$(DEPDIR)/tests-grav_pot.Po
+	-rm -f src/$(DEPDIR)/tests-neighbour_density.Po
 	-rm -f src/$(DEPDIR)/tests-ocl.Po
 	-rm -f src/$(DEPDIR)/tests-tests.Po
 	-rm -f Makefile
@@ -1012,6 +1034,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f src/$(DEPDIR)/libpythonbody_la-ocl.Plo
 	-rm -f src/$(DEPDIR)/tests-cummean.Po
 	-rm -f src/$(DEPDIR)/tests-grav_pot.Po
+	-rm -f src/$(DEPDIR)/tests-neighbour_density.Po
 	-rm -f src/$(DEPDIR)/tests-ocl.Po
 	-rm -f src/$(DEPDIR)/tests-tests.Po
 	-rm -f Makefile

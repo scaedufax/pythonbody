@@ -462,7 +462,7 @@ class nbdf(pd.DataFrame):
         :type omp_n_procs: int
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
-        | Output columns: ``NEIGHBOUR_RHO_m``, ``NEIGHBOUR_RHO_N``
+        | Output columns: ``NEIGHBOUR_RHO_M``, ``NEIGHBOUR_RHO_N``
         """
         self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh, omp_n_procs=omp_n_procs)
 

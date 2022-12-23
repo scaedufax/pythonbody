@@ -10,7 +10,9 @@ void ocl_free_grav_pot(void);
 #endif
 
 double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
+#if HAVE_CL_OPENCL_H == 1
 double grav_pot_ocl(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
+#endif
 double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 
 #endif

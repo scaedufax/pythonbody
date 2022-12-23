@@ -11,7 +11,7 @@ from ffi import ffi
 #import timeit
 import datetime as dt
 
-N = 100000
+N = 10000
 np.random.seed(314159)
 
 if __name__ == "__main__":
@@ -23,6 +23,7 @@ if __name__ == "__main__":
         })
     EPOT = {}
     EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
+    RHO_N_c_funcs = ["unthreaded", "omp", "ocl"]
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
         reinit = False
@@ -40,11 +41,9 @@ if __name__ == "__main__":
           np.testing.assert_allclose(EPOT[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], EPOT[c_func],rtol=1e-4)
         if reinit:
             ffi._ocl_init()
-
+    
     print()
     print("Testing cummean")
-
-
     CUMMEAN = {}
     for c_func in EPOT_c_funcs:
         try:
@@ -56,4 +55,19 @@ if __name__ == "__main__":
             continue
         if EPOT_c_funcs.index(c_func) != 0:
           np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func],rtol=1e-4)
+    
     print()
+    print("Testing RHO_N")
+    RHO_N = {}
+    for c_func in RHO_N_c_funcs:
+        #try:
+        s = dt.datetime.now()
+        #eval(f"EPOT_{c_func} = None")
+        RHO_N[c_func] = eval(f"ffi.neighbour_density(df[['M', 'X1', 'X2', 'X3']], c_func='{c_func}')")
+        print(f"{c_func.replace('unthreaded','unthrd')}:\t{(dt.datetime.now() - s).microseconds/1000000 + (dt.datetime.now() - s).seconds}")
+        #except:
+        #    continue
+        if RHO_N_c_funcs.index(c_func) != 0:
+          np.testing.assert_allclose(RHO_N[RHO_N_c_funcs[RHO_N_c_funcs.index(c_func) - 1]], RHO_N[c_func],rtol=10e-2)
+    print()
+    print(RHO_N)

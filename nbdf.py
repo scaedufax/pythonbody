@@ -428,43 +428,39 @@ class nbdf(pd.DataFrame):
                                 - VROT[:,1]*self["X1"]/np.sqrt(self["X1"]**2 + self["X2"]**2))
         self["VROT"] = XSIGN * np.linalg.norm(VROT, axis=1)
 
-    def _calc_NEIGHBOUR_RHO(self, n_neigh: int = 80, omp_n_procs: int = None):
-        res = ffi.neighbour_density(self[["M", "X1", "X2", "X3"]],
-                                    n_neigh=n_neigh, omp_n_procs=omp_n_procs)
-
-        self["NEIGHBOUR_RHO_N"] = res[0]
-        self["NEIGHBOUR_RHO_M"] = res[1]
-
-    def calc_NEIGHBOUR_RHO_N(self, n_neigh: int = 80, omp_n_procs: int = None):
+    def calc_NEIGHBOUR_RHO(self,
+                           n_neigh: int = 80,
+                           c_func: str = None,
+                           omp_n_procs: int = None
+                           ):
         """
-        calculate neighbour density n, meaning in this case simply 1/(4/3*pi*r_bar^3)
-        where r_bar is the average distance of the neighbours to the star.
+        calculate neighbour density both in number and mass, meaning in this 
+        case simply 1/(4/3*pi*r_bar^3) and m_bar/(4/3*pi*r_bar^3)
+        where r_bar is the average distance and m_bar the average mass of the
+        neighbours to the star.
 
         :param n_neigh: number of neighbour to average over
         :type n_neigh: int
-        :param omp_n_procs: number of threads omp is supposed to use
+        :param c_func: type for ffi to use
+        :type c_func: str: ["omp", "ocl", "unthreaded"]
+        :param omp_n_procs: number of threads omp is supposed to use requires
+            ``c_func = "omp"``.
         :type omp_n_procs: int
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``
         | Output columns: ``NEIGHBOUR_RHO_N``, ``NEIGHBOUR_RHO_M``
         """
-        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh, omp_n_procs=omp_n_procs)
+        res = ffi.neighbour_density(self[["M", "X1", "X2", "X3"]],
+                                    n_neigh=n_neigh, c_func=c_func, omp_n_procs=omp_n_procs)
+
+        self["NEIGHBOUR_RHO_N"] = res[0]
+        self["NEIGHBOUR_RHO_M"] = res[1]
+
+    def _calc_NEIGHBOUR_RHO_N(self, n_neigh: int = 80, c_func: str = None, omp_n_procs: int = None):
+        self.calc_NEIGHBOUR_RHO(n_neigh=n_neigh, c_func=c_func, omp_n_procs=omp_n_procs)
     
-    def calc_NEIGHBOUR_RHO_M(self, n_neigh: int = 80, omp_n_procs: int = None):
-        """
-        calculate neighbour density n, meaning in this case simply m_bar/(4/3*pi*r_bar^3)
-        where r_bar is the average distance of the neighbours to the star, and
-        m_bar the average distance of the neighbour stars
-
-        :param n_neigh: number of neighbour to average over
-        :type n_neigh: int
-        :param omp_n_procs: number of threads omp is supposed to use
-        :type omp_n_procs: int
-
-        | Required columns: ``M``, ``X1``, ``X2``, ``X3``
-        | Output columns: ``NEIGHBOUR_RHO_M``, ``NEIGHBOUR_RHO_N``
-        """
-        self._calc_NEIGHBOUR_RHO(n_neigh=n_neigh, omp_n_procs=omp_n_procs)
+    def _calc_NEIGHBOUR_RHO_M(self, n_neigh: int = 80, c_func: str = None, omp_n_procs: int = None):
+        self.calc_NEIGHBOUR_RHO(n_neigh=n_neigh, c_func=c_func, omp_n_procs=omp_n_procs)
 
 
     def calc_VROT_CUMMEAN(self):

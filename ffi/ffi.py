@@ -160,6 +160,8 @@ class FFI:
 
         if c_func is None or c_func.lower() == "auto":
             c_func = self.default_cfunc
+        if omp_n_procs is not None:
+            c_func = "omp"
 
         func = eval(f"self.lib.neighbour_density_{c_func}")
         N = data.shape[0]

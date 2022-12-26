@@ -443,8 +443,8 @@ class nbdf(pd.DataFrame):
         :type n_neigh: int
         :param c_func: type for ffi to use
         :type c_func: str: ["omp", "ocl", "unthreaded"]
-        :param omp_n_procs: number of threads omp is supposed to use requires
-            ``c_func = "omp"``.
+        :param omp_n_procs: number of threads omp is supposed to use.
+            Automatically sets ``c_func = "omp"``.
         :type omp_n_procs: int
 
         | Required columns: ``M``, ``X1``, ``X2``, ``X3``

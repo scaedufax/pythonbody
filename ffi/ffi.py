@@ -158,6 +158,11 @@ class FFI:
         if c_func == "ocl" and n_neigh != 80:
             raise ValueError("OpenCL only allows n_neigh to be equal to 80!")
 
+        if c_func is None or c_func.lower() == "auto":
+            c_func = self.default_cfunc
+        if omp_n_procs is not None:
+            c_func = "omp"
+
         func = eval(f"self.lib.neighbour_density_{c_func}")
         N = data.shape[0]
         rho_n = (c_float * N) (*np.zeros(N))

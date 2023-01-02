@@ -29,7 +29,8 @@ class dat10(nbdf):
                 names=default_cols
                 )
             super().__init__(data=pd_df, *args, **kwargs)
-        self._default_cols = ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
+        else:
+            super().__init__(*args, **kwargs)
 
     def load(self, file_path: str):
         """
@@ -65,7 +66,11 @@ class dat10(nbdf):
             index=False,
             float_format="%.6f"
         )
-    
+     
+    @property
+    def _default_cols(self):
+        return ["M", "X1", "X2", "X3", "V1", "V2", "V3"]
+
     @property
     def ETOT(self):
         """

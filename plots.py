@@ -56,7 +56,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
         axes[0].set_xlabel("X1")
         axes[0].set_ylabel("X2")
         axes[1].set_xlabel("X1")
-        axes[2].set_ylabel("X3")
+        axes[1].set_ylabel("X3")
         if xlim is not None:
             axes[0].set_xlim(*xlim)
             axes[1].set_xlim(*xlim)

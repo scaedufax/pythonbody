@@ -40,33 +40,33 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                                           inplace=True,
                                           ascending=True)
 
-    fig, axes = plt.subplots(nrows=1,
-                             ncols=2,
-                             figsize=(6.4*2, 6.4))
-    
-    axes[0].scatter(run.snap.cluster_data["X1"],
-                    run.snap.cluster_data["X2"],
-                    c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
-                    **scatter_kw_args)
-    axes[1].scatter(run.snap.cluster_data["X1"],
-                    run.snap.cluster_data["X3"],
-                    c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
-                    **scatter_kw_args)
+        fig, axes = plt.subplots(nrows=1,
+                                 ncols=2,
+                                 figsize=(6.4*2, 6.4))
+        
+        axes[0].scatter(run.snap.cluster_data["X1"],
+                        run.snap.cluster_data["X2"],
+                        c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
+                        **scatter_kw_args)
+        axes[1].scatter(run.snap.cluster_data["X1"],
+                        run.snap.cluster_data["X3"],
+                        c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
+                        **scatter_kw_args)
 
-    axes[0].set_xlabel("X1")
-    axes[0].set_ylabel("X2")
-    axes[1].set_xlabel("X1")
-    axes[2].set_ylabel("X3")
-    if xlim is not None:
-        axes[0].set_xlim(*xlim)
-        axes[1].set_xlim(*xlim)
-    if ylim is not None:
-        axes[0].set_ylim(*ylim)
-        axes[1].set_ylim(*ylim)
+        axes[0].set_xlabel("X1")
+        axes[0].set_ylabel("X2")
+        axes[1].set_xlabel("X1")
+        axes[2].set_ylabel("X3")
+        if xlim is not None:
+            axes[0].set_xlim(*xlim)
+            axes[1].set_xlim(*xlim)
+        if ylim is not None:
+            axes[0].set_ylim(*ylim)
+            axes[1].set_ylim(*ylim)
 
-    fig.suptitle(f"Time = {i}")
-    fig.tight_layout()
+        fig.suptitle(f"Time = {i}")
+        fig.tight_layout()
 
-    max_time = run.snap.snap_data.index.max()
-    zero_pad = int(np.ceil(np.log10(max_time)))
-    fig.savefig(f"{path}/{base_file_name}_{str(i).zfill(zero_pad)}.{image_ext}")
+        max_time = run.snap.snap_data.index.max()
+        zero_pad = int(np.ceil(np.log10(max_time)))
+        fig.savefig(f"{path}/{base_file_name}_{str(i).zfill(zero_pad)}.{image_ext}")

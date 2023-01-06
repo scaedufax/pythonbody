@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import tqdm
 
 from .nbody import nbody
 
@@ -27,7 +28,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
         matplotlib.pyplot.savefig for available formats.
     :type image_ext: str
     """
-    for i, r in run.snap.snap_data.iterrows():
+    for i, r in tqdm(run.snap.snap_data.iterrows()):
         run.snap.load_cluster(i)
 
         if (("NEIGHBOUR_RHO_M" not in run.snap.cluster_data.columns)
@@ -57,11 +58,11 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     axes[1].set_xlabel("X1")
     axes[2].set_ylabel("X3")
     if xlim is not None:
-        axes[0].set_xlim(xlim)
-        axes[1].set_xlim(xlim)
+        axes[0].set_xlim(*xlim)
+        axes[1].set_xlim(*xlim)
     if ylim is not None:
-        axes[0].set_ylim(ylim)
-        axes[1].set_ylim(ylim)
+        axes[0].set_ylim(*ylim)
+        axes[1].set_ylim(*ylim)
 
     fig.suptitle(f"Time = {i}")
     fig.tight_layout()

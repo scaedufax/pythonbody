@@ -38,6 +38,7 @@ Classes and modules
 
    snap/index.rst
    data_files/index.rst
+   plots.rst
 
 Indices and tables
 ==================

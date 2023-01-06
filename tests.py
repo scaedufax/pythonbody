@@ -11,7 +11,7 @@ from ffi import ffi
 #import timeit
 import datetime as dt
 
-N = 10000
+N = 100000
 np.random.seed(314159)
 
 if __name__ == "__main__":

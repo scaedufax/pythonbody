@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-import tqdm
+from tqdm import tqdm
 
 from .nbody import nbody
 
@@ -28,7 +28,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
         matplotlib.pyplot.savefig for available formats.
     :type image_ext: str
     """
-    for i, r in tqdm(run.snap.snap_data.iterrows()):
+    for i in tqdm(run.snap.snap_data.index.values):
         run.snap.load_cluster(i)
 
         if (("NEIGHBOUR_RHO_M" not in run.snap.cluster_data.columns)

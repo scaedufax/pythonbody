@@ -8,6 +8,7 @@ from tqdm import tqdm
 import pathlib
 import warnings
 from packaging import version
+import re
 
 from ..ffi import ffi
 from ..nbdf import nbdf
@@ -444,6 +445,12 @@ class snap():
             if defaults.snap.binary_col_map[col] in f["Step#" + self.snap_data.loc[time]["step"]].keys():
                 self.binaries_data[col] = f["Step#" + self.snap_data.loc[time]["step"]][defaults.snap.binary_col_map[col]][:]
 
+        for key in f["Step#" + self.snap_data.loc[time]["step"]].keys():
+            if re.search("PNB_CD_.*", key):
+                self.cluster_data[key.replace("PNB_CD_","")] = f["Step#" + self.snap_data.loc[time]["step"]][key][:]
+            elif re.search("PNB_BD_.*", key):
+                self.binaries_data[key.replace("PNB_BD_","")] = f["Step#" + self.snap_data.loc[time]["step"]][key][:]
+
         #self.singles_data = singles(self.cluster_data, self.binary_data)
         try:
             self.singles_mask = ~self.cluster_data["NAME"].isin(self.binaries_data["NAME1"]) & ~self.cluster_data["NAME"].isin(self.binaries_data["NAME2"])
@@ -466,6 +473,8 @@ class snap():
         if binaries_data_filter is not None:
             self.binaries_data.calc_spherical_coords()
             self.binaries_data = self.binaries_data[eval(binaries_data_filter)]
+
+        f.close()
 
         if return_nbtime:
             return float(nbtime)
@@ -500,6 +509,28 @@ class snap():
                                               "step": "0"}, ignore_index=True))
                 self.snap_data.index = self.snap_data["time"].values
         self.snap_data.sort_index(inplace=True)
+
+    def save_cols(self, mapping: dict):
+        """
+        save (calculated) columns to hdf5 file.
+
+        For easy reloading the data prepend columns for the entire cluster
+        with ``PNB_CD_`` and binaries data with ``PNB_BD_``. When reloading
+        the snap files these prefixes will automatically be dropped
+
+        :param mapping: mapping on how to store files: column -> snap key
+        :type mapping: dict
+        """
+        file_name = self.snap_data.loc[self.time, "file"]
+
+        file = h5py.File(file_name, "r+")
+
+        for key in mapping.keys():
+            if mapping[key] not in file["Step#" + self.snap_data.loc[self.time]["step"]].keys():
+                file["Step#" + self.snap_data.loc[self.time]["step"]].create_dataset(mapping[key], self.cluster_data.loc[:,key].values.shape)
+            file["Step#" + self.snap_data.loc[self.time]["step"]][mapping[key]][:] = self.cluster_data.loc[:, key]
+
+        file.close()
 
     def analyze_files(self):
         """

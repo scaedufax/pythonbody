@@ -12,6 +12,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               image_ext: str = "png",
                               xlim: tuple = None,
                               ylim: tuple = None,
+                              save_neighbour_rho_to_snap: bool = True
                               ):
     """
     generates X-Y and X-Z plots
@@ -27,6 +28,13 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :param image_ext: extension/format to use for images. See
         matplotlib.pyplot.savefig for available formats.
     :type image_ext: str
+    :param xlim: set x-range for scatter plot
+    :type xlim: tuple
+    :param ylim: set y-range for scatter plot
+    :type ylim: tuple
+    :param save_neighbour_rho_to_snap: As Neighbour_rho needs to be calculated
+        anyway here, this can be used to save them to the snap files!
+    :type save_neighbour_rho_to_snap: bool
     """
     for i in tqdm(run.snap.snap_data.index.values):
         run.snap.load_cluster(i)
@@ -34,6 +42,10 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
         if (("NEIGHBOUR_RHO_M" not in run.snap.cluster_data.columns)
             or ("NEIGHBOUR_RHO_N" not in run.snap.cluster_data.columns)):
             run.snap.cluster_data.calc_NEIGHBOUR_RHO()
+
+            if save_neighbour_rho_to_snap:
+                run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
+                                    "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
         
         run.snap.cluster_data.sort_values("NEIGHBOUR_RHO_M",
                                           ignore_index=True,

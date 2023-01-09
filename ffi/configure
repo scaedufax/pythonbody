@@ -693,6 +693,7 @@ build_vendor
 build_cpu
 build
 LIBTOOL
+OCL_CFLAGS
 OPENCL_FALSE
 OPENCL_TRUE
 OMP_FALSE
@@ -4553,8 +4554,9 @@ fi
 if test "x$with_cuda" != "x"
 then :
   CFLAGS="$CFLAGS -I$with_cuda/include"
+	   OCL_CFLAGS="-I$with_cuda/include"
 fi
-echo "$CFLAGS"
+
        for ac_header in CL/opencl.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "CL/opencl.h" "ac_cv_header_CL_opencl_h" "$ac_includes_default"
@@ -4575,6 +4577,8 @@ else
   OPENCL_TRUE='#'
   OPENCL_FALSE=
 fi
+
+
 
 
 case `pwd` in

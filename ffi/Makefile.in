@@ -93,8 +93,9 @@ host_triplet = @host@
 @OMP_TRUE@am__append_2 = $(OPENMP_CFLAGS) 
 @OMP_TRUE@am__append_3 = $(OPENMP_LDFLAGS) 
 @OPENCL_TRUE@am__append_4 = -lOpenCL 
+@OPENCL_TRUE@am__append_5 = @OCL_CFLAGS@ 
 @OPENCL_TRUE@bin_PROGRAMS = tests$(EXEEXT)
-@DEBUG_TRUE@@OPENCL_TRUE@am__append_5 = -g
+@DEBUG_TRUE@@OPENCL_TRUE@am__append_6 = -g
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -304,6 +305,7 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OCL_CFLAGS = @OCL_CFLAGS@
 OPENMP_CFLAGS = @OPENMP_CFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
@@ -379,11 +381,12 @@ AUTOMAKE_OPTIONS = foreign subdir-objects
 AM_CFLAGS = -I./include/
 lib_LTLIBRARIES = libpythonbody.la #libgrav_pot.la libcummean.la libpythonbody.la
 libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
-libpythonbody_la_CFLAGS = -I./include $(am__append_1) $(am__append_2)
+libpythonbody_la_CFLAGS = -I./include $(am__append_1) $(am__append_2) \
+	$(am__append_5)
 libpythonbody_la_LDFLAGS = -lm $(am__append_3) $(am__append_4)
 @OPENCL_TRUE@tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
-@OPENCL_TRUE@tests_CFLAGS = -I./include $(OPENMP_CFLAGS) \
-@OPENCL_TRUE@	$(am__append_5)
+@OPENCL_TRUE@tests_CFLAGS = -I./include @OCL_CFLAGS@ $(OPENMP_CFLAGS) \
+@OPENCL_TRUE@	$(am__append_6)
 @OPENCL_TRUE@tests_LDFLAGS = -lm $(OPENMP_LDFLAGS) -lOpenCL
 all: all-am
 

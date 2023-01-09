@@ -26,7 +26,8 @@ AM_CONDITIONAL([OMP], [test "x$enable_omp" = "xyes"])
 
 dnl check for OpenCL
 AS_IF([test "x$with_cuda" != "x"],
- 	  [CFLAGS="$CFLAGS -I$with_cuda/include"],
+ 	  [CFLAGS="$CFLAGS -I$with_cuda/include"
+	   OCL_CFLAGS="-I$with_cuda/include"],
 	  []
 	  )
 
@@ -35,6 +36,8 @@ AC_CHECK_HEADERS([CL/opencl.h],
 				[enable_opencl=no])
 
 AM_CONDITIONAL([OPENCL], [test "x$enable_opencl" = "xyes"])
+
+AC_SUBST([OCL_CFLAGS])
 
 LT_INIT
 AC_OUTPUT

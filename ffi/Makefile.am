@@ -20,9 +20,10 @@ endif
 
 if OPENCL
 libpythonbody_la_LDFLAGS += -lOpenCL 
+libpythonbody_la_CFLAGS += @OCL_CFLAGS@ 
 bin_PROGRAMS = tests
 tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
-tests_CFLAGS = -I./include 
+tests_CFLAGS = -I./include @OCL_CFLAGS@ 
 tests_LDFLAGS = -lm
 tests_CFLAGS += $(OPENMP_CFLAGS) 
 tests_LDFLAGS += $(OPENMP_LDFLAGS)

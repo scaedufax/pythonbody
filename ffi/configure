@@ -4552,21 +4552,10 @@ fi
 
 if test "x$with_cuda" != "x"
 then :
-         for ac_header in CL/opencl.h
-do :
-  ac_fn_c_check_header_compile "$LINENO" "CL/opencl.h" "ac_cv_header_CL_opencl_h" "\"$with_cuda/include\"
-"
-if test "x$ac_cv_header_CL_opencl_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_CL_OPENCL_H 1" >>confdefs.h
- enable_opencl=yes
-else $as_nop
-  enable_opencl=no
+  CFLAGS="$CFLAGS -I$with_cuda/include"
 fi
-
-done
-else $as_nop
-         for ac_header in CL/opencl.h
+echo "$CFLAGS"
+       for ac_header in CL/opencl.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "CL/opencl.h" "ac_cv_header_CL_opencl_h" "$ac_includes_default"
 if test "x$ac_cv_header_CL_opencl_h" = xyes
@@ -4579,7 +4568,6 @@ fi
 
 done
 
-fi
  if test "x$enable_opencl" = "xyes"; then
   OPENCL_TRUE=
   OPENCL_FALSE='#'

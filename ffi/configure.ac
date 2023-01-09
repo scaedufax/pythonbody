@@ -29,7 +29,7 @@ AS_IF([test "x$with_cuda" != "x"],
  	  [CFLAGS="$CFLAGS -I$with_cuda/include"],
 	  []
 	  )
-echo "$CFLAGS"
+
 AC_CHECK_HEADERS([CL/opencl.h],
 				[enable_opencl=yes],
 				[enable_opencl=no])

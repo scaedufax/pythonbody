@@ -82,3 +82,4 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
         max_time = run.snap.snap_data.index.max()
         zero_pad = int(np.ceil(np.log10(max_time))) + 2
         fig.savefig(f"{path}/{base_file_name}_{str(i).zfill(zero_pad)}.{image_ext}")
+        plt.close()

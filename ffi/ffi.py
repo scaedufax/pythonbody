@@ -30,6 +30,7 @@ class FFI:
         except:
             print("FFI: Couldn't load OpenCL, defaulting back to OpenMP")
             self.default_cfunc = "omp"
+            self.OpenCL = False
         
 
     def __del__(self):

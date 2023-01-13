@@ -693,7 +693,10 @@ build_vendor
 build_cpu
 build
 LIBTOOL
-OCL_CFLAGS
+CUDA_LDFLAGS
+CUDA_CFLAGS
+WITH_CUDA_FALSE
+WITH_CUDA_TRUE
 OPENCL_FALSE
 OPENCL_TRUE
 OMP_FALSE
@@ -4554,7 +4557,8 @@ fi
 if test "x$with_cuda" != "x"
 then :
   CFLAGS="$CFLAGS -I$with_cuda/include"
-	   OCL_CFLAGS="-I$with_cuda/include"
+	   CUDA_CFLAGS="-I$with_cuda/include"
+	   CUDA_LDFLAGS="-L$with_cuda/lib64"
 fi
 
        for ac_header in CL/opencl.h
@@ -4577,6 +4581,15 @@ else
   OPENCL_TRUE='#'
   OPENCL_FALSE=
 fi
+
+ if test "x$with_cuda" != "x"; then
+  WITH_CUDA_TRUE=
+  WITH_CUDA_FALSE='#'
+else
+  WITH_CUDA_TRUE='#'
+  WITH_CUDA_FALSE=
+fi
+
 
 
 
@@ -12895,6 +12908,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${OPENCL_TRUE}" && test -z "${OPENCL_FALSE}"; then
   as_fn_error $? "conditional \"OPENCL\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${WITH_CUDA_TRUE}" && test -z "${WITH_CUDA_FALSE}"; then
+  as_fn_error $? "conditional \"WITH_CUDA\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 

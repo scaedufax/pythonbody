@@ -5,6 +5,7 @@ cl_platform_id ocl_platform_id[MAX_PLATFORMS];
 cl_device_id ocl_device_id[MAX_DEVICES];
 cl_context ocl_context;
 cl_command_queue ocl_queue;
+int ocl_below_20 = 0;
 
 int ocl_init(int *p_id, int *d_id) {
 	cl_int err;
@@ -38,7 +39,17 @@ int ocl_init(int *p_id, int *d_id) {
 	ocl_context = clCreateContext(0, 1, &ocl_device_id[*d_id], NULL, NULL, &err);
 	CL_SUCCESS_OR_RETURN(err, "clCreateContext");
 
+	/* Check OpenCL version below 2.0 */
+	/*char buf[100];
+	err = clGetPlatformInfo(ocl_platform_id[*p_id], CL_PLATFORM_VERSION, 100, &buf, NULL);
+	CL_SUCCESS_OR_RETURN(err, clGetPlatformInfo);
+	printf("%s\n",buf);*/
+	
+	#if CL_TARGET_OPENCL_VERSION > 120
 	ocl_queue = clCreateCommandQueueWithProperties(ocl_context, ocl_device_id[*d_id], 0, &err);
+	#else
+	ocl_queue = clCreateCommandQueue(ocl_context, ocl_device_id[*d_id], 0, &err);
+	#endif
 	CL_SUCCESS_OR_RETURN(err, "clCreateQueue");
 
 	if (p_id_was_null) {	

@@ -9,27 +9,31 @@ libpythonbody_la_SOURCES = src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_
 libpythonbody_la_CFLAGS = -I./include 
 libpythonbody_la_LDFLAGS = -lm 
 
+tests_CFLAGS = -I./include
+tests_LDFLAGS = -lm
+
 if DEBUG
 libpythonbody_la_CFLAGS += -g
+tests_CFLAGS += -g
 endif
 
 if OMP
 libpythonbody_la_CFLAGS += $(OPENMP_CFLAGS) 
 libpythonbody_la_LDFLAGS += $(OPENMP_LDFLAGS) 
+tests_CFLAGS += $(OPENMP_CFLAGS) 
+tests_LDFLAGS += $(OPENMP_LDFLAGS)
 endif
 
 if OPENCL
 libpythonbody_la_LDFLAGS += -lOpenCL 
-libpythonbody_la_CFLAGS += @OCL_CFLAGS@ 
 bin_PROGRAMS = tests
 tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
-tests_CFLAGS = -I./include @OCL_CFLAGS@ 
-tests_LDFLAGS = -lm
-tests_CFLAGS += $(OPENMP_CFLAGS) 
-tests_LDFLAGS += $(OPENMP_LDFLAGS)
-if DEBUG
-tests_CFLAGS += -g
+tests_LDFLAGS += -lOpenCL
+if WITH_CUDA
+libpythonbody_la_CFLAGS += @CUDA_CFLAGS@ 
+libpythonbody_la_LDFLAGS += @CUDA_LDFLAGS@ 
+tests_CFLAGS += @CUDA_CFLAGS@
+tests_LDFLAGS += @CUDA_LDFLAGS@
 endif
-tests_LDFLAGS += -lOpenCL 
 endif
 

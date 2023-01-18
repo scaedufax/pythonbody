@@ -89,6 +89,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
+bin_PROGRAMS = tests$(EXEEXT)
 @DEBUG_TRUE@am__append_1 = -g
 @DEBUG_TRUE@am__append_2 = -g
 @OMP_TRUE@am__append_3 = $(OPENMP_CFLAGS) 
@@ -96,7 +97,6 @@ host_triplet = @host@
 @OMP_TRUE@am__append_5 = $(OPENMP_CFLAGS) 
 @OMP_TRUE@am__append_6 = $(OPENMP_LDFLAGS)
 @OPENCL_TRUE@am__append_7 = -lOpenCL 
-@OPENCL_TRUE@bin_PROGRAMS = tests$(EXEEXT)
 @OPENCL_TRUE@am__append_8 = -lOpenCL
 @OPENCL_TRUE@@WITH_CUDA_TRUE@am__append_9 = @CUDA_CFLAGS@ 
 @OPENCL_TRUE@@WITH_CUDA_TRUE@am__append_10 = @CUDA_LDFLAGS@ 
@@ -162,13 +162,9 @@ libpythonbody_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(libpythonbody_la_CFLAGS) $(CFLAGS) \
 	$(libpythonbody_la_LDFLAGS) $(LDFLAGS) -o $@
-am__tests_SOURCES_DIST = src/tests.c src/ocl.c src/cummean.c \
-	src/grav_pot.c src/neighbour_density.c
-@OPENCL_TRUE@am_tests_OBJECTS = src/tests-tests.$(OBJEXT) \
-@OPENCL_TRUE@	src/tests-ocl.$(OBJEXT) \
-@OPENCL_TRUE@	src/tests-cummean.$(OBJEXT) \
-@OPENCL_TRUE@	src/tests-grav_pot.$(OBJEXT) \
-@OPENCL_TRUE@	src/tests-neighbour_density.$(OBJEXT)
+am_tests_OBJECTS = src/tests-tests.$(OBJEXT) src/tests-ocl.$(OBJEXT) \
+	src/tests-cummean.$(OBJEXT) src/tests-grav_pot.$(OBJEXT) \
+	src/tests-neighbour_density.$(OBJEXT)
 tests_OBJECTS = $(am_tests_OBJECTS)
 tests_LDADD = $(LDADD)
 tests_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -216,7 +212,7 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libpythonbody_la_SOURCES) $(tests_SOURCES)
-DIST_SOURCES = $(libpythonbody_la_SOURCES) $(am__tests_SOURCES_DIST)
+DIST_SOURCES = $(libpythonbody_la_SOURCES) $(tests_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -392,10 +388,10 @@ libpythonbody_la_CFLAGS = -I./include $(am__append_1) $(am__append_3) \
 	$(am__append_9)
 libpythonbody_la_LDFLAGS = -lm $(am__append_4) $(am__append_7) \
 	$(am__append_10)
+tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
 tests_CFLAGS = -I./include $(am__append_2) $(am__append_5) \
 	$(am__append_11)
 tests_LDFLAGS = -lm $(am__append_6) $(am__append_8) $(am__append_12)
-@OPENCL_TRUE@tests_SOURCES = src/tests.c src/ocl.c src/cummean.c src/grav_pot.c src/neighbour_density.c
 all: all-am
 
 .SUFFIXES:

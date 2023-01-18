@@ -18,10 +18,11 @@ int main (void) {
 	float target[N];
 	float EPOT[N];
 
-	ocl_init(NULL,NULL);
-	ocl_init_neighbour_density();
-	ocl_init_grav_pot();
-	ocl_init_cummean();
+	//ocl_init(NULL,NULL);
+	//ocl_init_neighbour_density();
+	//ocl_init_grav_pot();
+	//ocl_init_cummean();
+	srand(SEED);
 
 	
 
@@ -33,12 +34,35 @@ int main (void) {
 		EPOT[i] = 0;
 	}
 	grav_pot_unthreaded(M,X1,X2,X3,EPOT,N);
+	for (int i = 0; i < 9; i++) {
+	    printf("%03.02f ", EPOT[i]);
+	}
+	printf(" ... ");
+	for (int i = 9; i > 0; i--) {
+	    printf("%03.02f ", EPOT[N-i]);
+	}
+	printf("\n");
+	
+	
+	for (int i = 0; i < N; i++) {
+		EPOT[i] = 0;
+	}
+	
+	grav_pot_omp(M,X1,X2,X3,EPOT,N);
+	for (int i = 0; i < 9; i++) {
+	    printf("%03.02f ", EPOT[i]);
+	}
+	printf(" ... ");
+	for (int i = 9; i > 0; i--) {
+	    printf("%03.02f ", EPOT[N-i]);
+	}
+	printf("\n");
 
-	grav_pot_ocl(M,X1,X2,X3,EPOT,N);
+	//grav_pot_ocl(M,X1,X2,X3,EPOT,N);
 
-	ocl_free_grav_pot();
-	ocl_free_cummean();
-	ocl_free();
+	//ocl_free_grav_pot();
+	//ocl_free_cummean();
+	//ocl_free();
 
 	
 	return 0;

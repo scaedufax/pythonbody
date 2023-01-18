@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+#include <immintrin.h>
 
 #include "../include/grav_pot.h"
 
@@ -180,13 +181,34 @@ double grav_pot_ocl(float *m,
 }
 #endif
 
-double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
-	for (int i = 0; i < n; i++) {
-		for (int j = i+1; j < n; j++) {
-			float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-			float epot_ij = -m[i]*m[j]/dist;
+double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *epot, int n) {
+	__m256* M = (__m256*) m;
+	__m256* X1 = (__m256*) x1;
+	__m256* X2 = (__m256*) x2;
+	__m256* X3 = (__m256*) x3;
+	__m256* EPOT = (__m256*) epot;
+
+	for (int i = 0; i < (int) n/8; i++) {
+		for (int j = 0; j < (int) n/8; j++) {
+			printf("i = %d; j = %d\n", i,j);
+			__m256 dist_x1 = _mm256_sub_ps(X1[i],X1[j]);
+			__m256 dist_x2 = _mm256_sub_ps(X2[i],X2[j]);
+			__m256 dist_x3 = _mm256_sub_ps(X3[i],X3[j]);
+			printf("test\n");
+			dist_x1 = _mm256_mul_ps(dist_x1, dist_x1);
+			dist_x2 = _mm256_mul_ps(dist_x2, dist_x2);
+			dist_x3 = _mm256_mul_ps(dist_x3, dist_x3);
+			__m256 dist = _mm256_add_ps(dist_x1, dist_x2);
+			dist = _mm256_add_ps(dist, dist_x3);
+			dist = _mm256_sqrt_ps(dist);
+
+			__m256 epot_ij = _mm256_mul_ps(M[i], M[j]);
+			epot_ij = _mm256_div_ps(epot_ij,dist);
 			EPOT[i] += epot_ij;
-			EPOT[j] += epot_ij;
+			//float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+			//float epot_ij = -m[i]*m[j]/dist;
+			//epot[i] += epot_ij;
+			//epot[j] += epot_ij;
 		}
 	}
 }

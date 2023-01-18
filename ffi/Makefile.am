@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4
 
-CFLAGS= -std=c99 -O3
+CFLAGS= -std=c99 -O3 -mavx
 
 AUTOMAKE_OPTIONS = foreign subdir-objects
 AM_CFLAGS = -I./include/

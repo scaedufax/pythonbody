@@ -7,7 +7,7 @@
 #include "cummean.h"
 #include "neighbour_density.h"
 
-#define N 100000
+#define N 1000
 #define SEED 314159
 
 int main (void) {
@@ -30,7 +30,9 @@ int main (void) {
 		X1[i] = (float) rand()/RAND_MAX;
 		X2[i] = (float) rand()/RAND_MAX;
 		X3[i] = (float) rand()/RAND_MAX;
+		EPOT[i] = 0;
 	}
+	grav_pot_unthreaded(M,X1,X2,X3,EPOT,N);
 
 	grav_pot_ocl(M,X1,X2,X3,EPOT,N);
 

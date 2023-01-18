@@ -44,23 +44,10 @@ double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *epot, int 
 				float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
 				float epot_ij = -m[i]*m[j]/dist;
 				epot[i] += epot_ij;
-				//epot_thread[j] += epot_ij;
 			}
 			#endif
 			
 		}
-		/*for (int i = 0; i < n; i++) {
-			for (int j = i+1; j < n; j++) {
-				float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
-				float epot_ij = -m[i]*m[j]/dist;
-				epot_thread[i] += epot_ij;
-				epot_thread[j] += epot_ij;
-			}
-		}*/
-		/*for (int i = 0; i < n; i++) {
-			#pragma omp atomic
-			epot[i] += epot_thread[i];
-		}*/
 	}
 }
 #endif
@@ -144,9 +131,7 @@ double grav_pot_ocl(float *m,
     localSize = 256;
  
     // Number of total work items - localSize must be devisor
-    //globalSize = ceil(n/(float)localSize)*localSize;
-    //globalSize = (((int) (n/localSize)) + 1)*localSize;
-	globalSize = N;
+    globalSize = N;
      
     // Create the input and output arrays in device memory for our calculation
     l_m = clCreateBuffer(ocl_context, CL_MEM_READ_ONLY, bytes, NULL, NULL);

@@ -24,7 +24,7 @@ if __name__ == "__main__":
     EPOT = {}
     #EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
     EPOT_c_funcs = ["unthreaded", "omp"]
-    RHO_N_c_funcs = ["unthreaded", "omp", "ocl"]
+    RHO_N_c_funcs = ["unthreaded", "omp"]
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
         reinit = False
@@ -44,7 +44,6 @@ if __name__ == "__main__":
             ffi._ocl_init()
     
     print()
-    sys.exit(0)
     print("Testing cummean")
     CUMMEAN = {}
     for c_func in EPOT_c_funcs:

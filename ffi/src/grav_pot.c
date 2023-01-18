@@ -45,6 +45,7 @@ double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *epot, int 
 				float epot_ij = -m[i]*m[j]/dist;
 				epot[i] += epot_ij;
 				//epot_thread[j] += epot_ij;
+			}
 			#endif
 			
 		}
@@ -200,6 +201,7 @@ double grav_pot_ocl(float *m,
 }
 #endif
 
+#if AVX
 void _grav_pot_inner_loop_avx(
 		__m256 *M,
 		__m256 *X1,
@@ -241,17 +243,30 @@ void _grav_pot_inner_loop_avx(
 		epot[i] -= res;
 	}
 }
+#endif
+
 double grav_pot_unthreaded(float *m, float *x1, float *x2, float *x3, float *epot, int n) {
+	#if AVX
 	__m256* M = (__m256*) m;
 	__m256* X1 = (__m256*) x1;
 	__m256* X2 = (__m256*) x2;
 	__m256* X3 = (__m256*) x3;
+	#endif
 
 	for (int i = 0; i < n; i++) {
+		#if AVX
 		__m256 X1_i = _mm256_set1_ps(x1[i]);
 		__m256 X2_i = _mm256_set1_ps(x2[i]);
 		__m256 X3_i = _mm256_set1_ps(x3[i]);
 		__m256 M_i = _mm256_set1_ps(m[i]);
 		_grav_pot_inner_loop_avx(M,X1,X2,X3, M_i, X1_i, X2_i, X3_i, epot, i,n);
+		#else
+		for (int j = i+1; j < n; j++) {
+			float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
+			float epot_ij = -m[i]*m[j]/dist;
+			epot[i] += epot_ij;
+			epot[j] += epot_ij;
+		}
+		#endif
 	}
 }

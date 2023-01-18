@@ -11,6 +11,7 @@ int ocl_init_grav_pot(void);
 void ocl_free_grav_pot(void);
 #endif
 
+#if AVX
 void _grav_pot_inner_loop_avx(
 		__m256 *M,
 		__m256 *X1,
@@ -24,6 +25,7 @@ void _grav_pot_inner_loop_avx(
 		int i,
 		int n
 		);
+#endif
 
 double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n);
 #if HAVE_CL_OPENCL_H == 1

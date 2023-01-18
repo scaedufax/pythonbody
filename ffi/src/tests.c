@@ -18,10 +18,12 @@ int main (void) {
 	float target[N];
 	float EPOT[N];
 
+	#if HAVE_CL_OPENCL_H
 	ocl_init(NULL,NULL);
 	ocl_init_neighbour_density();
 	ocl_init_grav_pot();
 	ocl_init_cummean();
+	#endif
 	srand(SEED);
 
 	
@@ -47,7 +49,7 @@ int main (void) {
 	for (int i = 0; i < N; i++) {
 		EPOT[i] = 0;
 	}
-	
+	#if HAVE_OMP_H
 	grav_pot_omp(M,X1,X2,X3,EPOT,N);
 	for (int i = 0; i < 9; i++) {
 	    printf("%03.02f ", EPOT[i]);
@@ -57,12 +59,15 @@ int main (void) {
 	    printf("%03.02f ", EPOT[N-i]);
 	}
 	printf("\n");
-
+	#endif
+	
+	#if HAVE_CL_OPENCL_H
 	grav_pot_ocl(M,X1,X2,X3,EPOT,N);
 
 	ocl_free_grav_pot();
 	ocl_free_cummean();
 	ocl_free();
+	#endif
 
 	
 	return 0;

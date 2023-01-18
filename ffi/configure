@@ -4702,9 +4702,8 @@ printf "%s\n" "$ax_cv_check_cflags___O3" >&6; }
 if test "x$ax_cv_check_cflags___O3" = xyes
 then :
   CFLAGS_OPTIMISATION="-O3"
-					  CFLAGS_OPTIMISATION=""
 else $as_nop
-  :
+  CFLAGS_OPTIMISATION=""
 fi
 
 

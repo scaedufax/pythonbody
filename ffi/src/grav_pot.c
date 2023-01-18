@@ -21,25 +21,63 @@ double grav_pot(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
 }
 
 #if HAVE_OMP_H == 1
-double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *EPOT, int n) {
+double grav_pot_omp(float *m, float *x1, float *x2, float *x3, float *epot, int n) {
+	__m256* M = (__m256*) m;
+	__m256* X1 = (__m256*) x1;
+	__m256* X2 = (__m256*) x2;
+	__m256* X3 = (__m256*) x3;
 	#pragma omp parallel
 	{
-		float EPOT_thread[n];
+		float epot_thread[n];
 		for (int i = 0; i < n; i++) {
-			EPOT_thread[i] = 0;
+			epot_thread[i] = 0;
 		}
+		__m256* EPOT_thread = (__m256*) epot_thread;
 		#pragma omp for
 		for (int i = 0; i < n; i++) {
+			__m256 X1_i = _mm256_set1_ps(x1[i]);
+			__m256 X2_i = _mm256_set1_ps(x2[i]);
+			__m256 X3_i = _mm256_set1_ps(x3[i]);
+			__m256 M_i = _mm256_set1_ps(m[i]);
+			for (int j = 0; j < (int) n/8; j++) {
+				__m256 dist_x1 = _mm256_sub_ps(X1_i,X1[j]);
+				__m256 dist_x2 = _mm256_sub_ps(X2_i,X2[j]);
+				__m256 dist_x3 = _mm256_sub_ps(X3_i,X3[j]);
+				dist_x1 = _mm256_mul_ps(dist_x1, dist_x1);
+				dist_x2 = _mm256_mul_ps(dist_x2, dist_x2);
+				dist_x3 = _mm256_mul_ps(dist_x3, dist_x3);
+				__m256 dist = _mm256_add_ps(dist_x1, dist_x2);
+				dist = _mm256_add_ps(dist, dist_x3);
+				dist = _mm256_sqrt_ps(dist);
+
+				__m256 epot_ij = _mm256_mul_ps(M_i, M[j]);
+				epot_ij = _mm256_div_ps(epot_ij,dist);
+
+				/* Disabling self gravity */			
+				__m256 mask = _mm256_cmp_ps(dist, _mm256_set1_ps(0.0), _CMP_NEQ_OQ);
+				epot_ij = _mm256_and_ps(epot_ij, mask);
+
+				/* Summing all together */
+				epot_ij = _mm256_hadd_ps(epot_ij, epot_ij);
+				epot_ij = _mm256_hadd_ps(epot_ij, epot_ij);
+				__m256 epot_ij_flip = _mm256_permute2f128_ps(epot_ij,epot_ij,1);
+				epot_ij = _mm256_add_ps(epot_ij, epot_ij_flip);
+
+				float res = epot_ij[0];
+				epot[i] -= res;
+			}
+		}
+		/*for (int i = 0; i < n; i++) {
 			for (int j = i+1; j < n; j++) {
 				float dist = sqrt((x1[i] - x1[j])*(x1[i] - x1[j]) + (x2[i] - x2[j])*(x2[i] - x2[j]) + (x3[i] - x3[j])*(x3[i] - x3[j]));
 				float epot_ij = -m[i]*m[j]/dist;
-				EPOT_thread[i] += epot_ij;
-				EPOT_thread[j] += epot_ij;
+				epot_thread[i] += epot_ij;
+				epot_thread[j] += epot_ij;
 			}
-		}
+		}*/
 		for (int i = 0; i < n; i++) {
 			#pragma omp atomic
-			EPOT[i] += EPOT_thread[i];
+			epot[i] += epot_thread[i];
 		}
 	}
 }

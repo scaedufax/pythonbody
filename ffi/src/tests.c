@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "ocl.h"
-#include "grav_pot.h"
-#include "cummean.h"
-#include "neighbour_density.h"
+#include "../include/ocl.h"
+#include "../include/grav_pot.h"
+#include "../include/cummean.h"
+#include "../include/neighbour_density.h"
 
 #define N 1000
 #define SEED 314159
@@ -18,10 +18,10 @@ int main (void) {
 	float target[N];
 	float EPOT[N];
 
-	//ocl_init(NULL,NULL);
-	//ocl_init_neighbour_density();
-	//ocl_init_grav_pot();
-	//ocl_init_cummean();
+	ocl_init(NULL,NULL);
+	ocl_init_neighbour_density();
+	ocl_init_grav_pot();
+	ocl_init_cummean();
 	srand(SEED);
 
 	
@@ -58,11 +58,11 @@ int main (void) {
 	}
 	printf("\n");
 
-	//grav_pot_ocl(M,X1,X2,X3,EPOT,N);
+	grav_pot_ocl(M,X1,X2,X3,EPOT,N);
 
-	//ocl_free_grav_pot();
-	//ocl_free_cummean();
-	//ocl_free();
+	ocl_free_grav_pot();
+	ocl_free_cummean();
+	ocl_free();
 
 	
 	return 0;

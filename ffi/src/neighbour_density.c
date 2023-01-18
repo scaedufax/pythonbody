@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <math.h>
-#include "ocl.h"
-#include "neighbour_density.h"
+#include "../include/ocl.h"
+#include "../include/neighbour_density.h"
 
 #if HAVE_OMP_H == 1
 int neighbour_density_omp(float *m,

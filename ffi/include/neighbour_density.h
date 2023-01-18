@@ -1,12 +1,12 @@
-#ifndef GRAV_POT_H
-#define GRAV_POT_H
+#ifndef NEIGHBOUR_DENSITY_H
+#define NEIGHBOUR_DENSITY_H
 
 #if HAVE_CL_OPENCL_H == 1
 #include "ocl.h"
 extern cl_program ocl_program_neighbour_density;
 extern cl_kernel ocl_kernel_neighbour_density;
-int ocl_init_neighbour_density(void);
 void ocl_free_neighbour_density(void);
+int ocl_init_neighbour_density(void);
 #endif
 
 int neighbour_density_omp(float *m,

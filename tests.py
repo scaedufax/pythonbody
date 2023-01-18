@@ -22,9 +22,9 @@ if __name__ == "__main__":
         "X3": np.random.rand(N),
         })
     EPOT = {}
-    #EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
-    EPOT_c_funcs = ["unthreaded", "omp"]
-    RHO_N_c_funcs = ["unthreaded", "omp"]
+    EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
+    #EPOT_c_funcs = ["unthreaded", "omp"]
+    RHO_N_c_funcs = ["unthreaded", "omp", "ocl"]
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
         reinit = False

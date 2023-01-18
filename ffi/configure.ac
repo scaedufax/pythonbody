@@ -8,10 +8,12 @@ dnl AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_FILES([Makefile])
 
+AC_PROG_GREP
+
 dnl cuda
 AC_ARG_WITH([cuda],
-			AS_HELP_STRING([--with-cuda=/path/to/cuda], [Specify path to cuda])
-			)
+            AS_HELP_STRING([--with-cuda=/path/to/cuda], [Specify path to cuda])
+	   )
 
 dnl debug
 AC_ARG_ENABLE([debug],
@@ -23,6 +25,20 @@ AS_IF([test x$enable_openmp != "xno"], [
 AC_CHECK_HEADERS([omp.h],[enable_omp=yes])
 ])
 AM_CONDITIONAL([OMP], [test "x$enable_omp" = "xyes"])
+
+dnl check for AVX
+AC_ARG_ENABLE([avx],
+	      AS_HELP_STRING([--enable-avx], ["enable avx"])
+	      )
+AS_IF([test "x$enable_avx" != "xno"],
+      [AS_IF([test `grep -c avx /proc/cpuinfo`],      
+	      [AC_CHECK_HEADER([immintrin.h])
+	       CFLAGS_AVX="-mavx -DAVX"
+	       AC_SUBST([CFLAGS_AVX])],
+	      [CFLAGS_AVX=""],
+	      )
+      ])
+
 
 dnl check for OpenCL
 AS_IF([test "x$with_cuda" != "x"],

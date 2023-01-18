@@ -699,6 +699,7 @@ WITH_CUDA_TRUE
 OPENCL_FALSE
 OPENCL_TRUE
 CFLAGS_AVX
+CFLAGS_OPTIMISATION
 OMP_FALSE
 OMP_TRUE
 DEBUG_FALSE
@@ -4479,6 +4480,45 @@ printf "%s\n" "$ac_cv_prog_c_openmp" >&6; }
 
 
 
+# ===========================================================================
+#  https://www.gnu.org/software/autoconf-archive/ax_check_compile_flag.html
+# ===========================================================================
+#
+# SYNOPSIS
+#
+#   AX_CHECK_COMPILE_FLAG(FLAG, [ACTION-SUCCESS], [ACTION-FAILURE], [EXTRA-FLAGS], [INPUT])
+#
+# DESCRIPTION
+#
+#   Check whether the given FLAG works with the current language's compiler
+#   or gives an error.  (Warnings, however, are ignored)
+#
+#   ACTION-SUCCESS/ACTION-FAILURE are shell commands to execute on
+#   success/failure.
+#
+#   If EXTRA-FLAGS is defined, it is added to the current language's default
+#   flags (e.g. CFLAGS) when the check is done.  The check is thus made with
+#   the flags: "CFLAGS EXTRA-FLAGS FLAG".  This can for example be used to
+#   force the compiler to issue an error when a bad flag is given.
+#
+#   INPUT gives an alternative input source to AC_COMPILE_IFELSE.
+#
+#   NOTE: Implementation based on AX_CFLAGS_GCC_OPTION. Please keep this
+#   macro in sync with AX_CHECK_{PREPROC,LINK}_FLAG.
+#
+# LICENSE
+#
+#   Copyright (c) 2008 Guido U. Draheim <guidod@gmx.de>
+#   Copyright (c) 2011 Maarten Bosmans <mkbosmans@gmail.com>
+#
+#   Copying and distribution of this file, with or without modification, are
+#   permitted in any medium without royalty provided the copyright notice
+#   and this notice are preserved.  This file is offered as-is, without any
+#   warranty.
+
+#serial 6
+
+
 ac_config_files="$ac_config_files Makefile"
 
 
@@ -4628,6 +4668,86 @@ else
 fi
 
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -O3" >&5
+printf %s "checking whether C compiler accepts -O3... " >&6; }
+if test ${ax_cv_check_cflags___O3+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -O3"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags___O3=yes
+else $as_nop
+  ax_cv_check_cflags___O3=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___O3" >&5
+printf "%s\n" "$ax_cv_check_cflags___O3" >&6; }
+if test "x$ax_cv_check_cflags___O3" = xyes
+then :
+  CFLAGS_OPTIMISATION="-O3"
+					  CFLAGS_OPTIMISATION=""
+else $as_nop
+  :
+fi
+
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -std=c99" >&5
+printf %s "checking whether C compiler accepts -std=c99... " >&6; }
+if test ${ax_cv_check_cflags___std_c99+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -std=c99"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags___std_c99=yes
+else $as_nop
+  ax_cv_check_cflags___std_c99=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___std_c99" >&5
+printf "%s\n" "$ax_cv_check_cflags___std_c99" >&6; }
+if test "x$ax_cv_check_cflags___std_c99" = xyes
+then :
+  :
+else $as_nop
+  exit 1
+fi
+
+
 # Check whether --enable-avx was given.
 if test ${enable_avx+y}
 then :
@@ -4636,23 +4756,112 @@ fi
 
 if test "x$enable_avx" != "xno"
 then :
-  if test `grep -c avx /proc/cpuinfo`
+  as_ac_File=`printf "%s\n" "ac_cv_file_"/proc/cpuinfo"" | $as_tr_sh`
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for \"/proc/cpuinfo\"" >&5
+printf %s "checking for \"/proc/cpuinfo\"... " >&6; }
+if eval test \${$as_ac_File+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  test "$cross_compiling" = yes &&
+  as_fn_error $? "cannot check for file existence when cross compiling" "$LINENO" 5
+if test -r ""/proc/cpuinfo""; then
+  eval "$as_ac_File=yes"
+else
+  eval "$as_ac_File=no"
+fi
+fi
+eval ac_res=\$$as_ac_File
+	       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+printf "%s\n" "$ac_res" >&6; }
+if eval test \"x\$"$as_ac_File"\" = x"yes"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking wheter CPU supports AVX" >&5
+printf %s "checking wheter CPU supports AVX... " >&6; }
+			if test `grep -c avx /proc/cpuinfo`
+then :
+  enable_avx="yes"
+elif enable_avx="no"
+then :
+
+fi
+		    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_avx" >&5
+printf "%s\n" "$enable_avx" >&6; }
+else $as_nop
+  enable_avx="no"
+fi
+
+
+fi
+
+if test "x$enable_avx" != "xno"
 then :
   ac_fn_c_check_header_compile "$LINENO" "immintrin.h" "ac_cv_header_immintrin_h" "$ac_includes_default"
 if test "x$ac_cv_header_immintrin_h" = xyes
 then :
-
+  enable_avx="yes"
+else $as_nop
+  enable_avx="no"
 fi
 
-	       CFLAGS_AVX="-mavx -DAVX"
 
-elif CFLAGS_AVX=""
+fi
+if test "x$enable_avx" != "xno"
 then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -mavx" >&5
+printf %s "checking whether C compiler accepts -mavx... " >&6; }
+if test ${ax_cv_check_cflags___mavx+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
 
+  ax_check_save_flags=$CFLAGS
+  CFLAGS="$CFLAGS  -mavx"
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+int
+main (void)
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"
+then :
+  ax_cv_check_cflags___mavx=yes
+else $as_nop
+  ax_cv_check_cflags___mavx=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
+  CFLAGS=$ax_check_save_flags
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ax_cv_check_cflags___mavx" >&5
+printf "%s\n" "$ax_cv_check_cflags___mavx" >&6; }
+if test "x$ax_cv_check_cflags___mavx" = xyes
+then :
+  enable_avx="yes"
+else $as_nop
+  enable_avx="no"
 fi
 
-fi
 
+
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for AVX" >&5
+printf %s "checking for AVX... " >&6; }
+if test "x$enable_avx" != "xno"
+then :
+  CFLAGS_AVX="-mavx -DAVX"
+
+	   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+else $as_nop
+  CFLAGS_AVX=""
+	   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
 
 if test "x$with_cuda" != "x"
 then :

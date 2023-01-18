@@ -28,7 +28,7 @@ AM_CONDITIONAL([OMP], [test "x$enable_omp" = "xyes"])
 
 dnl check for optimization flags
 AX_CHECK_COMPILE_FLAG([-O3],
-					  [CFLAGS_OPTIMISATION="-O3"]
+					  [CFLAGS_OPTIMISATION="-O3"],
 					  [CFLAGS_OPTIMISATION=""])
 AC_SUBST([CFLAGS_OPTIMISATION])
 

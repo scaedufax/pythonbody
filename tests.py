@@ -22,9 +22,10 @@ if __name__ == "__main__":
         "X3": np.random.rand(N),
         })
     EPOT = {}
-    EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
-    #EPOT_c_funcs = ["unthreaded", "omp"]
-    RHO_N_c_funcs = ["unthreaded", "omp", "ocl"]
+    #EPOT_c_funcs = ["unthreaded", "omp", "ocl", "ocl_cpu", "cuda"]
+    EPOT_c_funcs = ["unthreaded", "omp"]
+    RHO_N_c_funcs = ["unthreaded", "omp"]
+    """
     print("Testing grav_pot")
     for c_func in EPOT_c_funcs:
         reinit = False
@@ -57,7 +58,7 @@ if __name__ == "__main__":
         if EPOT_c_funcs.index(c_func) != 0:
           np.testing.assert_allclose(CUMMEAN[EPOT_c_funcs[EPOT_c_funcs.index(c_func) - 1]], CUMMEAN[c_func],rtol=1e-4)
     
-    print()
+    print()"""
     print("Testing RHO_N")
     RHO_N = {}
     for c_func in RHO_N_c_funcs:

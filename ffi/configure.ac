@@ -44,7 +44,7 @@ AC_ARG_ENABLE([avx],
 AS_IF([test "x$enable_avx" != "xno"],
       [AC_CHECK_FILE(["/proc/cpuinfo"],
 		   [AC_MSG_CHECKING([wheter CPU supports AVX])
-			AS_IF([test `grep -c avx /proc/cpuinfo`],      
+			AS_IF([test `grep -c avx /proc/cpuinfo` -gt 0],      
 			      [enable_avx="yes"],
 			      [enable_avx="no"],
 			     )

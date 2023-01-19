@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <math.h>
+
+#if AVX
+#include <immintrin.h>
+#include <string.h>
+#endif
+
 #include "../include/ocl.h"
 #include "../include/neighbour_density.h"
 
@@ -31,16 +37,6 @@ void _neighbour_density_inner_loop(float *m,
             //printf("Star %d: Dropping star %d with dist %f", i,j,dist);
             continue;
         }
-        else if ((dist_list[0] != -1 ) && (dist < dist_list[0])) {
-            for (int k = n_neigh - 1; k > 0; k--) {
-                dist_list[k] = dist_list[k-1];
-                dist_idx_list[k] = dist_idx_list[k-1];
-            }
-            dist_list[0] = dist;
-            dist_idx_list[0] = j;
-            //printf("Star %d: inserting neighbour %d at beginning with distance %f\n",i,j,dist);
-            continue;
-        }
 
         for (int k = 0; k < n_neigh - 1; k++) {
             if ((dist_list[k] == -1) && (dist_idx_list[k] == -1)) {
@@ -49,15 +45,16 @@ void _neighbour_density_inner_loop(float *m,
                 //printf("Star %d: inserting neighbour %d as number %d inserting distance %f (Due to -1 found)\n",i,j,k,dist);
                 break;
             }
-            else if ((dist_list[k] < dist) && ((dist_list[k+1] > dist) || dist_list[k+1] == -1.0)) {
+            else if (dist_list[k] > dist) {
                 /* Found position in index, now moving up */
-                for (int l = n_neigh - 1; l > k + 1; l--) {
+                for (int l = n_neigh - 1; l > k; l--) {
+                    if (dist_list[l-1] == -1) { continue; }
                     dist_list[l] = dist_list[l-1];
                     dist_idx_list[l] = dist_idx_list[l-1];
                 }
                 /* Insert positions */
-                dist_list[k+1] = dist;
-                dist_idx_list[k+1] = j;
+                dist_list[k] = dist;
+                dist_idx_list[k] = j;
                 // printf("Star %d: inserting neightbour %d as number %d inserting distance %f (Found proper position)\n",i,j,k,dist);
                 break;
             }
@@ -73,6 +70,113 @@ void _neighbour_density_inner_loop(float *m,
     /* store averages */
     neighbour_density_n[i] = 1/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
     neighbour_density_m[i] = avg_mass/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
+}
+
+void _neighbour_density_inner_loop_avx(float *m,
+                                       float *x1,
+                                       float *x2,
+                                       float *x3,
+                                       float *neighbour_density_n,
+                                       float *neighbour_density_m,
+                                       float *dist_list,
+                                       int *dist_idx_list,
+                                       int n_neigh,
+                                       int n_tot,
+                                       int i) {
+    __m256 *M = (__m256 *) m;
+    __m256 *X1 = (__m256 *) x1;
+    __m256 *X2 = (__m256 *) x2;
+    __m256 *X3 = (__m256 *) x3;
+
+    float *full_dist_list =(float *) malloc(sizeof(float)*n_tot);
+    __m256 *FULL_DIST_LIST = (__m256 *) full_dist_list;
+
+    __m256 M_i = _mm256_set1_ps(m[i]);
+    __m256 X1_i = _mm256_set1_ps(x1[i]);
+    __m256 X2_i = _mm256_set1_ps(x2[i]);
+    __m256 X3_i = _mm256_set1_ps(x3[i]);
+    for (int j = 0; j < (int) n_tot/8; j++) {
+        __m256 dist_x1 = _mm256_sub_ps(X1_i, X1[j]); 
+        __m256 dist_x2 = _mm256_sub_ps(X2_i, X2[j]); 
+        __m256 dist_x3 = _mm256_sub_ps(X3_i, X3[j]);
+
+        dist_x1 = _mm256_mul_ps(dist_x1, dist_x1);
+        dist_x2 = _mm256_mul_ps(dist_x2, dist_x2);
+        dist_x3 = _mm256_mul_ps(dist_x3, dist_x3);
+
+        __m256 dist = _mm256_add_ps(dist_x1, dist_x2);
+        dist = _mm256_add_ps(dist, dist_x3);
+        memcpy(&FULL_DIST_LIST[j], &dist, 32);
+    }
+    for (int j = 0; j < n_tot; j++) {
+        float dist = full_dist_list[j];
+        if (dist == 0.0) { continue ;}
+        
+        if ((dist_list[n_neigh - 1] != -1) && (dist > dist_list[n_neigh - 1])) {
+            //printf("Star %d: Dropping star %d with dist %f", i,j,dist);
+            continue;
+        }
+
+        for (int k = 0; k < n_neigh - 1; k++) {
+            if ((dist_list[k] == -1) && (dist_idx_list[k] == -1)) {
+                dist_list[k] = dist;
+                dist_idx_list[k] = j;
+                //printf("Star %d: inserting neighbour %d as number %d inserting distance %f (Due to -1 found)\n",i,j,k,dist);
+                break;
+            }
+            else if (dist_list[k] > dist) {
+                /* Found position in index, now moving up */
+                for (int l = n_neigh - 1; l > k; l--) {
+                    if (dist_list[l-1] == -1) { continue; }
+                    dist_list[l] = dist_list[l-1];
+                    dist_idx_list[l] = dist_idx_list[l-1];
+                }
+                /* Insert positions */
+                dist_list[k] = dist;
+                dist_idx_list[k] = j;
+                // printf("Star %d: inserting neightbour %d as number %d inserting distance %f (Found proper position)\n",i,j,k,dist);
+                break;
+            }
+        }
+    }
+    free(full_dist_list);
+    /* calculate averages */
+    float avg_dist = 0;
+    float avg_mass = 0;
+    for (int j = 0; j < n_neigh; j++) {
+        avg_dist += dist_list[j]/n_neigh;
+        avg_mass += m[dist_idx_list[j]]/n_neigh;
+    }
+    /* store averages */
+    neighbour_density_n[i] = 1/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
+    neighbour_density_m[i] = avg_mass/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
+}
+
+void _neighbour_density_reset_lists(float *dist_list, int *dist_idx_list, int n_neigh) {
+    /*#if AVX
+    __m256 *DIST_LIST = (__m256 *) dist_list;
+    __m256i *DIST_IDX_LIST = (__m256i *) dist_idx_list;
+    for (int j = 0; j < (int) n_neigh/8; j++) {
+        printf("%d\n",j);
+        float *test = (float *) &DIST_LIST[j];
+        for (int i = 0; i < 8; i++) {
+            printf("%f ", test[i]);
+            test[i] = -1.;
+        }
+        printf("\n");;
+        _mm256_store_ps((float *) DIST_LIST[j], _mm256_set1_ps(-1.0));
+        _mm256_store_si256(&DIST_IDX_LIST[j], _mm256_set1_epi32(-1));
+        _mm256_set1_ps(-1.);
+        DIST_IDX_LIST[j] = _mm256_set1_epi32(-1);
+        printf("%d\n",j);
+    }
+    #else*/
+    for (int j = 0; j < n_neigh; j++) {
+        dist_list[j] = -1;
+        dist_idx_list[j] = -1;
+    }
+    //#endif
+
 }
 
 #if HAVE_OMP_H == 1
@@ -96,11 +200,7 @@ int neighbour_density_omp(float *m,
         int *dist_idx_list = (int *) malloc(sizeof(int) * n_neigh);
         #pragma omp for
         for (int i = 0; i < n_tot; i++) {
-            /* initialize lists with -1 */
-            for (int j = 0; j < n_neigh; j++) {
-                dist_list[j] = -1;
-                dist_idx_list[j] = -1;
-            }
+            _neighbour_density_reset_lists(dist_list, dist_idx_list, n_neigh);
             _neighbour_density_inner_loop(m, x1, x2, x3, neighbour_density_n, neighbour_density_m, dist_list, dist_idx_list, n_neigh, n_tot, i);
             
             /* free memory */
@@ -124,12 +224,12 @@ int neighbour_density_unthreaded(float *m,
     float *dist_list = (float *) malloc(sizeof(float) * n_neigh);
     int *dist_idx_list = (int *) malloc(sizeof(int) * n_neigh);
     for (int i = 0; i < n_tot; i++) {
-        /* initialize lists with -1 */
-        for (int j = 0; j < n_neigh; j++) {
-            dist_list[j] = -1;
-            dist_idx_list[j] = -1;
-        }
+        _neighbour_density_reset_lists(dist_list, dist_idx_list, n_neigh);
+        //#if AVX
+        //_neighbour_density_inner_loop_avx(m, x1, x2, x3, neighbour_density_n, neighbour_density_m, dist_list, dist_idx_list, n_neigh, n_tot, i);
+        //#else
         _neighbour_density_inner_loop(m, x1, x2, x3, neighbour_density_n, neighbour_density_m, dist_list, dist_idx_list, n_neigh, n_tot, i);
+        //#endif
 
     }
     /* free memory */

@@ -7,7 +7,7 @@
 #include "../include/cummean.h"
 #include "../include/neighbour_density.h"
 
-#define N 1000
+#define N 10
 #define SEED 314159
 
 int main (void) {

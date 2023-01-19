@@ -27,10 +27,15 @@ AC_CHECK_HEADERS([omp.h],[enable_omp=yes])
 AM_CONDITIONAL([OMP], [test "x$enable_omp" = "xyes"])
 
 dnl check for optimization flags
-AX_CHECK_COMPILE_FLAG([-O3],
-					  [CFLAGS_OPTIMISATION="-O3"],
-					  [CFLAGS_OPTIMISATION=""])
-AC_SUBST([CFLAGS_OPTIMISATION])
+AC_ARG_ENABLE([compiler_optimisation],
+			  AS_HELP_STRING([--enable-compiler-optimisation], ["enable compiler optimisation (-03)"])
+			  )
+AS_IF([test "x$enable_compiler_optimisation" != "xno"],
+	  [AX_CHECK_COMPILE_FLAG([-O3],
+	                         [CFLAGS_OPTIMISATION="-O3"],
+		                     [CFLAGS_OPTIMISATION=""])
+       AC_SUBST([CFLAGS_OPTIMISATION])]
+	  )
 
 dnl check -std=c99 flag
 AX_CHECK_COMPILE_FLAG([-std=c99],

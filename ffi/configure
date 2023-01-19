@@ -800,6 +800,7 @@ enable_silent_rules
 enable_openmp
 with_cuda
 enable_debug
+enable_compiler_optimisation
 enable_avx
 enable_shared
 enable_static
@@ -1454,6 +1455,9 @@ Optional Features:
   --disable-silent-rules  verbose build output (undo: "make V=0")
   --disable-openmp        do not use OpenMP
   --enable-debug          "enable debugging info"
+  --enable-compiler-optimisation
+                          "enable compiler optimisation (-03)"
+
   --enable-avx            "enable avx"
 
   --enable-shared[=PKGS]  build shared libraries [default=yes]
@@ -4668,7 +4672,15 @@ else
 fi
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -O3" >&5
+# Check whether --enable-compiler_optimisation was given.
+if test ${enable_compiler_optimisation+y}
+then :
+  enableval=$enable_compiler_optimisation;
+fi
+
+if test "x$enable_compiler_optimisation" != "xno"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -O3" >&5
 printf %s "checking whether C compiler accepts -O3... " >&6; }
 if test ${ax_cv_check_cflags___O3+y}
 then :
@@ -4707,6 +4719,8 @@ else $as_nop
 fi
 
 
+
+fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether C compiler accepts -std=c99" >&5
 printf %s "checking whether C compiler accepts -std=c99... " >&6; }
@@ -4777,7 +4791,7 @@ if eval test \"x\$"$as_ac_File"\" = x"yes"
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking wheter CPU supports AVX" >&5
 printf %s "checking wheter CPU supports AVX... " >&6; }
-			if test `grep -c avx /proc/cpuinfo`
+			if test `grep -c avx /proc/cpuinfo` -gt 0
 then :
   enable_avx="yes"
 elif enable_avx="no"

@@ -9,6 +9,7 @@ from .nbody import nbody
 
 def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               ref_run: nbody = None,
+                              ref_run_time_scale: float = 1.,
                               path: str = "./",
                               scatter_kw_args: dict = {},
                               base_file_name: str = "",
@@ -26,6 +27,8 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :type run: nbody
     :param ref_run: adds a reference plot below the main one
     :type ref_run: nbody
+    :param ref_run_time_scale: Scale the time to be loaded for the ref run by this factor
+    :type ref_run_time_scale: float
     :param path: where to store the the output plots
     :type path: str
     :param scatter_kw_args: arguments to pass to scatter
@@ -58,6 +61,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                        lock=lock,
                        run=run,
                        ref_run=ref_run,
+                       ref_run_time_scale=ref_run_time_scale,
                        path=path,
                        scatter_kw_args=scatter_kw_args,
                        base_file_name=base_file_name,
@@ -71,7 +75,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
             # make sure to have nice tqdm output
             max_time = run.snap.snap_data.index.values.max()
             if ref_run is not None:
-                max_time = min(max_time, ref_run.snap.snap_data.index.values.max())
+                max_time = int(min(max_time, ref_run.snap.snap_data.index.values.max()/ref_run_time_scale))
             mask = run.snap.snap_data.index.values <= max_time
             _total = mask.sum()
             with tqdm(total=_total) as pbar:
@@ -98,6 +102,7 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                               path: str,
                               scatter_kw_args: dict,
                               ref_run: nbody = None,
+                              ref_run_time_scale: int = 1,
                               base_file_name: str = "",
                               image_ext: str = "png",
                               xlim: tuple = None,
@@ -109,7 +114,7 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
     # load time step (also in ref cluster!)
     run.snap.load_cluster(time)
     if ref_run is not None:
-        ref_run.snap.load_cluster(time)
+        ref_run.snap.load_cluster(time*ref_run_time_scale)
 
     if (("NEIGHBOUR_RHO_M" not in run.snap.cluster_data.columns)
         or ("NEIGHBOUR_RHO_N" not in run.snap.cluster_data.columns)
@@ -186,10 +191,11 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
             axes[2].set_ylim(*ylim)
             axes[3].set_ylim(*ylim)
 
-    for ax in axes:
+    for i, ax in enumerate(axes):
         ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
+        ax.set_title(f"{'X1-X2' if i % 2 == 0 else 'X1-X3'} at time = {time if i < 2 else time * ref_run_time_scale}")
 
-    fig.suptitle(f"Time = {time}")
+    #fig.suptitle(f"Time = {time}")
     fig.tight_layout()
 
     max_time = run.snap.snap_data.index.max()

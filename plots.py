@@ -124,15 +124,24 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
             lock.acquire()
             try:
                 run.snap.cluster_data.calc_NEIGHBOUR_RHO()
-                if ref_run is not None:
-                    ref_run.snap.cluster_data.calc_NEIGHBOUR_RHO()
-
                 if save_neighbour_rho_to_snap:
                     run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
                                         "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
-                    if ref_run is not None:
-                        ref_run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
-                                                "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
+            finally:
+                lock.release()
+    
+    if (ref_run is not None
+        and (("NEIGHBOUR_RHO_M" not in ref_run.snap.cluster_data.columns)
+        or ("NEIGHBOUR_RHO_N" not in ref_run.snap.cluster_data.columns)
+        or force_neighbour_rho_recalc)):
+
+        if lock is not None:
+            lock.acquire()
+            try:
+                ref_run.snap.cluster_data.calc_NEIGHBOUR_RHO()
+                if save_neighbour_rho_to_snap:
+                    ref_run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
+                                            "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
             finally:
                 lock.release()
     

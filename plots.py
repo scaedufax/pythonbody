@@ -52,7 +52,13 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     """
     
     # get number of processors if nothing was passend
-    n_procs = mp.cpu_count() if n_procs is None else n_procs
+    if n_procs is None:
+        n_procs = mp.cpu_count()
+        # leave 1 cpu idle (or 2 cpus if there are more than ten!)
+        if n_procs > 2:
+            n_procs -= 1
+        if n_procs > 10:
+            n_procs -= 1
 
     with mp.Manager() as manager:
         # Initialise lock and function

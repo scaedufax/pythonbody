@@ -160,7 +160,7 @@ class FFI:
             raise ValueError("OpenCL only allows n_neigh to be equal to 80!")
 
         if c_func is None or c_func.lower() == "auto":
-            c_func = self.default_cfunc
+            c_func = "omp"
         if omp_n_procs is not None:
             c_func = "omp"
 

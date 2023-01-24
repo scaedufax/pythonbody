@@ -346,7 +346,7 @@ int neighbour_density_ocl(float *m,
     err |= clEnqueueWriteBuffer(ocl_queue, l_nd_m, CL_TRUE, 0,
                                    bytes, neighbour_density_m, 0, NULL, NULL);
 
-    CL_SUCCESS_OR_RETURN(err, "clEngueueWriteBuffer");
+    CL_SUCCESS_OR_RETURN(err, "clEnqueueWriteBuffer");
     
     // Set the arguments to our compute kernel
     err  = clSetKernelArg(ocl_kernel_neighbour_density, 0, sizeof(cl_mem), &l_m);

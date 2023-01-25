@@ -11,6 +11,8 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               ref_run: nbody = None,
                               ref_run_time_scale: float = 1.,
                               path: str = "./",
+                              run_title: str = None,
+                              ref_run_title: str = None,
                               scatter_kw_args: dict = {},
                               base_file_name: str = "",
                               image_ext: str = "png",
@@ -31,6 +33,10 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :type ref_run_time_scale: float
     :param path: where to store the the output plots
     :type path: str
+    :param run_title: Title to put above plots referring to the run
+    :type run_title: str
+    :param ref_run_title: Title to put above plots referring to the reference run
+    :type ref_run_title: str
     :param scatter_kw_args: arguments to pass to scatter
     :type scatter_kw_args: dict
     :param base_file_name: Prepend to file name
@@ -48,7 +54,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :param force_neighbour_rho_recalc: Force recalculation of neighbour_rho data
     :type force_neighbour_rho_recalc: bool
     :param n_procs: number of processes to use during multiprocessing
-    :type n_procs: int:
+    :type n_procs: int
     """
     
     # get number of processors if nothing was passend
@@ -69,6 +75,8 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                        ref_run=ref_run,
                        ref_run_time_scale=ref_run_time_scale,
                        path=path,
+                       run_title=run_title,
+                       ref_run_title=ref_run_title,
                        scatter_kw_args=scatter_kw_args,
                        base_file_name=base_file_name,
                        image_ext=image_ext,
@@ -109,6 +117,8 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                               scatter_kw_args: dict,
                               ref_run: nbody = None,
                               ref_run_time_scale: int = 1,
+                              run_title: str = None,
+                              ref_run_title: str = None,
                               base_file_name: str = "",
                               image_ext: str = "png",
                               xlim: tuple = None,
@@ -208,7 +218,9 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
 
     for i, ax in enumerate(axes):
         ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
-        ax.set_title(f"{'X1-X2' if i % 2 == 0 else 'X1-X3'} at time = {time if i < 2 else time * ref_run_time_scale}")
+        plot_title = run_title if i < 2 else ref_run_title
+        ax.set_title(f"{'X1-X2' if i % 2 == 0 else 'X1-X3'} {plot_title + ' ' if plot_title is not None else ''}at time = {time if i < 2 else time * ref_run_time_scale}")
+        
 
     #fig.suptitle(f"Time = {time}")
     fig.tight_layout()

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <math.h>
+#include <assert.h>
+#include <float.h>
 
 #if AVX
 #include <immintrin.h>
@@ -30,6 +32,11 @@ void _neighbour_density_inner_loop(float *m,
             continue;
         }
         float dist = (x1[i] - x1[j]) * (x1[i] - x1[j]) + (x2[i] - x2[j]) * (x2[i] - x2[j]) + (x3[i] - x3[j]) * (x3[i] - x3[j]);
+		if (dist == 0.) {
+			dist = FLT_MIN;
+		}
+		assert(dist > 0.);
+		
         //printf("Star %d, looking at neighbour %d with distance %f\n",i,j,dist);
         
         /* continue if distance is too large! */
@@ -68,8 +75,19 @@ void _neighbour_density_inner_loop(float *m,
         avg_mass += m[dist_idx_list[j]]/n_neigh;
     }
     /* store averages */
-    neighbour_density_n[i] = 1/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
-    neighbour_density_m[i] = avg_mass/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
+    neighbour_density_n[i] = 1/(4./3.*3.14159*sqrt(avg_dist*avg_dist*avg_dist));
+    neighbour_density_m[i] = avg_mass/(4./3.*3.14159*sqrt(avg_dist*avg_dist*avg_dist));
+	if (neighbour_density_n[i] <= 0.) {
+		printf("i=%d dens_n=%f avg_dist=%f", i, neighbour_density_n[i], avg_dist);
+	}
+	if (neighbour_density_n[i] == 0.) {
+		neighbour_density_n[i] = FLT_MIN;
+	}
+	if (neighbour_density_m[i] == 0.) {
+		neighbour_density_m[i] = FLT_MIN;
+	}
+	/*assert(neighbour_density_n[i] > 0.);
+	assert(neighbour_density_m[i] > 0.);*/
 }
 
 void _neighbour_density_inner_loop_avx(float *m,
@@ -148,8 +166,8 @@ void _neighbour_density_inner_loop_avx(float *m,
         avg_mass += m[dist_idx_list[j]]/n_neigh;
     }
     /* store averages */
-    neighbour_density_n[i] = 1/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
-    neighbour_density_m[i] = avg_mass/(4./3.*3.14159*avg_dist*avg_dist*avg_dist);
+    neighbour_density_n[i] = 1/(4./3.*3.14159*sqrt(avg_dist*avg_dist*avg_dist));
+    neighbour_density_m[i] = avg_mass/(4./3.*3.14159*sqrt(avg_dist*avg_dist*avg_dist));
 }
 
 void _neighbour_density_reset_lists(float *dist_list, int *dist_idx_list, int n_neigh) {

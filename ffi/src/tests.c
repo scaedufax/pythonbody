@@ -28,8 +28,6 @@ int main (void) {
 	#endif*/
 	srand(SEED);
 
-	
-
 	for (int i = 0; i < N; i++) {
 		M[i] = (float) rand()/RAND_MAX;
 		X1[i] = (float) rand()/RAND_MAX;

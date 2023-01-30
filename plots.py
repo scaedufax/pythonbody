@@ -6,6 +6,8 @@ from functools import partial
 
 from .nbody import nbody
 
+DEBUG = True
+
 
 def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               ref_run: nbody = None,
@@ -18,8 +20,10 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               image_ext: str = "png",
                               xlim: tuple = None,
                               ylim: tuple = None,
+                              n_neigh: int = 80,
                               save_neighbour_rho_to_snap: bool = True,
                               force_neighbour_rho_recalc: bool = False,
+                              trace_particle_j: int = None,
                               n_procs: int = None,
                               ):
     """
@@ -48,11 +52,14 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :type xlim: tuple
     :param ylim: set y-range for scatter plot
     :type ylim: tuple
+    :param n_neigh: use `n_neigh` neighbour for `NEIGHBOUR_RHO` calculation
     :param save_neighbour_rho_to_snap: As Neighbour_rho needs to be calculated
         anyway here, this can be used to save them to the snap files!
     :type save_neighbour_rho_to_snap: bool
     :param force_neighbour_rho_recalc: Force recalculation of neighbour_rho data
     :type force_neighbour_rho_recalc: bool
+    :param trace_particle_j: trace particle by index J used in Nbody
+    :type trace_particle_j: int
     :param n_procs: number of processes to use during multiprocessing
     :type n_procs: int
     """
@@ -82,8 +89,10 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                        image_ext=image_ext,
                        xlim=xlim,
                        ylim=ylim,
+                       n_neigh=n_neigh,
                        save_neighbour_rho_to_snap=save_neighbour_rho_to_snap,
-                       force_neighbour_rho_recalc=force_neighbour_rho_recalc)
+                       force_neighbour_rho_recalc=force_neighbour_rho_recalc,
+                       trace_particle_j=trace_particle_j)
         # start pool
         with mp.Pool(processes=n_procs) as pool:
             # make sure to have nice tqdm output
@@ -123,8 +132,10 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                               image_ext: str = "png",
                               xlim: tuple = None,
                               ylim: tuple = None,
+                              n_neigh: int = 80,
                               save_neighbour_rho_to_snap: bool = True,
                               force_neighbour_rho_recalc: bool = False,
+                              trace_particle_j: int = None,
                               ):
 
     # load time step (also in ref cluster!)
@@ -139,7 +150,20 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
         if lock is not None:
             lock.acquire()
             try:
-                run.snap.cluster_data.calc_NEIGHBOUR_RHO()
+                run.snap.cluster_data.calc_NEIGHBOUR_RHO(n_neigh=n_neigh)
+                if DEBUG:
+                    print(f"NEIGHBOUR_RHO_M at time = {time}: "
+                          f"mean: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_M']).mean():.03f} +- "
+                          f"{np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_M']).std():.03f} "
+                          f"min: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_M']).min():.03f} "
+                          f"max: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_M']).max():.03f} "
+                          )
+                    print(f"NEIGHBOUR_RHO_N at time = {time}: "
+                          f"mean: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_N']).mean():.03f} +- "
+                          f"{np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_N']).std():.03f} "
+                          f"min: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_N']).min():.03f} "
+                          f"max: {np.log10(run.snap.cluster_data['NEIGHBOUR_RHO_N']).max():.03f} "
+                          )
                 if save_neighbour_rho_to_snap:
                     run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
                                         "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
@@ -154,7 +178,20 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
         if lock is not None:
             lock.acquire()
             try:
-                ref_run.snap.cluster_data.calc_NEIGHBOUR_RHO()
+                ref_run.snap.cluster_data.calc_NEIGHBOUR_RHO(n_neigh=n_neigh)
+                if DEBUG:
+                    print(f"ref NEIGHBOUR_RHO_M at time = {time}: "
+                          f"mean: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_M']).mean():.03f} +- "
+                          f"{np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_M']).std():.03f} "
+                          f"min: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_M']).min():.03f} "
+                          f"max: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_M']).max():.03f} "
+                          )
+                    print(f"ref NEIGHBOUR_RHO_N at time = {time}: "
+                          f"mean: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_N']).mean():.03f} +- "
+                          f"{np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_N']).std():.03f} "
+                          f"min: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_N']).min():.03f} "
+                          f"max: {np.log10(ref_run.snap.cluster_data['NEIGHBOUR_RHO_N']).max():.03f} "
+                          )
                 if save_neighbour_rho_to_snap:
                     ref_run.snap.save_cols({"NEIGHBOUR_RHO_N": "PNB_CD_NEIGHBOUR_RHO_N",
                                             "NEIGHBOUR_RHO_M": "PNB_CD_NEIGHBOUR_RHO_M"})
@@ -183,6 +220,16 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                     run.snap.cluster_data["X3"],
                     c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
                     **scatter_kw_args)
+    
+    if (trace_particle_j is not None 
+        and run.snap.cluster_data.index.shape[0] >= trace_particle_j):
+
+        axes[0].scatter(run.snap.cluster_data.loc[trace_particle_j - 1, "X1"],
+                        run.snap.cluster_data.loc[trace_particle_j - 1, "X2"],
+                        c="r")
+        axes[1].scatter(run.snap.cluster_data.loc[trace_particle_j - 1, "X1"],
+                        run.snap.cluster_data.loc[trace_particle_j - 1, "X3"],
+                        c="r")
 
     axes[0].set_xlabel("X1")
     axes[0].set_ylabel("X2")

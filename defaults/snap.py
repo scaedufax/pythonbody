@@ -96,6 +96,8 @@ cluster_col_map = {
     "K*": "031 KW",
     "NAME": "032 Name",
     "Type": "033 Type",
+    "ASPN": "035 ASPN",
+    "RHO": "036 RHO",
     }
 time_evolution_cluster_cols = [
     "M",

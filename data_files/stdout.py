@@ -10,6 +10,8 @@ from tqdm import tqdm
 import numpy as np
 # import multiprocessing as mp
 
+AUTO_LOAD = True
+
 COLS = None
 
 

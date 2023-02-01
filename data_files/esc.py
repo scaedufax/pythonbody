@@ -7,6 +7,8 @@ import re
 
 from .data_file import DataFile as pbdf
 
+AUTO_LOAD = True
+
 COLS = None
 
 REGEX = None

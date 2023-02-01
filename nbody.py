@@ -10,8 +10,10 @@ from .cluster import cluster
 from . import data_files
 
 
-SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))]
-SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))}
+#SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))]
+SUPPORTED_DATA_FILES = [i for i in dir(data_files) if ((i[:2] != "__") and eval(f"data_files.{i}.AUTO_LOAD"))]
+#SUPPORTED_COLS = {i: eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and (i != "pythonbody") and ((i != "data_file") and (i != "pbdf")))}
+SUPPORTED_DATA_COLS = [eval(f"data_files.{i}").COLS for i in dir(data_files) if ((i[:2] != "__") and eval(f"data_files.{i}.AUTO_LOAD"))]
 CALCABLE_DATA = {key: [i for i in eval(f"dir(data_files.{key})") if "calc_" in i] for key in SUPPORTED_DATA_FILES}
 
 

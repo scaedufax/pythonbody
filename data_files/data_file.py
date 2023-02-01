@@ -2,6 +2,9 @@ import pandas as pd
 import ast
 from pythonbody import data_files
 
+AUTO_LOAD = False
+
+COLS = None
 
 class DataFile(pd.DataFrame):
     """
@@ -10,6 +13,7 @@ class DataFile(pd.DataFrame):
     will calculate a missing column if calc_{NAME} is available in the
     referenced file type.
     """
+    AUTO_LOAD = False
     def __init__(self, name: str = None, *args):
         super().__init__(*args)
         self.__name__ = name

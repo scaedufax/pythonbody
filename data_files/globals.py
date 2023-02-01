@@ -3,6 +3,8 @@ import pathlib
 import os
 import errno
 
+AUTO_LOAD = True
+
 COLS = ["TIME[NB]", "TIME[Myr]", "TCR[Myr]", "DE", "BE(3)", "RSCALE[PC]", "RTIDE[PC]", "RDENS[PC]", "RC[PC]", "RHOD[M*/PC3]", "RHOM[M*/PC3]", "MC[M*]", "CMAX", "⟨Cn⟩", "Ir/R", "RCM[NB]", "VCM[NB]", "AZ", "EB/E", "EM/E", "VRMS[km/s]", "N", "NS", "NPAIRS", "NUPKS", "NPKS", "NMERGE", "MULT", "⟨NB⟩", "NC", "NESC", "NSTEPI", "NSTEPB", "NSTEPR", "NSTEPU", "NSTEPT", "NSTEPQ", "NSTEPC", "NBLOCK", "NBLCKR", "NNPRED", "NIRRF", "NBCORR", "NBFLUX", "NBFULL", "NBVOID", "NICONV", "NLSMIN", "NBSMIN", "NBDIS", "NBDIS2", "NCMDER", "NFAST", "NBFAST", "NKSTRY", "NKSREG", "NKSHYP", "NKSPER", "NKSMOD", "NTTRY", "NTRIP", "NQUAD", "NCHAIN", "NMERG", "NEWHI"]
 
 REGEX = None

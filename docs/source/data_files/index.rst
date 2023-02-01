@@ -10,3 +10,4 @@ data_files (ANSI Output)
    globals.rst
    lagr.rst
    stdout.rst
+   conf.rst

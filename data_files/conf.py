@@ -20,8 +20,25 @@ class conf():
     .. code-block:: python
         
         >>> from pythonbody.data_files import conf
+        # load entire project
         >>> c = conf("/path/to/nbody/run")
-        >>> c.load(0)
+        # look at available files
+        >>> c.files
+                   time                           file 
+        0.0        0.0     /path/to/nbody/run/conf.3_0 
+        1.0        1.0     /path/to/nbody/run/conf.3_1 
+        2.0        2.0     /path/to/nbody/run/conf.3_2 
+        3.0        3.0     /path/to/nbody/run/conf.3_3 
+        4.0        4.0     /path/to/nbody/run/conf.3_4
+        ...        ...                             ... 
+        1147.0  1147.0  /path/to/nbody/run/conf.3_1147 
+        1148.0  1148.0  /path/to/nbody/run/conf.3_1148 
+        1149.0  1149.0  /path/to/nbody/run/conf.3_1149 
+        1150.0  1150.0  /path/to/nbody/run/conf.3_1150 
+        1151.0  1151.0  /path/to/nbody/run/conf.3_1151
+        >>> c.load(0) # loads conf.3_0
+        # alternative just load a file
+        >>> c = conf("/path/to/nbody/run/conf.3_0")
         >>> c.scalars
         {'NTOT': 1000,  'MODEL': 1,  'NRUN': 1,  'NK': 20,  'TIME': 0.0,  'NPAIRS': 0.0,  'RBAR': 1.0,  'ZMBAR': 604.2362670898438,  'RTIDE': 13.855620384216309,  'TIDAL4': 0.022379951551556587,  'RDENS1': -0.02988378144800663,  'RDENS2': 0.017876293510198593,  'RDENS3': 0.08017675578594208,  'TIME/TCR': 0.0,  'TSCALE': 0.6076550483703613,  'VSTAR': 1.6120661497116089,  'RC': 0.2905365228652954,  'NC': 81.0,  'VC': 0.7904078960418701,  'RHOM': 2.732787847518921,  'CMAX': 7.402853012084961,  'RSCALE': 0.7310086488723755,  'RSMIN': 100.0,  'DMIN1': 100.0}
         >>> c.data
@@ -42,7 +59,7 @@ class conf():
     AUTO_LOAD = False
     def __init__(self, data_path):
         self._files = pd.DataFrame(columns=["time", "file"])
-        if data_path is not None and not pathlib.Path(data_path).is_dir():
+        if data_path is not None and not pathlib.Path(data_path).is_dir() and not pathlib.Path(data_path).is_file():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
 
@@ -85,6 +102,9 @@ class conf():
 
         self._conf_data = None
         self._conf_scalars = None
+        
+        if pathlib.Path(self.data_path).is_file():
+            self._load_file(self.data_path)
 
     def __getitem__(self, value):
         """
@@ -128,23 +148,16 @@ class conf():
     def files(self):
         return self._files
 
-    def load(self, time: float):
-        """
-        load conf file at a given time step
-
-        :param time: time in Nbody units to load
-        """
-        if time not in self._files.index:
-            raise KeyError(f"Couldn't find file according to time {time} see conf.files for files")
-        if not pathlib.Path(self._files.loc[time,"file"]).is_file():
-            raise IOError(f"Couldn't find {self._files.loc[time,'file']}. Does it exist?")
-
-        self.time = time
+    def _load_file(self, file: str, time: float = None):
+        if time is not None:
+            self.time = time
+        else:
+            self.time = float(file[file.rfind("/")+1:].replace("conf.3_", ""))
 
         self._conf_scalars = {}
 
         data = None
-        with open(self._files.loc[time,"file"], "rb") as conf_file:
+        with open(file, "rb") as conf_file:
             data = conf_file.read()
 
         for scalar in self._scalar_map.keys():
@@ -183,3 +196,18 @@ class conf():
             "POT": POT,
             "NAME": NAME
             })
+        return self.data
+
+    def load(self, time: float):
+        """
+        load conf file at a given time step
+
+        :param time: time in Nbody units to load
+        """
+        if time not in self._files.index:
+            raise KeyError(f"Couldn't find file according to time {time} see conf.files for files")
+        if not pathlib.Path(self._files.loc[time,"file"]).is_file():
+            raise IOError(f"Couldn't find {self._files.loc[time,'file']}. Does it exist?")
+
+        return self._load_file(self._files.loc[time,'file'], time)
+

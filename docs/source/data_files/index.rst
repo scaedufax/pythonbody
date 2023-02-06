@@ -11,3 +11,4 @@ data_files (ANSI Output)
    lagr.rst
    stdout.rst
    conf.rst
+   comm.rst

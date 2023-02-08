@@ -57,6 +57,7 @@ class comm():
         self.data_path = data_path
 
         self.time = None
+        self._byte_data = None
         
         if self.data_path is not None:
             files = sorted(glob.glob(self.data_path + "/comm.2_*"))
@@ -65,25 +66,33 @@ class comm():
             self._files["time"] = time
             self._files.index = time
             self._files = self.files.sort_index()
-
+        
         # mapping of integer values at beginning
-        self._imap = {
-                4: "NMAX",
-                8: "KMAX",
-                12: "LMAX",
-                16: "MMAX",
-                20: "MLD",
-                24: "MLR",
-                28: "MLV",
-                32: "MCL",
-                36: "NCMAX",
-                40: "NTMAX",
-                52: "ntot",
-                56: "npairs",
-                60: "nttot",
-                }
+        # for later values we need the data here!
+        # see _update_byte_map_with_scalars()
+        self._value_map = [
+                {"name": "offset1", "n": 1, "type": "i"},
+                {"name": "NMAX", "n": 1, "type": "i"},
+                {"name": "KMAX", "n": 1, "type": "i"},
+                {"name": "LMAX","n": 1, "type": "i"},
+                {"name": "MMAX", "n": 1, "type": "i"},
+                {"name": "MLD", "n": 1, "type": "i"},
+                {"name": "MLR", "n": 1, "type": "i"},
+                {"name": "MLV", "n": 1, "type": "i"},
+                {"name": "MCL", "n": 1, "type": "i"},
+                {"name": "NCMAX", "n": 1, "type": "i"},
+                {"name": "NTMAX", "n": 1, "type": "i"},
+                {"name": "offset2", "n": 1, "type": "d"},
+                {"name": "ntot", "n": 1, "type": "i"},
+                {"name": "npairs", "n": 1, "type": "i"},
+                {"name": "nttot", "n": 1, "type": "i"},
+                {"name": "ia", "n": 85, "type": "i"},
+                {"name": "b", "n": 168, "type": "f"},
+                {"name": "c", "n": 530, "type": "f"},
+        ]
         self._fmap = None
-        self._byte_map = None 
+        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._init_byte_map()
 
         self._data_offset = 16
 
@@ -135,31 +144,203 @@ class comm():
     def files(self):
         return self._files
 
-    def _gen_fmap(self, f_offset: int = 64):
-        if self.scalars is None:
-            raise KeyError("scalars are not available! did you load some data?")
-        if self._fmap is None:
-            self._fmap = {}
+    def _init_byte_map(self):
+        self._byte_map_data_types()
+        self._byte_map_t.loc[:, "bytes_tot"] = pd.to_numeric(self._byte_map_t["bytes_data_type"] * self._byte_map_t["n"], downcast="signed")
+        self._byte_map_t.loc[:, "bytes_start"] = 0
+        self._byte_map_t.loc[:, "bytes_end"] = self._byte_map_t["bytes_tot"].cumsum() 
+        self._byte_map_t.loc[:, "bytes_start"] = self._byte_map_t["bytes_end"] - self._byte_map_t["bytes_tot"]
+        
+    def _byte_map_data_types(self):
+        self._byte_map_t.loc[self._byte_map_t["type"] == "i", "bytes_data_type"] = 4
+        self._byte_map_t.loc[self._byte_map_t["type"] == "f", "bytes_data_type"] = 4
+        self._byte_map_t.loc[self._byte_map_t["type"] == "d", "bytes_data_type"] = 8
+        self._byte_map_t["bytes_data_type"] = pd.to_numeric(self._byte_map_t["bytes_data_type"], downcast="signed")
 
-        self._foutput = [
-                ["ia", "i", 85],
-                ["b", "f", 168],
-                ["c", "f", 530],
-                ["d", "f", 381 + self.scalars["MLR"] + self.scalars["MLD"] + self.scalars["MLV"]],
-                ["e","f",24],
-                ["g", "f", 132],
-                ["l", "f", 99],
-                ["m", "f", 40],
-                ["o", "f", 20 * self.scalars["MCL"] + 16],
-                ["p", "f", 32 * self.scalars["NTMAX"]],
-                ["q", "f", 31 * self.scalars["MMAX"]],
-                ["s", "f", 44 * self.scalars["MMAX"]],
+    def _update_byte_map_with_scalars(self):
+        ntot = self.scalars["ntot"]
+        self._value_map += [
+                {"name": "d", "n": 381 + self.scalars["MLR"] + self.scalars["MLD"] + self.scalars["MLV"], "type": "f"},
+                {"name": "e", "n": 24, "type": "f"},
+                {"name": "g", "n": 132, "type": "f"},
+                {"name": "l", "n": 99, "type": "f"},
+                {"name": "m", "n": 40, "type": "f"},
+                {"name": "o", "n": 20 * self.scalars["MCL"] + 16, "type": "f"},
+                {"name": "p", "n": 32 * self.scalars["NTMAX"], "type": "f"},
+                {"name": "q", "n": 31 * self.scalars["MMAX"], "type": "f"},
+                {"name": "s", "n": 44 * self.scalars["MMAX"], "type": "f"},
+                {"name": "offset3", "n": 1, "type": "d"},
+                {"name": "X123", "n": 3 * ntot, "type": "d"},
+                {"name": "X0123", "n": 3 * ntot, "type": "d"},
+                {"name": "V0123", "n": 3 * ntot, "type": "d"},
+                {"name": "V123", "n": 3 * ntot, "type": "d"},
+                {"name": "F123", "n": 3 * ntot, "type": "d"},
+                {"name": "FDOT123", "n": 3 * ntot, "type": "d"},
+                {"name": "M", "n": ntot, "type": "d"},
+                {"name": "RS", "n": ntot, "type": "d"},
+                {"name": "FI123", "n": 3 * ntot, "type": "d"},
+                {"name": "D1_123", "n": 3 * ntot, "type": "d"},
+                {"name": "D2_123", "n": 3 * ntot, "type": "d"},
+                {"name": "D3_123", "n": 3 * ntot, "type": "d"},
+                {"name": "FR123", "n": 3 * ntot, "type": "d"},
+                {"name": "D1R_123", "n": 3 * ntot, "type": "d"},
+                {"name": "D2R_123", "n": 3 * ntot, "type": "d"},
+                {"name": "D3R_123", "n": 3 * ntot, "type": "d"},
+                {"name": "STEP", "n": ntot, "type": "d"},
+                {"name": "T0", "n": ntot, "type": "d"},
+                {"name": "STEPR", "n": ntot, "type": "d"},
+                {"name": "T0R", "n": ntot, "type": "d"},
+                {"name": "TIMENW", "n": ntot, "type": "d"},
+                {"name": "RADIUS", "n": ntot, "type": "d"},
+                {"name": "TEV", "n": ntot, "type": "d"},
+                {"name": "TEV0", "n": ntot, "type": "d"},
+                {"name": "BODY0", "n": ntot, "type": "d"},
+                {"name": "EPOCH", "n": ntot, "type": "d"},
+                {"name": "spin", "n": ntot, "type": "d"},
+                {"name": "xstar", "n": ntot, "type": "d"},
+                {"name": "zlmsty", "n": ntot, "type": "d"},
+                {"name": "FIDOT123", "n": 3*ntot, "type": "d"},
+                {"name": "D0_123", "n": 3*ntot, "type": "d"},
+                {"name": "FRDOT123", "n": 3*ntot, "type": "d"},
+                {"name": "D0R_123", "n": 3*ntot, "type": "d"},
+                {"name": "KSTAR", "n": ntot, "type": "i"},
+                {"name": "IMINR", "n": ntot, "type": "i"},
+                {"name": "NAME", "n": ntot, "type": "i"},
+
                 ]
-        for i, d in enumerate(self._foutput):
-            current_offset = 0
-            for j, dj in enumerate(self._foutput[:i]):
-                current_offset += dj[2]*4
-            self._fmap[f_offset + current_offset] = d
+        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._init_byte_map()
+
+    def _load_scalars_init(self):
+        """
+        loads a few scalars at first, as we later need further scalars!
+        """
+        if self._byte_map_t.shape[0] == 0:
+            raise ValueError("Did you load some data?")
+
+        for i, r in self._byte_map_t[self._byte_map_t["type"] == "i"].iterrows():
+            val = None
+            if r["n"] == 1:
+                val = struct.unpack("i", self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
+            else:
+                val = np.array(struct.unpack("i"*r["n"], self._byte_data[r["bytes_start"]:r["bytes_end"]]))
+            self._comm_scalars[r["name"]] = val
+    
+    def _load_scalars(self):
+        """
+        loads all scalars after unpacking the first few!
+        """
+        if self._byte_map_t.shape[0] < 27:
+            raise ValueError("Did you load some data?")
+
+        for i, r in self._byte_map_t[:27].iterrows():
+            val = None
+            if r["n"] == 1:
+                val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
+            else:
+                val = np.array(struct.unpack(r["type"]*r["n"], self._byte_data[r["bytes_start"]:r["bytes_end"]]))
+            self._comm_scalars[r["name"]] = val
+
+    def _load_cluster_data(self):
+        if self._byte_map_t.shape[0] < 28:
+            raise ValueError("Did you load some data?")
+
+        data = {}
+
+        for i, r in self._byte_map_t[28:].iterrows():
+            val = None
+            if r["n"] == 1:
+                val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
+            else:
+                val = np.array(struct.unpack(r["type"]*r["n"], self._byte_data[r["bytes_start"]:r["bytes_end"]]))
+
+            if r["name"][-3:] == "123":
+                base_name = r["name"][:-3]
+                for j in range(1, 4):
+                    exec(f"data['{base_name}{j}'] = val[{j-1}::3]")
+            else:
+                data[r["name"]] = val
+
+        self._comm_data = pd.DataFrame(data)
+
+        return self.data
+
+    def get_bytes(self, col: str, j: int = None, name: int = None):
+        """
+        get the relevant bytes for column for `J` (nbody index
+        starting at 1) or `name`
+
+        Either use `j` as param *or* `name`!
+
+        :param col: Column name of the value of interest
+        :type col: str
+        :param j: Nbody index (starting at 1) of particle of interest
+        :type j: int
+        :param name: Nbody name (integer) of particle of interest
+        :type name: int
+        """
+        if j is None and name is None:
+            raise Exception("Specify either \"j\" or \"name\" as parameter")
+        elif j is not None and name is not None:
+            raise Exception("Specify only \"j\" OR \"name\"")
+
+        if j is None:
+            j = self.data.loc[self.data["NAME"] == 77059].index.values[0]
+        else:
+            j -= 1
+
+        start = None
+        end = None
+        if col[-1] in ["1", "2", "3"] and col[:-1] + "123" in self._byte_map_t["name"].values:
+            vec_id = int(col[-1]) - 1
+            col_name = col[:-1] + "123"            
+            byte_map_row = self._byte_map_t[self._byte_map_t["name"] == col_name]
+
+            start = byte_map_row["bytes_start"].values[0]
+            start += byte_map_row["bytes_data_type"].values[0] * j * 3
+            start += byte_map_row["bytes_data_type"].values[0] * vec_id
+            end = start + byte_map_row["bytes_data_type"].values[0]
+        return (start, end)
+
+    def give_kick(self,
+                  v: str = "V1",
+                  j: int = None,
+                  name: int = None,
+                  n_mean: float = 5.0,
+                  n_std: int = 10.0):
+        """
+        will give a particle a velocity kick on given `v` (`V1` by default)
+
+        by default `V1` will be added `n_mean * mean_v + n_std * std_v`
+
+        :param v: which V (`V1`, `V2` or `V3`) to apply the kick to
+        :type v: str
+        :param j: Nbody index (starting at 1) of particle of interest
+        :type j: int
+        :param name: Nbody name (integer) of particle of interest
+        :type name: int
+        :param n_mean: factor for mean to add to the velocity
+        :type n_mean: float
+        :param n_std: factor for standard deviation to add to the velocity
+        :type n_std: float
+
+        """
+        if j is None and name is None:
+            raise Exception("Specify either \"j\" or \"name\" as parameter")
+        elif j is not None and name is not None:
+            raise Exception("Specify only \"j\" OR \"name\"")
+
+        relevant_bytes = self.get_bytes(col=v, name=name, j=j)
+        
+        if j is None:
+            j = self.data.loc[self.data["NAME"] == 77059].index.values[0]
+        else:
+            j -= 1
+
+        self._byte_data = ( self._byte_data[:relevant_bytes[0]]
+                            + struct.pack("d", self.data[v].mean() * n_mean + self.data[v].std() * n_std)
+                            + self._byte_data[relevant_bytes[1]:]
+                           )
 
     def _load_file(self, file: str, time: float = None):
         if time is not None:
@@ -172,87 +353,13 @@ class comm():
         data = None
         with open(file, "rb") as comm_file:
             data = comm_file.read()
+        self._byte_data = data
 
-        for scalar in self._imap.keys():
-            val = struct.unpack("i", data[scalar:scalar+1*4])[0]
-            self._comm_scalars[self._imap[scalar]] = val
-
-        self._gen_fmap()
-        
-        for f in self._fmap.keys():
-            val = np.array(struct.unpack(self._fmap[f][1]*self._fmap[f][2], data[f: f + self._fmap[f][2]*4]))
-            self._comm_scalars[self._fmap[f][0]] = val
+        self._load_scalars_init()
+        self._update_byte_map_with_scalars()
+        self._load_scalars()
+        self._load_cluster_data()
                 
-
-        self._data_offset =  ( 16 + 4 # unknown bytes 0-4, 44-52 (Between write statements), maybe also after the b,c,..,q,s
-                              + 4*13
-                              + 4*(
-                                  85 # ia
-                                  + 168 #b
-                                  + 530 #c
-                                  + 381 + self.scalars["MLR"] + self.scalars["MLD"] + self.scalars["MLV"] # d
-                                  + 24 #e
-                                  + 132 #g
-                                  + 99 #l
-                                  + 40 #m
-                                  + 20 * self.scalars["MCL"] + 16 #o
-                                  + 32 * self.scalars["NTMAX"] #p
-                                  + 31 * self.scalars["MMAX"] #q
-                                  + 44 * self.scalars["MMAX"] #s
-                                  )
-                              )
-        ntot = self.scalars["ntot"]
-        offset = self._data_offset
-        self._byte_map = {
-                "X123": (offset, offset + ntot*3*8),
-                "X0123": (offset + 1*3*8*ntot, offset + (1+1)*3*8*ntot),
-                "V0123": (offset + 2*3*8*ntot, offset + (2+1)*3*8*ntot),
-                "V123": (offset + 3*3*8*ntot, offset + (3+1)*3*8*ntot),
-                "F123": (offset + 4*3*8*ntot, offset + (4+1)*3*8*ntot),
-                "FDOT123": (offset + 5*3*8*ntot, offset + (5+1)*3*8*ntot),
-                "M": (offset + 6*3*8*ntot, offset + (6)*3*8*ntot + 1*8*ntot),
-                }
-        
-        X123 = np.array(struct.unpack("d" * self.scalars["ntot"] * 3, data[self._byte_map["X123"][0]:self._byte_map["X123"][1]]))
-        X1 = X123[0::3]
-        X2 = X123[1::3]
-        X3 = X123[2::3]
-        
-        X0123 = np.array(struct.unpack("d" * self.scalars["ntot"] * 3, data[self._byte_map["X0123"][0]:self._byte_map["X0123"][1]]))
-        X01 = X0123[0::3]
-        X02 = X0123[1::3]
-        X03 = X0123[2::3]
-        
-        V0123 = np.array(struct.unpack("d" * self.scalars["ntot"] * 3, data[self._byte_map["V0123"][0]:self._byte_map["V0123"][1]]))
-        V01 = V0123[0::3]
-        V02 = V0123[1::3]
-        V03 = V0123[2::3]
-        
-        V123 = np.array(struct.unpack("d" * self.scalars["ntot"] * 3, data[self._byte_map["V123"][0]:self._byte_map["V123"][1]]))
-        V1 = V123[0::3]
-        V2 = V123[1::3]
-        V3 = V123[2::3]
-        
-        F123 = np.array(struct.unpack("d" * self.scalars["ntot"] * 3, data[self._byte_map["F123"][0]:self._byte_map["F123"][1]]))
-        F1 = F123[0::3]
-        F2 = F123[1::3]
-        F3 = F123[2::3]
-
-        M = np.array(struct.unpack("d" * ntot, data[self._byte_map["M"][0]:self._byte_map["M"][1]]))
-
-        self._comm_data = pd.DataFrame(
-                {
-                    "X1": X1, "X2": X2, "X3": X3,
-                    "X0_1": X01, "X0_2": X02, "X0_3": X03,
-                    "V0_1": V01, "V0_2": V02, "V0_3": V03,
-                    "V1": V1, "V2": V2, "V3": V3,
-                    "F1": F1, "F2": F2, "F3": F3,
-                    "M": M
-                }
-                )
-
-        return self.data
-
     def load(self, time: float):
         """
         load conf file at a given time step
@@ -266,3 +373,11 @@ class comm():
 
         return self._load_file(self._files.loc[time,'file'], time)
 
+    def save(self, filename: str):
+        """
+        Save comm file. Currently only useful after applying a kick!
+
+        :param filename: name (and path) of the output file
+        """
+        with open(filename, "wb") as f:
+            f.write(self._byte_data)

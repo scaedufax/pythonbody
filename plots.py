@@ -213,10 +213,10 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                              ncols=2,
                              figsize=(6.4*2, 6.4 if ref_run is None else 6.4*2))
     axes = axes.flatten()
-    axes[0].scatter(run.snap.cluster_data["X1"],
-                    run.snap.cluster_data["X2"],
-                    c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
-                    **scatter_kw_args)
+    pcm = axes[0].scatter(run.snap.cluster_data["X1"],
+                          run.snap.cluster_data["X2"],
+                          c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
+                          **scatter_kw_args)
     axes[1].scatter(run.snap.cluster_data["X1"],
                     run.snap.cluster_data["X3"],
                     c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
@@ -270,6 +270,9 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
         if ylim is not None:
             axes[2].set_ylim(*ylim)
             axes[3].set_ylim(*ylim)
+    
+    fig.tight_layout()
+    fig.colorbar(pcm, ax=axes, shrink=0.6, label=r"$\log_{10}(\rho)$")
 
     for i, ax in enumerate(axes):
         ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
@@ -278,7 +281,6 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
         
 
     #fig.suptitle(f"Time = {time}")
-    fig.tight_layout()
 
     max_time = run.snap.snap_data.index.max()
     zero_pad = int(np.ceil(np.log10(max_time))) + 2

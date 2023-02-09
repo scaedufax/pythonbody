@@ -365,6 +365,7 @@ def _gen_x1_x2_and_x1_x3_nbody_rho_plot(time: float,
     #  set 0 to 1e-3 otherwise we'll later get errors when using log
     run.conf.data.loc[run.conf.data["RHO"] == 0, "RHO"] = np.full(np.sum(run.conf.data["RHO"] == 0), 1e-3)
 
+    run.conf.data.sort_values("RHO", inplace=True)
 
     # set plots
     nrows = len(xylims)

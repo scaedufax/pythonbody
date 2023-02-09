@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import multiprocessing as mp
 from functools import partial
+import sys
 
 from .nbody import nbody
 
@@ -221,16 +222,22 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                     c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
                     **scatter_kw_args)
     
-    if (trace_particle_name is not None 
-        and trace_particle_name in run.snap.cluster_data["NAME"].values):
-        idx = run.snap.cluster_data[run.snap.cluster_data["NAME"] == trace_particle_name].index.values[0]
+    if (trace_particle_name is not None):
+        if (trace_particle_name in run.snap.cluster_data["NAME"].values):
+            idx = run.snap.cluster_data[run.snap.cluster_data["NAME"] == trace_particle_name].index.values[0]
 
-        axes[0].scatter(run.snap.cluster_data.loc[idx, "X1"],
-                        run.snap.cluster_data.loc[idx, "X2"],
-                        c="r")
-        axes[1].scatter(run.snap.cluster_data.loc[idx, "X1"],
-                        run.snap.cluster_data.loc[idx, "X3"],
-                        c="r")
+            axes[0].scatter(run.snap.cluster_data.loc[idx, "X1"],
+                            run.snap.cluster_data.loc[idx, "X2"],
+                            c="r")
+            axes[1].scatter(run.snap.cluster_data.loc[idx, "X1"],
+                            run.snap.cluster_data.loc[idx, "X3"],
+                            c="r")
+        else:
+            print(f"Couldn't find particle with name \"{trace_particle_name}\" "
+                  f"in particle Name list", file=sys.stderr)
+            if DEBUG:
+                print(run.snap.cluster_data["NAME"].values, file=sys.stderr)
+
 
     axes[0].set_xlabel("X1")
     axes[0].set_ylabel("X2")

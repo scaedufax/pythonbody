@@ -99,6 +99,7 @@ class nbody:
 
         self.snap = snap(self.data_path)
         self.cluster = cluster(self.data_path, s=self.snap)
+        self.conf = data_files.conf(self.data_path)
          
         self._data = {}
         

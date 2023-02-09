@@ -334,12 +334,9 @@ def gen_x1_x2_and_x1_x3_nbody_rho_plots(run: nbody,
     # start pool
     with mp.Pool(processes=n_procs) as pool:
         # make sure to have nice tqdm output
-        max_time = min(run.snap.snap_data.index.values.max(),
-                       run.conf.files.index.values.max())
-        mask = run.snap.snap_data.index.values <= max_time
-        _total = mask.sum()
+        _total = run.conf.files.shape[0]
         with tqdm(total=_total) as pbar:
-            for _ in pool.imap_unordered(func, run.snap.snap_data.index.values[mask]):
+            for _ in pool.imap_unordered(func, run.conf.files.index.values):
                 pbar.update()
 
 
@@ -354,26 +351,20 @@ def _gen_x1_x2_and_x1_x3_nbody_rho_plot(time: float,
                                         trace_particle_name: int
                                         ):
     # Prepare Data
-    run.snap.load_cluster(time)
     run.conf.load(time)
+    
+    if DEBUG:
+        print(f"RHO mean: {run.conf.data['RHO'].mean():.03f}; "
+              f"median: {run.conf.data['RHO'].median():.03f}; "
+              f"std: {run.conf.data['RHO'].std():.03f}; "
+              f"min: {run.conf.data['RHO'].min():.03f}; "
+              f"max: {run.conf.data['RHO'].max():.03f}; "
+              )
 
     # Insert RHO from conf file according to particle NAME
-    run.snap.cluster_data.index = run.snap.cluster_data["NAME"].values
-    run.conf.data.index = run.conf.data["NAME"].values
     #  set 0 to 1e-3 otherwise we'll later get errors when using log
     run.conf.data.loc[run.conf.data["RHO"] == 0, "RHO"] = np.full(np.sum(run.conf.data["RHO"] == 0), 1e-3)
 
-    run.snap.cluster_data["RHO"] = run.conf.data.loc[run.snap.cluster_data.index, "RHO"]
-
-    run.snap.cluster_data.sort_values("RHO", inplace=True)
-
-    if DEBUG:
-        print(f"RHO mean: {run.snap.cluster_data['RHO'].mean():.03f}; "
-              f"median: {run.snap.cluster_data['RHO'].median():.03f}; "
-              f"std: {run.snap.cluster_data['RHO'].std():.03f}; "
-              f"min: {run.snap.cluster_data['RHO'].min():.03f}; "
-              f"max: {run.snap.cluster_data['RHO'].max():.03f}; "
-              )
 
     # set plots
     nrows = len(xylims)
@@ -386,16 +377,16 @@ def _gen_x1_x2_and_x1_x3_nbody_rho_plot(time: float,
     for i, ax in enumerate(axes.flatten()):
         row = int(i/2)
         if i % 2 == 0:
-            pcm = axes[row][0].scatter(run.snap.cluster_data["X1"], 
-                                       run.snap.cluster_data["X2"],
-                                       c=np.log10(run.snap.cluster_data["RHO"]),
+            pcm = axes[row][0].scatter(run.conf.data["X1"], 
+                                       run.conf.data["X2"],
+                                       c=np.log10(run.conf.data["RHO"]),
                                        **scatter_kw_args)
             ax.set_title(f"{run_title} X1-X2 at time = {time} NB")
             ax.set_ylabel("X2")
         else:
-            axes[row][1].scatter(run.snap.cluster_data["X1"], 
-                                 run.snap.cluster_data["X3"],
-                                 c=np.log10(run.snap.cluster_data["RHO"]),
+            axes[row][1].scatter(run.conf.data["X1"], 
+                                 run.conf.data["X3"],
+                                 c=np.log10(run.conf.data["RHO"]),
                                  **scatter_kw_args)
             ax.set_title(f"{run_title} X1-X3 at time = {time} NB")
             ax.set_ylabel("X3")
@@ -404,29 +395,29 @@ def _gen_x1_x2_and_x1_x3_nbody_rho_plot(time: float,
    
         # plot traced particle
         if (trace_particle_name is not None):
-            if (trace_particle_name in run.snap.cluster_data["NAME"].values):
-                idx = run.snap.cluster_data[run.snap.cluster_data["NAME"] == trace_particle_name].index.values[0]
+            if (trace_particle_name in run.conf.data["NAME"].values):
+                idx = run.conf.data[run.conf.data["NAME"] == trace_particle_name].index.values[0]
 
-                axes[row][0].scatter(run.snap.cluster_data.loc[idx, "X1"],
-                                     run.snap.cluster_data.loc[idx, "X2"],
+                axes[row][0].scatter(run.conf.data.loc[idx, "X1"],
+                                     run.conf.data.loc[idx, "X2"],
                                      c="r")
-                axes[row][1].scatter(run.snap.cluster_data.loc[idx, "X1"],
-                                     run.snap.cluster_data.loc[idx, "X3"],
+                axes[row][1].scatter(run.conf.data.loc[idx, "X1"],
+                                     run.conf.data.loc[idx, "X3"],
                                      c="r") 
             else:
-                print(f"Couldn't find particle with name \"{trace_particle_name}\" "
+                print(f"TIME = {time} Couldn't find particle with name \"{trace_particle_name}\" "
                       f"in particle Name list", file=sys.stderr)
                 if DEBUG:
-                    print(run.snap.cluster_data["NAME"].values, file=sys.stderr)
+                    print(run.conf.data["NAME"].values, file=sys.stderr)
         
         # set X and Y lims on plots
         if xylims[row] == "full":
-            max_value = max(run.snap.cluster_data["X1"].max(),
-                            run.snap.cluster_data["X2"].max(),
-                            run.snap.cluster_data["X3"].max(),
-                            -run.snap.cluster_data["X1"].min(),
-                            -run.snap.cluster_data["X2"].min(),
-                            -run.snap.cluster_data["X3"].min(),
+            max_value = max(run.conf.data["X1"].max(),
+                            run.conf.data["X2"].max(),
+                            run.conf.data["X3"].max(),
+                            -run.conf.data["X1"].min(),
+                            -run.conf.data["X2"].min(),
+                            -run.conf.data["X3"].min(),
                             )
             ax.set_xlim(-max_value, max_value)
             ax.set_ylim(-max_value, max_value)
@@ -450,7 +441,7 @@ def _gen_x1_x2_and_x1_x3_nbody_rho_plot(time: float,
     for i, ax in enumerate(axes.flatten()):
         ax.set_aspect(1.0/ax.get_data_ratio(), adjustable='box')
 
-    max_time = run.snap.snap_data.index.max()
+    max_time = run.conf.files.index.max()
     zero_pad = int(np.ceil(np.log10(max_time))) + 2
     fig.savefig(f"{path}/{base_file_name}_{str(time).zfill(zero_pad)}.{image_ext}")
     plt.close()

@@ -23,7 +23,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                               n_neigh: int = 80,
                               save_neighbour_rho_to_snap: bool = True,
                               force_neighbour_rho_recalc: bool = False,
-                              trace_particle_j: int = None,
+                              trace_particle_name: int = None,
                               n_procs: int = None,
                               ):
     """
@@ -58,8 +58,8 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
     :type save_neighbour_rho_to_snap: bool
     :param force_neighbour_rho_recalc: Force recalculation of neighbour_rho data
     :type force_neighbour_rho_recalc: bool
-    :param trace_particle_j: trace particle by index J used in Nbody
-    :type trace_particle_j: int
+    :param trace_particle_name: trace particle by NAME used in Nbody
+    :type trace_particle_name: int
     :param n_procs: number of processes to use during multiprocessing
     :type n_procs: int
     """
@@ -92,7 +92,7 @@ def gen_x1_x2_and_x1_x3_plots(run: nbody,
                        n_neigh=n_neigh,
                        save_neighbour_rho_to_snap=save_neighbour_rho_to_snap,
                        force_neighbour_rho_recalc=force_neighbour_rho_recalc,
-                       trace_particle_j=trace_particle_j)
+                       trace_particle_name=trace_particle_name)
         # start pool
         with mp.Pool(processes=n_procs) as pool:
             # make sure to have nice tqdm output
@@ -135,7 +135,7 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                               n_neigh: int = 80,
                               save_neighbour_rho_to_snap: bool = True,
                               force_neighbour_rho_recalc: bool = False,
-                              trace_particle_j: int = None,
+                              trace_particle_name: int = None,
                               ):
 
     # load time step (also in ref cluster!)
@@ -221,14 +221,15 @@ def _gen_x1_x2_and_x1_x3_plot(time: float,
                     c=np.log10(run.snap.cluster_data["NEIGHBOUR_RHO_M"]),
                     **scatter_kw_args)
     
-    if (trace_particle_j is not None 
-        and run.snap.cluster_data.index.shape[0] >= trace_particle_j):
+    if (trace_particle_name is not None 
+        and trace_particle_name in run.snap.cluster_data["NAME"].values):
+        idx = run.snap.cluster_data[run.snap.cluster_data["NAME"] == trace_particle_name].index.values[0]
 
-        axes[0].scatter(run.snap.cluster_data.loc[trace_particle_j - 1, "X1"],
-                        run.snap.cluster_data.loc[trace_particle_j - 1, "X2"],
+        axes[0].scatter(run.snap.cluster_data.loc[idx, "X1"],
+                        run.snap.cluster_data.loc[idx, "X2"],
                         c="r")
-        axes[1].scatter(run.snap.cluster_data.loc[trace_particle_j - 1, "X1"],
-                        run.snap.cluster_data.loc[trace_particle_j - 1, "X3"],
+        axes[1].scatter(run.snap.cluster_data.loc[idx, "X1"],
+                        run.snap.cluster_data.loc[idx, "X3"],
                         c="r")
 
     axes[0].set_xlabel("X1")

@@ -3,6 +3,7 @@ import numpy as np
 import pathlib
 import glob
 import struct
+import re
 
 from ..nbdf import nbdf
 
@@ -61,6 +62,7 @@ class comm():
         
         if self.data_path is not None:
             files = sorted(glob.glob(self.data_path + "/comm.2_*"))
+            files = [file for file in files if re.match(".*comm\.2_[0-9]*$", file)]
             time = [float(file[file.rfind("/")+1:].replace("comm.2_", "")) for file in files]
             self._files["file"] = files
             self._files["time"] = time
@@ -346,7 +348,10 @@ class comm():
         if time is not None:
             self.time = time
         else:
-            self.time = float(file[file.rfind("/")+1:].replace("comm.2_", ""))
+            try:
+                self.time = float(file[file.rfind("/")+1:].replace("comm.2_", ""))
+            except:
+                self.time = None
 
         self._comm_scalars = {}
 

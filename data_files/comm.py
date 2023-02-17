@@ -287,7 +287,7 @@ class comm():
             raise Exception("Specify only \"j\" OR \"name\"")
 
         if j is None:
-            j = self.data.loc[self.data["NAME"] == 77059].index.values[0]
+            j = self.data.loc[self.data["NAME"] == name].index.values[0]
         else:
             j -= 1
 
@@ -295,13 +295,20 @@ class comm():
         end = None
         if col[-1] in ["1", "2", "3"] and col[:-1] + "123" in self._byte_map_t["name"].values:
             vec_id = int(col[-1]) - 1
-            col_name = col[:-1] + "123"            
+            col_name = col[:-1] + "123" 
             byte_map_row = self._byte_map_t[self._byte_map_t["name"] == col_name]
 
             start = byte_map_row["bytes_start"].values[0]
             start += byte_map_row["bytes_data_type"].values[0] * j * 3
             start += byte_map_row["bytes_data_type"].values[0] * vec_id
             end = start + byte_map_row["bytes_data_type"].values[0]
+        elif col in self._byte_map_t["name"].values:
+            byte_map_row = self._byte_map_t[self._byte_map_t["name"] == col]
+            start = byte_map_row["bytes_start"].values[0]
+            start += byte_map_row["bytes_data_type"].values[0] * j
+            end = start + byte_map_row["bytes_data_type"].values[0]
+        else:
+            raise KeyError(f"Don't know column of name {col}")
         return (start, end)
 
     def give_kick(self,
@@ -333,15 +340,20 @@ class comm():
             raise Exception("Specify only \"j\" OR \"name\"")
 
         relevant_bytes = self.get_bytes(col=v, name=name, j=j)
+        relevant_bytes_v0 = self.get_bytes(col=v[0] + "0" + v[1], name=name, j=j)
         
         if j is None:
-            j = self.data.loc[self.data["NAME"] == 77059].index.values[0]
+            j = self.data.loc[self.data["NAME"] == name].index.values[0]
         else:
             j -= 1
 
         self._byte_data = ( self._byte_data[:relevant_bytes[0]]
                             + struct.pack("d", self.data[v].mean() * n_mean + self.data[v].std() * n_std)
                             + self._byte_data[relevant_bytes[1]:]
+                           )
+        self._byte_data = ( self._byte_data[:relevant_bytes_v0[0]]
+                            + struct.pack("d", self.data[v].mean() * n_mean + self.data[v].std() * n_std)
+                            + self._byte_data[relevant_bytes_v0[1]:]
                            )
 
     def _load_file(self, file: str, time: float = None):

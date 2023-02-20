@@ -4,6 +4,7 @@ import pathlib
 import glob
 import struct
 import re
+import copy
 
 from ..nbdf import nbdf
 
@@ -72,7 +73,7 @@ class comm():
         # mapping of integer values at beginning
         # for later values we need the data here!
         # see _update_byte_map_with_scalars()
-        self._value_map = [
+        self._init_value_map = [
                 {"name": "offset1", "n": 1, "type": "i"},
                 {"name": "NMAX", "n": 1, "type": "i"},
                 {"name": "KMAX", "n": 1, "type": "i"},
@@ -92,6 +93,7 @@ class comm():
                 {"name": "b", "n": 168, "type": "f"},
                 {"name": "c", "n": 530, "type": "f"},
         ]
+        self._value_map = copy.deepcopy(self._init_value_map)
         self._byte_map_t = pd.DataFrame(self._value_map)
         self._init_byte_map()
 
@@ -365,9 +367,10 @@ class comm():
         # reset data 
         self.time = None
         self._byte_data = None
+        self._byte_map_t = None
+        self._value_map = copy.deepcopy(self._init_value_map)
         self._byte_map_t = pd.DataFrame(self._value_map)
         self._init_byte_map()
-
         self._comm_data = None
         self._comm_scalars = None
 

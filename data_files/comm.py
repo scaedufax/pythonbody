@@ -92,11 +92,8 @@ class comm():
                 {"name": "b", "n": 168, "type": "f"},
                 {"name": "c", "n": 530, "type": "f"},
         ]
-        self._fmap = None
         self._byte_map_t = pd.DataFrame(self._value_map)
         self._init_byte_map()
-
-        self._data_offset = 16
 
         self._comm_data = None
         self._comm_scalars = None
@@ -364,6 +361,15 @@ class comm():
                 self.time = float(file[file.rfind("/")+1:].replace("comm.2_", ""))
             except:
                 self.time = None
+ 
+        # reset data 
+        self.time = None
+        self._byte_data = None
+        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._init_byte_map()
+
+        self._comm_data = None
+        self._comm_scalars = None
 
         self._comm_scalars = {}
 

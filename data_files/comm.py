@@ -57,10 +57,7 @@ class comm():
         if data_path is not None and not pathlib.Path(data_path).is_dir() and not pathlib.Path(data_path).is_file():
             raise IOError(f"Couldn't find {data_path}. Does it exist?")
         self.data_path = data_path
-
-        self.time = None
-        self._byte_data = None
-        
+ 
         if self.data_path is not None:
             files = sorted(glob.glob(self.data_path + "/comm.2_*"))
             files = [file for file in files if re.match(".*comm\.2_[0-9]*$", file)]
@@ -94,13 +91,11 @@ class comm():
                 {"name": "b", "n": 168, "type": "f", "save_in": "scalars"},
                 {"name": "c", "n": 530, "type": "f", "save_in": "scalars"},
         ]
+        self._reset_data()
         self._value_map = copy.deepcopy(self._init_value_map)
         self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
-
-        self._comm_data = None
-        self._comm_scalars = None
-        
+ 
         if pathlib.Path(self.data_path).is_file():
             self._load_file(file=self.data_path)
 
@@ -145,6 +140,10 @@ class comm():
     @property
     def files(self):
         return self._files
+    
+    @property
+    def fortran_headers_footers(self):
+        return self._comm_fortran_headers_footers
 
     def _init_byte_map(self):
         self._byte_map_data_types()
@@ -269,7 +268,7 @@ class comm():
         self._value_map += [
                 {"name": "NXTLIMIT", "n": 1, "type": "i", "save_in": "scalars"},
                 {"name": "NGHOSTS", "n": 1, "type": "i", "save_in": "scalars"},
-                {"name": "NXTLST", "n": nxtlimit+nghosts, "type": "i", "save_in": "ignore"},
+                {"name": "NXTLST", "n": nxtlimit+nghosts, "type": "i", "save_in": "unused"},
                 {"name": "NXTLEN", "n": 1, "type": "i", "save_in": "scalars"},
                 {"name": "NDTK", "n": 64, "type": "i", "save_in": "ignore"},
                 {"name": "NDTMIN", "n": 1, "type": "i", "save_in": "scalars"},
@@ -303,7 +302,7 @@ class comm():
         if self._byte_map.shape[0] < 27:
             raise ValueError("Did you load some data?")
 
-        for i, r in self._byte_map[:27].iterrows():
+        for i, r in self._byte_map[self._byte_map["save_in"] == "scalars"].iterrows():
             val = None
             if r["n"] == 1:
                 val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
@@ -351,14 +350,13 @@ class comm():
         if col is None:
             ret = {}
             for i,r in self._byte_map.iterrows():
-                if r["save_in"] == "ignore" or r["save_in"] == "scalars":
+                if r["save_in"] == "ignore" or r["save_in"] == "scalars" or r["save_in"] == "pairs":
                     continue
                 b = self.get_bytes(name=name, col=r["name"])
-                print(i, r["name"], b, b[1]-b[0], int((b[1]-b[0])/r["bytes_data_type"]))
                 ret[r["name"]] = b
             return ret
                 
-        j = self.data.loc[self.data["NAME"] == name].index.values[0]
+        J = self.data.loc[self.data["NAME"] == name].index.values[0]
         
         start = None
         end = None
@@ -370,27 +368,27 @@ class comm():
             byte_map_row = self._byte_map[self._byte_map["name"] == col_name]
 
             start = byte_map_row["bytes_start"].values[0]
-            start += byte_map_row["bytes_data_type"].values[0] * j * 3
+            start += byte_map_row["bytes_data_type"].values[0] * J * 3
             start += byte_map_row["bytes_data_type"].values[0] * vec_id
             end = start + byte_map_row["bytes_data_type"].values[0]
         # Case col="V123" return all bytes!
         elif col[-3:] == "123" and col in self._byte_map["name"].values:
             byte_map_row = self._byte_map[self._byte_map["name"] == col]
             start = byte_map_row["bytes_start"].values[0]
-            start += byte_map_row["bytes_data_type"].values[0] * j * 3
+            start += byte_map_row["bytes_data_type"].values[0] * J * 3
             end = start + 3*byte_map_row["bytes_data_type"].values[0]
         # Case col="U_1234" (pair data)
         elif col[-4:] == "1234" and col in self._byte_map["name"].values:
             byte_map_row = self._byte_map[self._byte_map["name"] == col]
             start = byte_map_row["bytes_start"].values[0]
-            start += byte_map_row["bytes_data_type"].values[0] * j * 4
+            start += byte_map_row["bytes_data_type"].values[0] * J * 4
             end = start + 4*byte_map_row["bytes_data_type"].values[0]
         # Case col="SF_1234567" (pair data)
         elif col[-7:] == "1234567" and col in self._byte_map["name"].values:
             byte_map_row = self._byte_map[self._byte_map["name"] == col].index.values[0]
             byte_map_row = self._byte_map.iloc[byte_map_row].to_dict()
             start = byte_map_row["bytes_start"]
-            start += byte_map_row["bytes_data_type"] * j * 7
+            start += byte_map_row["bytes_data_type"] * J * 7
             end = start + 7*byte_map_row["bytes_data_type"]
         elif col == "LIST_DATA":
             ret = []
@@ -403,27 +401,115 @@ class comm():
                     skipper -= 1
                     continue
                 n = struct.unpack("i", self._byte_data[byte_map_row["bytes_start"] + (i*4): byte_map_row["bytes_start"] + ((i+1)*4)])[0]
-                if n == 0:
-                    print(particle_idx,i,n)
+                if n == 0 and particle_idx != J:
                     particle_idx += 1
-                else:
-                    print(particle_idx,i,n, end=" ")
+                elif n != 0 and particle_idx != J:
                     for j in range(1, n+1):
                         cur_name = struct.unpack("i", self._byte_data[byte_map_row["bytes_start"] + ((i+j)*4): byte_map_row["bytes_start"] + ((i+j+1)*4)])[0]
-                        print(cur_name, end = " ")
-                    print()
+                        if cur_name == name:
+                            ret.append({"reduce": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((i+1)*4)),
+                                        "remove": (byte_map_row["bytes_start"] + ((i+j)*4),  byte_map_row["bytes_start"] + ((i+j+1)*4))})
                     skipper = n
                     particle_idx += 1
+                elif J == particle_idx:
+                    ret.append({"own_list": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((n+i+1)*4))})
+                    particle_idx += 1
+            return ret
+        elif col == "NXTLST":
+            byte_map_row = self._byte_map[self._byte_map["name"] == col].index.values[0]
+            byte_map_row = self._byte_map.iloc[byte_map_row].to_dict()
+            
+            n = self.scalars["NXTLIMIT"] + self.scalars["NGHOSTS"]
+            nxtlist = struct.unpack("i"*n, self._byte_data[byte_map_row["bytes_start"]:byte_map_row["bytes_end"]])
+            idx = nxtlist.index(name)
+            start = byte_map_row["bytes_start"] + idx*4
+            end = start + 4
+            
 
         # simple case
         elif col in self._byte_map["name"].values:
             byte_map_row = self._byte_map[self._byte_map["name"] == col]
             start = byte_map_row["bytes_start"].values[0]
-            start += byte_map_row["bytes_data_type"].values[0] * j
+            start += byte_map_row["bytes_data_type"].values[0] * J
             end = start + byte_map_row["bytes_data_type"].values[0]
         else:
             raise KeyError(f"Don't know column of name {col}")
         return (start, end)
+
+    def _drop_byte_adjust_headers_footers(self, start: int, n_bytes: int):
+        for i, r in self.fortran_headers_footers[
+                (self.fortran_headers_footers["content_start"] < start)
+                & (self.fortran_headers_footers["content_end"] > start + n_bytes)
+                ].iterrows():
+            self._decrease_byte_int(r["bytes_start"], n_bytes)
+            if r["type"] == "footer":
+                self.fortran_headers_footers.loc[i, "bytes_start"] -= n_bytes
+                self.fortran_headers_footers.loc[i, "bytes_end"] -= n_bytes
+            self.fortran_headers_footers.loc[i, "content_end"] -= n_bytes
+            self.fortran_headers_footers.loc[i, "content"] -= n_bytes
+        for i, r in self.fortran_headers_footers[
+                (self.fortran_headers_footers["content_start"] > start)
+                ].iterrows():
+            self.fortran_headers_footers.loc[i, "bytes_start"] -= n_bytes
+            self.fortran_headers_footers.loc[i, "bytes_end"] -= n_bytes
+            self.fortran_headers_footers.loc[i, "content_start"] -= n_bytes
+            self.fortran_headers_footers.loc[i, "content_end"] -= n_bytes
+
+    def _drop_byte_range(self, a, b):
+        self._drop_byte_adjust_headers_footers(a, b-a)
+        self._byte_data = self._byte_data[:a] + self._byte_data[b:]
+    def _decrease_byte_int(self, start, decrease_by: int = 1):
+        byte_int = struct.unpack("i", self._byte_data[start: start+4])[0]
+        self._byte_data = self._byte_data[:start] + struct.pack("i", byte_int - decrease_by) + self._byte_data[start + 4:]
+
+    def drop_particle(self, name: int):
+        """
+        Drop a particle by name! NOTE it currently will not work if this particle is
+        within a pair! Expect errors if you try this anyway!
+
+        :param name: Name of the particle to drop
+        :type name: int
+        """
+        
+        # reduce ntot
+        self._decrease_byte_int(self._byte_map[self._byte_map["name"] == "ntot"]["bytes_start"].values[0])
+        self._decrease_byte_int(self._byte_map[self._byte_map["name"] == "NXTLIMIT"]["bytes_start"].values[0])
+        
+        # drop bytes
+        byte_info = self.get_bytes(name=name)
+        for item in list(byte_info.items())[::-1]:
+            # handle LIST_DATA
+            if item[0] == "LIST_DATA":
+                """removed_bytes = 0
+                # only count bytes that will be removed
+                for list_data_item in item[1][::-1]:
+                    if "remove" in list_data_item.keys():
+                        removed_bytes += 4
+                    elif "own_list" in list_data_item.keys():
+                        removed_bytes += list_data_item["own_list"][1] - list_data_item["own_list"][0]
+                # adjust header
+                self._decrease_fortran_header_footer(6, removed_bytes)"""
+                # remove data
+                for list_data_item in item[1][::-1]:
+                    if "remove" in list_data_item.keys():
+                        self._drop_byte_range(list_data_item["remove"][0],
+                                              list_data_item["remove"][1])
+                        self._decrease_byte_int(list_data_item["reduce"][0])
+                    elif "own_list" in list_data_item.keys():
+                        self._drop_byte_range(list_data_item["own_list"][0],
+                                              list_data_item["own_list"][1])
+                    else:
+                        KeyError("Key must either be \"remove\" or \"own list\"")
+            else:
+                """"n_bytes = item[1][1] - item[1][0]
+                if n_bytes == 4:
+                    print(item, struct.unpack("i", self._byte_data[item[1][0]:item[1][0] + 4]))
+                if n_bytes == 8:
+                    print(item, struct.unpack("d", self._byte_data[item[1][0]:item[1][0] + 8]))
+                if n_bytes == 24:
+                    print(item, struct.unpack("d"*3, self._byte_data[item[1][0]:item[1][0] + 24]))"""
+
+                self._drop_byte_range(item[1][0],item[1][1])
 
     def give_kick(self,
                   v: str = "V1",
@@ -458,6 +544,57 @@ class comm():
                             + self._byte_data[relevant_bytes_v0[1]:]
                            )
 
+    def _load_fortran_headers_footers(self):
+        if self._byte_data is None:
+            raise ValueError("cannot load fortran headers_footers without loaded byte_data")
+        count = 0
+        current_byte_start = 0
+        data = []
+        while current_byte_start < len(self._byte_data):
+            n_bytes = struct.unpack("i", self._byte_data[current_byte_start:current_byte_start + 4])[0]
+            data.append({
+                "id": count + 1,
+                "type": "header",
+                "content": n_bytes,
+                "bytes_start": current_byte_start,
+                "bytes_end": current_byte_start + 4,
+                "content_start": current_byte_start + 4,
+                "content_end": current_byte_start + 4 + n_bytes
+                })
+            current_byte_start += n_bytes + 4
+            data.append({
+                "id": count + 1,
+                "type": "footer",
+                "content": n_bytes,
+                "bytes_start": current_byte_start,
+                "bytes_end": current_byte_start + 4,
+                "content_start": current_byte_start - n_bytes,
+                "content_end": current_byte_start 
+                })
+            current_byte_start += 4
+            count += 1
+        self._comm_fortran_headers_footers = pd.DataFrame(data)
+        return self._comm_fortran_headers_footers
+
+
+    def _reset_data(self):
+        self.time = None
+        self._byte_data = None
+        self._byte_map = None
+        self._value_map = copy.deepcopy(self._init_value_map)
+        self._byte_map = pd.DataFrame(self._value_map)
+        self._init_byte_map()
+        self._comm_data = None
+        self._comm_scalars = {}
+        self._comm_fortran_headers_footers = None
+
+    def _load_file_into_byte_stream(self, file):
+        data = None
+        with open(file, "rb") as comm_file:
+            data = comm_file.read()
+        self._byte_data = data
+
+
     def _load_file(self, file: str, time: float = None):
         if time is not None:
             self.time = time
@@ -468,26 +605,17 @@ class comm():
                 self.time = None
  
         # reset data 
-        self.time = None
-        self._byte_data = None
-        self._byte_map = None
-        self._value_map = copy.deepcopy(self._init_value_map)
-        self._byte_map = pd.DataFrame(self._value_map)
-        self._init_byte_map()
-        self._comm_data = None
-        self._comm_scalars = None
+        self._reset_data()
 
-        self._comm_scalars = {}
-
-        data = None
-        with open(file, "rb") as comm_file:
-            data = comm_file.read()
-        self._byte_data = data
+        self._load_file_into_byte_stream(file)
 
         self._load_scalars_init()
         self._update_byte_map_with_scalars()
         self._load_scalars()
         self._load_cluster_data()
+        self._load_scalars()
+
+        self._load_fortran_headers_footers()
                 
     def load(self, time: float):
         """

@@ -33,7 +33,7 @@ class comm():
         30.0  30.0  /run/media/uli/ULIEXT/nbody_runs/N1k/comm.2_30
         >>> c.load(10) # loads comm.2_10
         # Alternatively load just a file
-        >>> c = conf("/path/to/nbody/run/comm.2_0")
+        >>> c = comm("/path/to/nbody/run/comm.2_0")
         >>> t.scalars # show scalar values
         ...
         >>> t.data # show cluster data
@@ -74,27 +74,28 @@ class comm():
         # for later values we need the data here!
         # see _update_byte_map_with_scalars()
         self._init_value_map = [
-                {"name": "offset1", "n": 1, "type": "i"},
-                {"name": "NMAX", "n": 1, "type": "i"},
-                {"name": "KMAX", "n": 1, "type": "i"},
-                {"name": "LMAX","n": 1, "type": "i"},
-                {"name": "MMAX", "n": 1, "type": "i"},
-                {"name": "MLD", "n": 1, "type": "i"},
-                {"name": "MLR", "n": 1, "type": "i"},
-                {"name": "MLV", "n": 1, "type": "i"},
-                {"name": "MCL", "n": 1, "type": "i"},
-                {"name": "NCMAX", "n": 1, "type": "i"},
-                {"name": "NTMAX", "n": 1, "type": "i"},
-                {"name": "offset2", "n": 1, "type": "d"},
-                {"name": "ntot", "n": 1, "type": "i"},
-                {"name": "npairs", "n": 1, "type": "i"},
-                {"name": "nttot", "n": 1, "type": "i"},
-                {"name": "ia", "n": 85, "type": "i"},
-                {"name": "b", "n": 168, "type": "f"},
-                {"name": "c", "n": 530, "type": "f"},
+                {"name": "fortran_header_1", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "NMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "KMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "LMAX","n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "MMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "MLD", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "MLR", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "MLV", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "MCL", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NCMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NTMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "fortran_footer_1", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_2", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "ntot", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "npairs", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "nttot", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "ia", "n": 85, "type": "i", "save_in": "scalars"},
+                {"name": "b", "n": 168, "type": "f", "save_in": "scalars"},
+                {"name": "c", "n": 530, "type": "f", "save_in": "scalars"},
         ]
         self._value_map = copy.deepcopy(self._init_value_map)
-        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
 
         self._comm_data = None
@@ -147,79 +148,147 @@ class comm():
 
     def _init_byte_map(self):
         self._byte_map_data_types()
-        self._byte_map_t.loc[:, "bytes_tot"] = pd.to_numeric(self._byte_map_t["bytes_data_type"] * self._byte_map_t["n"], downcast="signed")
-        self._byte_map_t.loc[:, "bytes_start"] = 0
-        self._byte_map_t.loc[:, "bytes_end"] = self._byte_map_t["bytes_tot"].cumsum() 
-        self._byte_map_t.loc[:, "bytes_start"] = self._byte_map_t["bytes_end"] - self._byte_map_t["bytes_tot"]
+        self._byte_map.loc[:, "bytes_tot"] = pd.to_numeric(self._byte_map["bytes_data_type"] * self._byte_map["n"], downcast="signed")
+        self._byte_map.loc[:, "bytes_start"] = 0
+        self._byte_map.loc[:, "bytes_end"] = self._byte_map["bytes_tot"].cumsum() 
+        self._byte_map.loc[:, "bytes_start"] = self._byte_map["bytes_end"] - self._byte_map["bytes_tot"]
         
     def _byte_map_data_types(self):
-        self._byte_map_t.loc[self._byte_map_t["type"] == "i", "bytes_data_type"] = 4
-        self._byte_map_t.loc[self._byte_map_t["type"] == "f", "bytes_data_type"] = 4
-        self._byte_map_t.loc[self._byte_map_t["type"] == "d", "bytes_data_type"] = 8
-        self._byte_map_t["bytes_data_type"] = pd.to_numeric(self._byte_map_t["bytes_data_type"], downcast="signed")
+        self._byte_map.loc[self._byte_map["type"] == "i", "bytes_data_type"] = 4
+        self._byte_map.loc[self._byte_map["type"] == "f", "bytes_data_type"] = 4
+        self._byte_map.loc[self._byte_map["type"] == "d", "bytes_data_type"] = 8
+        self._byte_map["bytes_data_type"] = pd.to_numeric(self._byte_map["bytes_data_type"], downcast="signed")
 
     def _update_byte_map_with_scalars(self):
         ntot = self.scalars["ntot"]
+        npairs = self.scalars["npairs"]
         self._value_map += [
-                {"name": "d", "n": 381 + self.scalars["MLR"] + self.scalars["MLD"] + self.scalars["MLV"], "type": "f"},
-                {"name": "e", "n": 24, "type": "f"},
-                {"name": "g", "n": 132, "type": "f"},
-                {"name": "l", "n": 99, "type": "f"},
-                {"name": "m", "n": 40, "type": "f"},
-                {"name": "o", "n": 20 * self.scalars["MCL"] + 16, "type": "f"},
-                {"name": "p", "n": 32 * self.scalars["NTMAX"], "type": "f"},
-                {"name": "q", "n": 31 * self.scalars["MMAX"], "type": "f"},
-                {"name": "s", "n": 44 * self.scalars["MMAX"], "type": "f"},
-                {"name": "offset3", "n": 1, "type": "d"},
-                {"name": "X123", "n": 3 * ntot, "type": "d"},
-                {"name": "X0123", "n": 3 * ntot, "type": "d"},
-                {"name": "V0123", "n": 3 * ntot, "type": "d"},
-                {"name": "V123", "n": 3 * ntot, "type": "d"},
-                {"name": "F123", "n": 3 * ntot, "type": "d"},
-                {"name": "FDOT123", "n": 3 * ntot, "type": "d"},
-                {"name": "M", "n": ntot, "type": "d"},
-                {"name": "RS", "n": ntot, "type": "d"},
-                {"name": "FI123", "n": 3 * ntot, "type": "d"},
-                {"name": "D1_123", "n": 3 * ntot, "type": "d"},
-                {"name": "D2_123", "n": 3 * ntot, "type": "d"},
-                {"name": "D3_123", "n": 3 * ntot, "type": "d"},
-                {"name": "FR123", "n": 3 * ntot, "type": "d"},
-                {"name": "D1R_123", "n": 3 * ntot, "type": "d"},
-                {"name": "D2R_123", "n": 3 * ntot, "type": "d"},
-                {"name": "D3R_123", "n": 3 * ntot, "type": "d"},
-                {"name": "STEP", "n": ntot, "type": "d"},
-                {"name": "T0", "n": ntot, "type": "d"},
-                {"name": "STEPR", "n": ntot, "type": "d"},
-                {"name": "T0R", "n": ntot, "type": "d"},
-                {"name": "TIMENW", "n": ntot, "type": "d"},
-                {"name": "RADIUS", "n": ntot, "type": "d"},
-                {"name": "TEV", "n": ntot, "type": "d"},
-                {"name": "TEV0", "n": ntot, "type": "d"},
-                {"name": "BODY0", "n": ntot, "type": "d"},
-                {"name": "EPOCH", "n": ntot, "type": "d"},
-                {"name": "spin", "n": ntot, "type": "d"},
-                {"name": "xstar", "n": ntot, "type": "d"},
-                {"name": "zlmsty", "n": ntot, "type": "d"},
-                {"name": "FIDOT123", "n": 3*ntot, "type": "d"},
-                {"name": "D0_123", "n": 3*ntot, "type": "d"},
-                {"name": "FRDOT123", "n": 3*ntot, "type": "d"},
-                {"name": "D0R_123", "n": 3*ntot, "type": "d"},
-                {"name": "KSTAR", "n": ntot, "type": "i"},
-                {"name": "IMINR", "n": ntot, "type": "i"},
-                {"name": "NAME", "n": ntot, "type": "i"},
-
+                {"name": "d", "n": 381 + self.scalars["MLR"] + self.scalars["MLD"] + self.scalars["MLV"], "type": "f", "save_in": "scalars"},
+                {"name": "e", "n": 24, "type": "f", "save_in": "scalars"},
+                {"name": "g", "n": 132, "type": "f", "save_in": "scalars"},
+                {"name": "l", "n": 99, "type": "f", "save_in": "scalars"},
+                {"name": "m", "n": 40, "type": "f", "save_in": "scalars"},
+                {"name": "o", "n": 20 * self.scalars["MCL"] + 16, "type": "f", "save_in": "scalars"},
+                {"name": "p", "n": 32 * self.scalars["NTMAX"], "type": "f", "save_in": "scalars"},
+                {"name": "q", "n": 31 * self.scalars["MMAX"], "type": "f", "save_in": "scalars"},
+                {"name": "s", "n": 44 * self.scalars["MMAX"], "type": "f", "save_in": "scalars"},
+                {"name": "fortran_footer_2", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_3", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "X123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "X0123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "V0123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "V123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "F123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "FDOT123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "M", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "RS", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "FI123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D1_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D2_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D3_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "FR123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D1R_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D2R_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "D3R_123", "n": 3 * ntot, "type": "d", "save_in": "data"},
+                {"name": "STEP", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "T0", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "STEPR", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "T0R", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "TIMENW", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "RADIUS", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "TEV", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "TEV0", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "BODY0", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "EPOCH", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "spin", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "xstar", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "zlmsty", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "FIDOT123", "n": 3*ntot, "type": "d", "save_in": "data"},
+                {"name": "D0_123", "n": 3*ntot, "type": "d", "save_in": "data"},
+                {"name": "FRDOT123", "n": 3*ntot, "type": "d", "save_in": "data"},
+                {"name": "D0R_123", "n": 3*ntot, "type": "d", "save_in": "data"},
+                {"name": "KSTAR", "n": ntot, "type": "i", "save_in": "data"},
+                {"name": "IMINR", "n": ntot, "type": "i", "save_in": "data"},
+                {"name": "NAME", "n": ntot, "type": "i", "save_in": "data"},
+                {"name": "fortran_footer_3", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_4", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "ASPN", "n": ntot, "type": "d", "save_in": "data"},
+                {"name": "fortran_footer_4", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_5", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "U_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "U0_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "UDOT_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FU_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FUDOT_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FUDOT2_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FUDOT3_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "H", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "HDOT", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "HDOT2", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "HDOT3", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "HDOT4", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "DTAU", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "TDOT2", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "TDOT3", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "R", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "R0", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "GAMMA", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "SF_1234567", "n": 7*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "H0", "n": npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FP0_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "FD0_1234", "n": 4*npairs, "type": "d", "save_in": "pairs"},
+                {"name": "KBLIST", "n": 10*npairs, "type": "i", "save_in": "pairs"},
+                {"name": "KSLOW", "n": npairs, "type": "i", "save_in": "pairs"},
+                {"name": "TBLIST", "n": 1, "type": "d", "save_in": "scalars"},
+                {"name": "fortran_footer_5", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_6", "n": 1, "type": "i", "save_in": "ignore"},
                 ]
-        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._byte_map = pd.DataFrame(self._value_map)
+        self._init_byte_map()
+        self._update_byte_map_with_list()
+
+    def _update_byte_map_with_list(self):
+        header_row_idx = self._byte_map.loc[self._byte_map["name"] == "fortran_header_6"].index.values[0]
+        header_row = self._byte_map.iloc[header_row_idx].to_dict()
+
+        total_bytes = struct.unpack("i", self._byte_data[header_row["bytes_start"]:header_row["bytes_end"]])[0]
+        n_list_entries = int(total_bytes/4)
+        self._value_map += [
+                {"name": "LIST_DATA", "n": n_list_entries, "type": "i", "save_in": "list"},
+                {"name": "fortran_footer_6", "n": 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_header_7", "n": 1, "type": "i", "save_in": "ignore"},
+                ]
+        self._byte_map = pd.DataFrame(self._value_map)
+        self._init_byte_map()
+        
+        header_row_idx = self._byte_map.loc[self._byte_map["name"] == "fortran_header_7"].index.values[0]
+        header_row = self._byte_map.iloc[header_row_idx].to_dict()
+        nxtlimit = struct.unpack("i", self._byte_data[header_row["bytes_end"]:header_row["bytes_end"] + 4])[0]
+        nghosts = struct.unpack("i", self._byte_data[header_row["bytes_end"] + 4:header_row["bytes_end"] + 8])[0]
+        nlstdelay0 = struct.unpack("i", self._byte_data[header_row["bytes_end"] + 4*(70+nxtlimit+nghosts):header_row["bytes_end"] + 4*(71+nxtlimit+nghosts)])[0]
+        self._value_map += [
+                {"name": "NXTLIMIT", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NGHOSTS", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NXTLST", "n": nxtlimit+nghosts, "type": "i", "save_in": "ignore"},
+                {"name": "NXTLEN", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NDTK", "n": 64, "type": "i", "save_in": "ignore"},
+                {"name": "NDTMIN", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NDTMAX", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NXTLEVEL", "n": 1, "type": "i", "save_in": "scalars"},
+                {"name": "NLSTDELAY", "n": nlstdelay0 + 1, "type": "i", "save_in": "ignore"},
+                {"name": "fortran_footer_7", "n": 1, "type": "i", "save_in": "ignore"},
+                ]
+        self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
 
     def _load_scalars_init(self):
         """
         loads a few scalars at first, as we later need further scalars!
         """
-        if self._byte_map_t.shape[0] == 0:
+        if self._byte_map.shape[0] == 0:
             raise ValueError("Did you load some data?")
 
-        for i, r in self._byte_map_t[self._byte_map_t["type"] == "i"].iterrows():
+        for i, r in self._byte_map[self._byte_map["type"] == "i"].iterrows():
             val = None
             if r["n"] == 1:
                 val = struct.unpack("i", self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
@@ -231,10 +300,10 @@ class comm():
         """
         loads all scalars after unpacking the first few!
         """
-        if self._byte_map_t.shape[0] < 27:
+        if self._byte_map.shape[0] < 27:
             raise ValueError("Did you load some data?")
 
-        for i, r in self._byte_map_t[:27].iterrows():
+        for i, r in self._byte_map[:27].iterrows():
             val = None
             if r["n"] == 1:
                 val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
@@ -243,12 +312,14 @@ class comm():
             self._comm_scalars[r["name"]] = val
 
     def _load_cluster_data(self):
-        if self._byte_map_t.shape[0] < 28:
+        if self._byte_map.shape[0] < 28:
             raise ValueError("Did you load some data?")
 
         data = {}
 
-        for i, r in self._byte_map_t[28:].iterrows():
+        for i, r in self._byte_map[self._byte_map["save_in"] == "data"].iterrows():
+            if "fortran_header" in r["name"] or "fortran_footer" in r["name"]:
+                continue
             val = None
             if r["n"] == 1:
                 val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
@@ -266,43 +337,87 @@ class comm():
 
         return self.data
 
-    def get_bytes(self, col: str, j: int = None, name: int = None):
+    def get_bytes(self, name: int, col: str = None):
         """
-        get the relevant bytes for column for `J` (nbody index
-        starting at 1) or `name`
+        get the relevant bytes for column for `name`
 
         Either use `j` as param *or* `name`!
 
         :param col: Column name of the value of interest
         :type col: str
-        :param j: Nbody index (starting at 1) of particle of interest
-        :type j: int
         :param name: Nbody name (integer) of particle of interest
         :type name: int
         """
-        if j is None and name is None:
-            raise Exception("Specify either \"j\" or \"name\" as parameter")
-        elif j is not None and name is not None:
-            raise Exception("Specify only \"j\" OR \"name\"")
-
-        if j is None:
-            j = self.data.loc[self.data["NAME"] == name].index.values[0]
-        else:
-            j -= 1
-
+        if col is None:
+            ret = {}
+            for i,r in self._byte_map.iterrows():
+                if r["save_in"] == "ignore" or r["save_in"] == "scalars":
+                    continue
+                b = self.get_bytes(name=name, col=r["name"])
+                print(i, r["name"], b, b[1]-b[0], int((b[1]-b[0])/r["bytes_data_type"]))
+                ret[r["name"]] = b
+            return ret
+                
+        j = self.data.loc[self.data["NAME"] == name].index.values[0]
+        
         start = None
         end = None
-        if col[-1] in ["1", "2", "3"] and col[:-1] + "123" in self._byte_map_t["name"].values:
+
+        # Case e.g. col="V1" needs to be mapped to V123 and then extracted
+        if col[-1] in ["1", "2", "3"] and col[:-1] + "123" in self._byte_map["name"].values:
             vec_id = int(col[-1]) - 1
             col_name = col[:-1] + "123" 
-            byte_map_row = self._byte_map_t[self._byte_map_t["name"] == col_name]
+            byte_map_row = self._byte_map[self._byte_map["name"] == col_name]
 
             start = byte_map_row["bytes_start"].values[0]
             start += byte_map_row["bytes_data_type"].values[0] * j * 3
             start += byte_map_row["bytes_data_type"].values[0] * vec_id
             end = start + byte_map_row["bytes_data_type"].values[0]
-        elif col in self._byte_map_t["name"].values:
-            byte_map_row = self._byte_map_t[self._byte_map_t["name"] == col]
+        # Case col="V123" return all bytes!
+        elif col[-3:] == "123" and col in self._byte_map["name"].values:
+            byte_map_row = self._byte_map[self._byte_map["name"] == col]
+            start = byte_map_row["bytes_start"].values[0]
+            start += byte_map_row["bytes_data_type"].values[0] * j * 3
+            end = start + 3*byte_map_row["bytes_data_type"].values[0]
+        # Case col="U_1234" (pair data)
+        elif col[-4:] == "1234" and col in self._byte_map["name"].values:
+            byte_map_row = self._byte_map[self._byte_map["name"] == col]
+            start = byte_map_row["bytes_start"].values[0]
+            start += byte_map_row["bytes_data_type"].values[0] * j * 4
+            end = start + 4*byte_map_row["bytes_data_type"].values[0]
+        # Case col="SF_1234567" (pair data)
+        elif col[-7:] == "1234567" and col in self._byte_map["name"].values:
+            byte_map_row = self._byte_map[self._byte_map["name"] == col].index.values[0]
+            byte_map_row = self._byte_map.iloc[byte_map_row].to_dict()
+            start = byte_map_row["bytes_start"]
+            start += byte_map_row["bytes_data_type"] * j * 7
+            end = start + 7*byte_map_row["bytes_data_type"]
+        elif col == "LIST_DATA":
+            ret = []
+            byte_map_row = self._byte_map[self._byte_map["name"] == col].index.values[0]
+            byte_map_row = self._byte_map.iloc[byte_map_row].to_dict()
+            particle_idx = 0
+            skipper = 0
+            for i in range(0,byte_map_row["n"]):
+                if skipper > 0:
+                    skipper -= 1
+                    continue
+                n = struct.unpack("i", self._byte_data[byte_map_row["bytes_start"] + (i*4): byte_map_row["bytes_start"] + ((i+1)*4)])[0]
+                if n == 0:
+                    print(particle_idx,i,n)
+                    particle_idx += 1
+                else:
+                    print(particle_idx,i,n, end=" ")
+                    for j in range(1, n+1):
+                        cur_name = struct.unpack("i", self._byte_data[byte_map_row["bytes_start"] + ((i+j)*4): byte_map_row["bytes_start"] + ((i+j+1)*4)])[0]
+                        print(cur_name, end = " ")
+                    print()
+                    skipper = n
+                    particle_idx += 1
+
+        # simple case
+        elif col in self._byte_map["name"].values:
+            byte_map_row = self._byte_map[self._byte_map["name"] == col]
             start = byte_map_row["bytes_start"].values[0]
             start += byte_map_row["bytes_data_type"].values[0] * j
             end = start + byte_map_row["bytes_data_type"].values[0]
@@ -312,7 +427,6 @@ class comm():
 
     def give_kick(self,
                   v: str = "V1",
-                  j: int = None,
                   name: int = None,
                   n_mean: float = 5.0,
                   n_std: int = 10.0):
@@ -323,8 +437,6 @@ class comm():
 
         :param v: which V (`V1`, `V2` or `V3`) to apply the kick to
         :type v: str
-        :param j: Nbody index (starting at 1) of particle of interest
-        :type j: int
         :param name: Nbody name (integer) of particle of interest
         :type name: int
         :param n_mean: factor for mean to add to the velocity
@@ -333,19 +445,10 @@ class comm():
         :type n_std: float
 
         """
-        if j is None and name is None:
-            raise Exception("Specify either \"j\" or \"name\" as parameter")
-        elif j is not None and name is not None:
-            raise Exception("Specify only \"j\" OR \"name\"")
 
-        relevant_bytes = self.get_bytes(col=v, name=name, j=j)
-        relevant_bytes_v0 = self.get_bytes(col=v[0] + "0" + v[1], name=name, j=j)
+        relevant_bytes = self.get_bytes(name=name, col=v)
+        relevant_bytes_v0 = self.get_bytes(col=v[0] + "0" + v[1], name=name)
         
-        if j is None:
-            j = self.data.loc[self.data["NAME"] == name].index.values[0]
-        else:
-            j -= 1
-
         self._byte_data = ( self._byte_data[:relevant_bytes[0]]
                             + struct.pack("d", self.data[v].mean() * n_mean + self.data[v].std() * n_std)
                             + self._byte_data[relevant_bytes[1]:]
@@ -367,9 +470,9 @@ class comm():
         # reset data 
         self.time = None
         self._byte_data = None
-        self._byte_map_t = None
+        self._byte_map = None
         self._value_map = copy.deepcopy(self._init_value_map)
-        self._byte_map_t = pd.DataFrame(self._value_map)
+        self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
         self._comm_data = None
         self._comm_scalars = None

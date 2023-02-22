@@ -244,7 +244,6 @@ class comm():
                 ]
         self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
-        self._update_byte_map_with_list()
 
     def _update_byte_map_with_list(self):
         header_row_idx = self._byte_map.loc[self._byte_map["name"] == "fortran_header_6"].index.values[0]
@@ -280,26 +279,12 @@ class comm():
         self._byte_map = pd.DataFrame(self._value_map)
         self._init_byte_map()
 
-    def _load_scalars_init(self):
-        """
-        loads a few scalars at first, as we later need further scalars!
-        """
-        if self._byte_map.shape[0] == 0:
-            raise ValueError("Did you load some data?")
-
-        for i, r in self._byte_map[self._byte_map["type"] == "i"].iterrows():
-            val = None
-            if r["n"] == 1:
-                val = struct.unpack("i", self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
-            else:
-                val = np.array(struct.unpack("i"*r["n"], self._byte_data[r["bytes_start"]:r["bytes_end"]]))
-            self._comm_scalars[r["name"]] = val
     
-    def _load_scalars(self):
+    def _load_scalars_from_byte_map(self):
         """
         loads all scalars after unpacking the first few!
         """
-        if self._byte_map.shape[0] < 27:
+        if self._byte_map.shape[0] == 0:
             raise ValueError("Did you load some data?")
 
         for i, r in self._byte_map[self._byte_map["save_in"] == "scalars"].iterrows():
@@ -309,6 +294,10 @@ class comm():
             else:
                 val = np.array(struct.unpack(r["type"]*r["n"], self._byte_data[r["bytes_start"]:r["bytes_end"]]))
             self._comm_scalars[r["name"]] = val
+        # Store value if it is just One!
+        for i, r in self._byte_map[self._byte_map["n"] == 1].iterrows():
+            val = struct.unpack(r["type"], self._byte_data[r["bytes_start"]:r["bytes_end"]])[0]
+            self._byte_map.loc[i, "content"] = val
 
     def _load_cluster_data(self):
         if self._byte_map.shape[0] < 28:
@@ -408,12 +397,24 @@ class comm():
                         cur_name = struct.unpack("i", self._byte_data[byte_map_row["bytes_start"] + ((i+j)*4): byte_map_row["bytes_start"] + ((i+j+1)*4)])[0]
                         if cur_name == name:
                             ret.append({"reduce": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((i+1)*4)),
-                                        "remove": (byte_map_row["bytes_start"] + ((i+j)*4),  byte_map_row["bytes_start"] + ((i+j+1)*4))})
+                                        "remove": (byte_map_row["bytes_start"] + ((i+j)*4),  byte_map_row["bytes_start"] + ((i+j+1)*4)),
+                                        "name": self._name_from_idx(particle_idx),
+                                        "idx": particle_idx,
+                                        "n": n})
                     skipper = n
                     particle_idx += 1
                 elif J == particle_idx:
-                    ret.append({"own_list": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((n+i+1)*4))})
+                    ret.append({"own_list": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((n+i+1)*4)),
+                                "remove": (byte_map_row["bytes_start"] + (i*4), byte_map_row["bytes_start"] + ((n+i+1)*4)),
+                                "n": n,
+                                "name": self._name_from_idx(particle_idx),
+                                "idx": particle_idx,
+                                "list": list(struct.unpack("i" * (n+1), self._byte_data[byte_map_row["bytes_start"] + (i*4):byte_map_row["bytes_start"] + ((i+n+1)*4)]))
+                                })
                     particle_idx += 1
+            minimum = min([i["remove"][0] for i in ret])
+            maximum = max([i["remove"][1] for i in ret])
+            #ret.insert(0,(minimum,maximum))
             return ret
         elif col == "NXTLST":
             byte_map_row = self._byte_map[self._byte_map["name"] == col].index.values[0]
@@ -458,9 +459,16 @@ class comm():
     def _drop_byte_range(self, a, b):
         self._drop_byte_adjust_headers_footers(a, b-a)
         self._byte_data = self._byte_data[:a] + self._byte_data[b:]
+    
     def _decrease_byte_int(self, start, decrease_by: int = 1):
         byte_int = struct.unpack("i", self._byte_data[start: start+4])[0]
         self._byte_data = self._byte_data[:start] + struct.pack("i", byte_int - decrease_by) + self._byte_data[start + 4:]
+
+    def _name_from_idx(self, idx: int):
+        return self.data.loc[idx,"NAME"]
+    
+    def _idx_from_name(self, name: int):
+        return self.data.loc[self.data["NAME"] == name].index.values[0]
 
     def drop_particle(self, name: int):
         """
@@ -491,16 +499,17 @@ class comm():
                 self._decrease_fortran_header_footer(6, removed_bytes)"""
                 # remove data
                 for list_data_item in item[1][::-1]:
-                    if "remove" in list_data_item.keys():
+                    if "own_list" not in list_data_item.keys():
+                        self._decrease_byte_int(list_data_item["reduce"][0])
                         self._drop_byte_range(list_data_item["remove"][0],
                                               list_data_item["remove"][1])
-                        self._decrease_byte_int(list_data_item["reduce"][0])
                     elif "own_list" in list_data_item.keys():
                         self._drop_byte_range(list_data_item["own_list"][0],
                                               list_data_item["own_list"][1])
                     else:
                         KeyError("Key must either be \"remove\" or \"own list\"")
             else:
+                print(item)
                 """"n_bytes = item[1][1] - item[1][0]
                 if n_bytes == 4:
                     print(item, struct.unpack("i", self._byte_data[item[1][0]:item[1][0] + 4]))
@@ -609,11 +618,12 @@ class comm():
 
         self._load_file_into_byte_stream(file)
 
-        self._load_scalars_init()
+        self._load_scalars_from_byte_map()
         self._update_byte_map_with_scalars()
-        self._load_scalars()
+        self._load_scalars_from_byte_map()
         self._load_cluster_data()
-        self._load_scalars()
+        self._update_byte_map_with_list()
+        self._load_scalars_from_byte_map()
 
         self._load_fortran_headers_footers()
                 
